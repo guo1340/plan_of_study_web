@@ -1,12 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ee92d446-47bc-4a54-b22f-75b224e79907" name="Changes" comment="starting up frontend">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/backend/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/apps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/migrations/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/migrations/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/plan_of_study_web.code-workspace" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/plan_of_study_web.code-workspace" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/views.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2bTFRF5qyjR9WdhV3kUFpy1rHRE" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;last_opened_file_path&quot;: &quot;E:/VT/Research/PoS&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "E:/VT/Research/PoS",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ee92d446-47bc-4a54-b22f-75b224e79907" name="Changes" comment="starting up frontend" />
+      <created>1706231154721</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1706231154721</updated>
+      <workItem from="1706231156150" duration="124000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="starting up frontend" />
+    <option name="LAST_COMMIT_MESSAGE" value="starting up frontend" />
+  </component>
 </project>
