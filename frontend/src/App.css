@@ -36,3 +36,19 @@
     transform: rotate(360deg);
   }
 }
+
+/*
+*css for sidebar
+*/
+.sidebar_container { 
+  display: flex;
+  height: 100vh;
+}
+
+.sidebarStyle {
+  height: 100vh;
+  width: 250px;
+  background-color: #860D0D;
+  position: relative;
+  transition: .5s;
+}
