@@ -40,7 +40,7 @@
 /*
 *css for sidebar
 */
-.sidebar_container { 
+.sidebar_container {
   display: flex;
   height: 100vh;
 }
@@ -48,7 +48,65 @@
 .sidebarStyle {
   height: 100vh;
   width: 250px;
-  background-color: #860D0D;
+  background-color: #5e0606;
   position: relative;
-  transition: .5s;
+  transition: 0.5s;
+}
+
+.link {
+  width: 100%;
+  height: 70px;
+  /* list-style-type: none; */
+  margin: 0%;
+  display: flex;
+  /* flex-direction: row; */
+  color: white;
+  /* justify-content: center; */
+  align-items: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.active {
+  background-color: #5e0606;
+}
+
+.icon {
+  flex: 30%;
+  display: grid;
+  place-items: center;
+}
+
+.link_text {
+  flex: 70%;
+}
+
+.extention_toggle {
+  align-items: center;
+  font-size: 25px;
+  width: 100%;
+  height: 60px;
+  list-style-type: none;
+  margin: 0%;
+  display: flex;
+  flex-direction: inherit;
+  color: white;
+  justify-content: center;
+}
+
+.extention_toggle:hover {
+  cursor: pointer;
+  background-color: #5e0606;
+}
+
+.toggle_container {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+
+.main_container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
 }
