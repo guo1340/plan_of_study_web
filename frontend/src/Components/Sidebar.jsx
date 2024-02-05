@@ -1,3 +1,4 @@
+import { AiOutlineMenu } from "react-icons/ai";
 import {
   BsHouseDoor,
   BsMap,
@@ -74,3 +75,5 @@ const Sidebar = ({ children }) => {
     </div>
   );
 };
+
+export default Sidebar;
