@@ -1,3 +1,4 @@
+import { IoMdClose } from "react-icons/io";
 import { AiOutlineMenu } from "react-icons/ai";
 import {
   BsHouseDoor,
@@ -50,7 +51,7 @@ const Sidebar = ({ children }) => {
         className="sidebarStyle"
       >
         {barItem.map((item, index) => (
-          <NavLink
+          <div
             to={item.path}
             key={index}
             className="link"
@@ -63,11 +64,13 @@ const Sidebar = ({ children }) => {
             >
               {item.name}
             </div>
-          </NavLink>
+          </div>
         ))}
         <div className="toggle_container">
-          <div className="extention_toggle" onClick={toggle}>
-            <AiOutlineMenu />
+          <div
+            className="extention_toggle"
+            onClick={toggle} 
+          > <div> {isOpen ? <IoMdClose /> : <AiOutlineMenu />} </div>
           </div>
         </div>
       </div>
