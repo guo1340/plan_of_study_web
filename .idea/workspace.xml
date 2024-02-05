@@ -4,17 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ee92d446-47bc-4a54-b22f-75b224e79907" name="Changes" comment="starting up frontend">
+    <list default="true" id="ee92d446-47bc-4a54-b22f-75b224e79907" name="Changes" comment="minor changes on backend file names">
+      <change afterPath="$PROJECT_DIR$/backend/classes/urls.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/templates/classes/list.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/backend/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/apps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/migrations/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/migrations/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/plan_of_study_web.code-workspace" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/plan_of_study_web.code-workspace" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/plan_of_study/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/classes/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/classes/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/classes/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,9 +20,23 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;guo1340&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="e4f008da-28a5-4686-ab0a-ec52fc3ef187" />
+        <option name="url" value="https://github.com/guo1340/plan_of_study_web.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2bTFRF5qyjR9WdhV3kUFpy1rHRE" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -41,8 +51,11 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "E:/VT/Research/PoS",
+    "last_opened_file_path": "E:/VT/Research/PoS/plan_of_study_web/backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -54,8 +67,18 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1706231154721</updated>
-      <workItem from="1706231156150" duration="124000" />
+      <workItem from="1706231156150" duration="1135000" />
+      <workItem from="1706556697362" duration="5600000" />
     </task>
+    <task id="LOCAL-00001" summary="minor changes on backend file names">
+      <option name="closed" value="true" />
+      <created>1706231302341</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1706231302341</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -63,6 +86,10 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="starting up frontend" />
-    <option name="LAST_COMMIT_MESSAGE" value="starting up frontend" />
+    <MESSAGE value="minor changes on backend file names" />
+    <option name="LAST_COMMIT_MESSAGE" value="minor changes on backend file names" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/plan_of_study_web$urls.coverage" NAME="urls Coverage Results" MODIFIED="1706732708183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/classes" />
   </component>
 </project>
