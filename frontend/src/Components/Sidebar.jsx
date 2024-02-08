@@ -51,7 +51,7 @@ const Sidebar = ({ children }) => {
         className="sidebarStyle"
       >
         {barItem.map((item, index) => (
-          <div
+          <NavLink
             to={item.path}
             key={index}
             className="link"
@@ -64,7 +64,7 @@ const Sidebar = ({ children }) => {
             >
               {item.name}
             </div>
-          </div>
+          </NavLink>
         ))}
         <div className="toggle_container">
           <div

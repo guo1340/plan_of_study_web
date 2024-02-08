@@ -1,12 +1,15 @@
 import "./App.css";
 import Sidebar from "./Components/Sidebar";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 const App = () => {
   return (
     <div>
-      <Sidebar />
+      <BrowserRouter>
+        <Sidebar />
+      </BrowserRouter>
     </div>
   );
-}
+};
 
 export default App;
