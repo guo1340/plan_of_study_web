@@ -110,3 +110,37 @@
   width: 100%;
   min-height: 100vh;
 }
+
+/*
+*css for topbar
+*/
+.login_button {
+  width: 165px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background-color: #5e0606;
+  color: white;
+  cursor: pointer;
+  position: absolute;
+  top: calc(50% - 20px);
+  right: 20px;
+  -ms-transform: translateY(0, -50%);
+  transform: translateY(0, -50%);
+}
+
+.signUp_button {
+  width: 165px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background-color: #5e0606;
+  color: white;
+  cursor: pointer;
+  position: absolute;
+  top: calc(50% - 20px);
+  right: 80px;
+  -ms-transform: translateY(0, -50%);
+  transform: translateY(0, -50%);
+}
+
