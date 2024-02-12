@@ -3,7 +3,7 @@ import Sidebar from "./Components/Sidebar";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Topbar from "./Components/Topbar";
 import { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 
 const App = () => {
@@ -21,7 +21,7 @@ const App = () => {
           />
         </Sidebar>
       </BrowserRouter>
-      <NotificationContainer />
+      {/* <NotificationContainer /> */}
     </div>
   );
 };
