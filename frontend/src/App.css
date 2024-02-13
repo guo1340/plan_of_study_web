@@ -114,8 +114,21 @@
 /*
 *css for topbar
 */
+
+.top_bar {
+  outline-style: solid;
+  border-radius: 0px;
+  background-color:#e9967a;
+  outline-color: #e9967a;
+  padding: 40px 40px 40px 40px;
+  display: flex;
+  margin-left: 2px;
+  margin-right: 0px;
+  margin-top: 0px;
+  position: relative;
+}
 .login_button {
-  width: 165px;
+  width: 130px;
   height: 40px;
   border: none;
   border-radius: 6px;
@@ -123,14 +136,14 @@
   color: white;
   cursor: pointer;
   position: absolute;
-  top: calc(50% - 20px);
-  right: 20px;
+  top: calc(20%);
+  right: 220px;
   -ms-transform: translateY(0, -50%);
   transform: translateY(0, -50%);
 }
 
 .signUp_button {
-  width: 165px;
+  width: 130px;
   height: 40px;
   border: none;
   border-radius: 6px;
@@ -138,9 +151,24 @@
   color: white;
   cursor: pointer;
   position: absolute;
-  top: calc(50% - 20px);
-  right: 80px;
+  top: calc(20%);
+  right: 60px;
   -ms-transform: translateY(0, -50%);
   transform: translateY(0, -50%);
+}
+
+/*
+*css for home page
+*/
+
+.home_container {
+  outline-style: solid;
+  outline-color: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  padding: 10px 10px;
+  margin: 15px 15px 15px 15px;
+  flex: 1;
+  overflow-y: scroll;
+  flex: 1;
 }
 

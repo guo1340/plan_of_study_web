@@ -9,6 +9,7 @@ import React from "react";
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
   const [signedIn, signIn] = useState(false);
+  const [signedUp, setSignUp] = useState(false)
 
   return (
     <div>
@@ -18,6 +19,7 @@ const App = () => {
             signedIn={signedIn}
             openLoginPage={setOpenLogin}
             signIn={signIn}
+            openSignUpPage={setSignUp}
           />
         </Sidebar>
       </BrowserRouter>
