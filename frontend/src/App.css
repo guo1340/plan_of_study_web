@@ -118,7 +118,7 @@
 .top_bar {
   outline-style: solid;
   border-radius: 0px;
-  background-color:#e9967a;
+  background-color: #e9967a;
   outline-color: #e9967a;
   padding: 40px 40px 40px 40px;
   display: flex;
@@ -172,3 +172,85 @@
   flex: 1;
 }
 
+/*
+*css for login
+*/
+
+.login_container {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  margin-top: 500px;
+  background: linear-gradient(#5e0606, white);
+  padding-bottom: 20px;
+}
+
+.login_header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.login_text {
+  color: white;
+  font-size: 40px;
+  font-weight: 600;
+}
+
+.login_inputs {
+  margin-top: 55px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.login_input {
+  display: flex;
+  align-items: center;
+  margin: auto;
+  width: 480px;
+  height: 80px;
+  background: #eaeaea;
+  border-radius: 6px;
+}
+
+.login_input img {
+  margin: 0px 30px;
+}
+
+.login_input input {
+  height: 50px;
+  width: 400px;
+  background: transparent;
+  border: none;
+  color: #797979;
+  font-size: 19px;
+}
+
+.forgot_password {
+  padding-left: 62px;
+  margin-top: 27px;
+  color: #797979;
+  font-size: 18px;
+}
+
+.submit_container {
+  display: flex;
+  gap: 30px;
+  margin: 60px auto;
+}
+
+.login_submit {
+  display: flex;
+  align-items: center;
+  width: 210px;
+  height: 50px;
+  color: #fff;
+  background: #5e0606;
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 700px;
+}
