@@ -1,7 +1,8 @@
 import "./App.css";
 import Sidebar from "./Components/Sidebar";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import Topbar from "./Components/Topbar";
+import Login from "./Components/Login";
 import { useState } from "react";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
@@ -24,6 +25,7 @@ const App = () => {
         </Sidebar>
       </BrowserRouter>
       {/* <NotificationContainer /> */}
+      {openLogin && <Login signIn={signIn} closeLogin={setOpenLogin} />}
     </div>
   );
 };
