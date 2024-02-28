@@ -189,7 +189,6 @@
 
 .login_container {
   width: 500px;
-  height: 500px;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -197,11 +196,16 @@
   padding: 25px;
 }
 
+.login_close {
+  justify-content: flex-end;
+  display: flex;
+}
+
 .login_header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 9px;
+  gap: 25px;
   width: 100%;
   margin-top: 20px;
 }
@@ -213,20 +217,29 @@
 }
 
 .login_inputs {
-  margin-top: 55px;
+  margin-top: 45px;
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 50px;
+  align-items: center;
+}
+
+.login_spacing {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  color: #797979;
 }
 
 .login_input {
   display: flex;
-  align-items: center;
+  padding-left: 15px;
   margin: auto;
   width: 480px;
-  height: 80px;
+  height: 50px;
   background: #eaeaea;
   border-radius: 6px;
+  flex-direction: column;
 }
 
 .login_input img {
@@ -238,24 +251,21 @@
   width: 400px;
   background: transparent;
   border: none;
-  color: #797979;
-  font-size: 19px;
+  font-size: 16px;
 }
 
 .forgot_password {
-  padding-left: 62px;
-  margin-top: 27px;
   color: #797979;
   font-size: 18px;
 }
 
 .submit_container {
   display: flex;
-  gap: 30px;
-  margin: 60px auto;
+  margin: auto;
 }
 
 .login_submit {
+  padding-left: 74px;
   display: flex;
   align-items: center;
   width: 210px;
@@ -264,5 +274,31 @@
   background: #5e0606;
   border-radius: 50px;
   font-size: 18px;
-  font-weight: 700px;
 }
+
+
+/*
+*css for Home page
+*/
+
+.home_container {
+  
+}
+
+.welcome_message {
+  --s: 0.1em;   /* the thickness of the line */
+  --c: #5e0606; /* the color */
+  
+  color: #0000;
+  padding-bottom: var(--s);
+  background: 
+    linear-gradient(90deg,var(--c) 50%,#000 0) calc(100% - var(--_p,0%))/200% 100%,
+    linear-gradient(var(--c) 0 0) 0% 100%/var(--_p,0%) var(--s) no-repeat;
+  -webkit-background-clip: text,padding-box;
+          background-clip: text,padding-box;
+  transition: 0.5s;
+}
+.welcome_message:hover {--_p: 100%}
+
+
+
