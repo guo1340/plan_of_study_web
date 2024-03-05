@@ -4,5 +4,5 @@ from .models import Class
 
 # Create your views here.
 def classes_home(request):
-    # classes = Class.object {"classes": classes}
+    # class = Class.object {"class": class}
     return render(request, 'classes/list.html')
