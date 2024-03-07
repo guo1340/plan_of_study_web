@@ -1,9 +1,7 @@
-import uuid
-
 from django.db import models
 
-class Class(models.Model) :
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+class Class(models.Model):
     major = models.CharField(max_length=50)
     abbreviation = models.CharField(max_length=150)
     prereq = models.CharField(max_length=50)
@@ -16,4 +14,4 @@ class Class(models.Model) :
     elective_field_name = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.abbreviation
+        return f"Class: {self.abbreviation}"

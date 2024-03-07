@@ -1,6 +1,6 @@
 import "./App.css";
 import Sidebar from "./Components/Sidebar";
-import { BrowserRouter, Route, Routes} from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Topbar from "./Components/Topbar";
 import Login from "./Components/Login";
 import Home from "./Pages/Home";
@@ -8,6 +8,7 @@ import SignUp from "./Components/SignUp";
 import { useState } from "react";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
+import Courses from "./Pages/Courses";
 
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -26,7 +27,8 @@ const App = () => {
           />
           <Routes>
             <Route path="/" element={<Home signedIn={signedIn} />} />
-            <Route path="/home" element={<Home signedIn={signedIn}/>} />
+            <Route path="/home" element={<Home signedIn={signedIn} />} />
+            <Route path="/courses" element={<Courses signedIn={signedIn} />} />
           </Routes>
         </Sidebar>
       </BrowserRouter>

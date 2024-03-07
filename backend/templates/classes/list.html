@@ -1,16 +1,17 @@
 <div>
-    {% if classes %}
+    {% if class_list %}
         <ul id="recipe-list">
-            {% for class in classes %}
+            {% for class in class_list %}
                 <li>
                     <div>
                         <h2>{{ class.abbreviation }}</h2>
                         <h3>{{ class.description }}</h3>
+                        <h3>{{ class.elective_field_name }}</h3>
                     </div>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <h1>There are currently no uploaded recipes from this user</h1>
+        <h1>There are currently no uploaded classes</h1>
     {% endif %}
 </div>
