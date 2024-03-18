@@ -3,11 +3,11 @@ from django.db import models
 
 class Class(models.Model):
     major = models.CharField(max_length=50)
-    abbreviation = models.CharField(max_length=150)
+    abbreviation = models.CharField(max_length=10)
     title = models.CharField(max_length=150, default="")
-    prereq = models.CharField(max_length=50)
+    prereq = models.CharField(max_length=10)
     term = models.CharField(max_length=50)
-    coreq = models.CharField(max_length=50)
+    coreq = models.CharField(max_length=10)
     description = models.TextField()
     credits = models.IntegerField(default=0)
     editable_credits = models.BooleanField(default=False)
