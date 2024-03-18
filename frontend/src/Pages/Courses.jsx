@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
@@ -42,52 +42,32 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const Courses = () => {
   const [classes, setClasses] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    major: "",
+    abbreviation: "",
+    title: "",
+    prereq: "",
+    term: "",
+    coreq: "",
+    description: "",
+    credits: "",
+    elective_field: -1,
+    elective_field_name: "",
+    editable_credits: false,
+  });
 
   const elective_fields = [
-    {
-      num: 0,
-      name: "Ethics and Research Methods",
-    },
-    {
-      num: 1,
-      name: "Algorithms and Theory",
-    },
-    {
-      num: 2,
-      name: "Computer Systems",
-    },
-    {
-      num: 3,
-      name: "Programming Languages",
-    },
-    {
-      num: 4,
-      name: "Numerical and Scientific Computing",
-    },
-    {
-      num: 5,
-      name: "Computer Architecture and Networking",
-    },
-    {
-      num: 6,
-      name: "Data and Information",
-    },
-    {
-      num: 7,
-      name: "Software Engineering",
-    },
-    {
-      num: 8,
-      name: "Human-Computer Interaction",
-    },
-    {
-      num: 9,
-      name: "Intelligent Systems",
-    },
-    {
-      num: 10,
-      name: "Computational Biology and Bioinformatics",
-    },
+    { num: 0, name: "Ethics and Research Methods" },
+    { num: 1, name: "Algorithms and Theory" },
+    { num: 2, name: "Computer Systems" },
+    { num: 3, name: "Programming Languages" },
+    { num: 4, name: "Numerical and Scientific Computing" },
+    { num: 5, name: "Computer Architecture and Networking" },
+    { num: 6, name: "Data and Information" },
+    { num: 7, name: "Software Engineering" },
+    { num: 8, name: "Human-Computer Interaction" },
+    { num: 9, name: "Intelligent Systems" },
+    { num: 10, name: "Computational Biology and Bioinformatics" },
   ];
 
   const handleClose = () => {
@@ -98,49 +78,58 @@ const Courses = () => {
     setOpenDialog(true);
   };
 
-  const handleSubmit = () => {
-    const courseData = {};
-
-    // Retrieve values from each text field and populate the object
-    const major = document.getElementById("major").value;
-    const abbreviation = document.getElementById("class_abbr").value;
-    const title = document.getElementById("title").value;
-    const prereq = document.getElementById("prerequisite").value;
-    const term = document.getElementById("offered_term").value;
-    const coreq = document.getElementById("corequisite").value;
-    const description = document.getElementById("description").value;
-    // const editable_credits = document.getElementById(
-    //   "credit_editable_switch"
-    // ).checked;
-    const credits = document.getElementById("number").value;
-    // console.log(document.getElementById("number"));
-    // const elective_field = document.getElementById("elective_field_num").value;
-    // const isCreditEditableElement = document.getElementById(
-    //   "credit_editable_switch"
-    // );
-    // const editable_credits = isCreditEditableElement
-    //   ? isCreditEditableElement.checked
-    //   : false;
-
-    courseData.major = major;
-    courseData.abbreviation = abbreviation;
-    courseData.title = title;
-    courseData.prereq = prereq;
-    courseData.term = term;
-    courseData.coreq = coreq;
-    courseData.description = description;
-    // courseData.editable_credits = editable_credits;
-    courseData.credits = credits;
-    // courseData.elective_field = elective_field;
-
-    // Log or send the object wherever necessary
-    console.log(courseData);
+  const handleChange = (e) => {
+    const { id, value, type, checked } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [id]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  React.useEffect(() => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(formData);
+    axios
+      .post("http://localhost:8000/api/classes/", formData)
+      .then(() => {
+        axios
+          .get("http://localhost:8000/api/classes/")
+          .then((res) => {
+            console.log("hello I am Here");
+            console.log(res.data);
+            console.log("yup right here");
+            setClasses(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    setFormData({
+      major: "",
+      abbreviation: "",
+      title: "",
+      prereq: "",
+      term: "",
+      coreq: "",
+      description: "",
+      credits: "",
+      elective_field: -1,
+      elective_field_name: "",
+      editable_credits: false,
+    });
+    setOpenDialog(false);
+  };
+
+  useEffect(() => {
     axios
       .get("http://localhost:8000/api/classes/")
       .then((res) => {
+        console.log("hello I am Here");
+        console.log(res.data);
+        console.log("yup right here");
         setClasses(res.data);
       })
       .catch((err) => {
@@ -180,6 +169,8 @@ const Courses = () => {
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.major}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -189,13 +180,15 @@ const Courses = () => {
                 required
                 autoFocus
                 margin="dense"
-                id="class_abbr"
+                id="abbreviation"
                 label="Class Abbreviation"
                 type="text"
                 style={{
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.abbreviation}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -212,6 +205,8 @@ const Courses = () => {
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.title}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -221,13 +216,15 @@ const Courses = () => {
                 required
                 autoFocus
                 margin="dense"
-                id="prerequisite"
+                id="prereq"
                 label="Prerequisite"
                 type="text"
                 style={{
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.prereq}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -237,29 +234,15 @@ const Courses = () => {
                 required
                 autoFocus
                 margin="dense"
-                id="offered_term"
+                id="term"
                 label="Offered Term(s)"
                 type="text"
                 style={{
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
-                fullWidth
-              />
-            </div>
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Major</div>
-              <TextField
-                required
-                autoFocus
-                margin="dense"
-                id="major"
-                label="Major"
-                type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                value={formData.term}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -269,13 +252,15 @@ const Courses = () => {
                 required
                 autoFocus
                 margin="dense"
-                id="corequisite"
+                id="coreq"
                 label="Corequisite"
                 type="text"
                 style={{
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.coreq}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
@@ -292,67 +277,73 @@ const Courses = () => {
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.description}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Number</div>
+              <div>Credits</div>
               <TextField
                 required
                 autoFocus
                 margin="dense"
-                id="number"
-                label="Number"
+                id="credits"
+                label="Credits"
                 type="text"
                 style={{
                   paddingRight: "20px",
                   paddingBottom: "10px",
                 }}
+                value={formData.credits}
+                onChange={handleChange}
                 fullWidth
               />
             </div>
-            {/* <TextField
-              autoFocus
-              margin="dense"
-              id="editable_credits"
-              label="Is Credit Editable"
-              type="text"
-               
-            /> */}
             <div>Is Credit Editable</div>
-            <FormControlLabel control={<Switch />} />
+            <FormControlLabel
+              control={<Switch id="editable_credits" onChange={handleChange} />}
+            />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
               <TextField
-                required
-                autoFocus
-                select
-                margin="dense"
                 id="elective_field_num"
-                label="Elective Field Number"
-                type="text"
+                required
                 fullWidth
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
+                select
+                label="Select"
+                helperText="Please select the course's elective field"
+                onChange={(event) => {
+                  const selectedNum = event.target.value;
+                  const selectedField = elective_fields.find(
+                    (option) => option.num === parseInt(selectedNum)
+                  );
+                  setFormData({
+                    ...formData,
+                    elective_field: selectedNum,
+                    elective_field_name: selectedField
+                      ? selectedField.name
+                      : "",
+                  });
                 }}
               >
-                {elective_fields.map((option) => (
-                  <MenuItem key={option.num} value={option.num}>
-                    {"Area " + option.num + ": " + option.name}
+                {elective_fields.map((field) => (
+                  <MenuItem key={field.num} value={field.num}>
+                    {"Area " + field.num + ": " + field.name}
                   </MenuItem>
                 ))}
               </TextField>
             </div>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
           </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} color="primary">
-            Save
-          </Button>
-        </DialogActions>
       </Dialog>
+
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 700 }} aria-label="customized table">
           <TableHead>
@@ -378,7 +369,7 @@ const Courses = () => {
                 <StyledTableCell align="center">{row.coreq}</StyledTableCell>
                 <StyledTableCell align="center">{row.credits}</StyledTableCell>
                 <StyledTableCell align="center">
-                  {row.elective_field_name}
+                  {row.elective_field_num}
                 </StyledTableCell>
               </StyledTableRow>
             ))}
