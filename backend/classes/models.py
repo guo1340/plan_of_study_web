@@ -1,13 +1,13 @@
 from django.db import models
 
 
-class Class(models.Model):
+class Course(models.Model):
     major = models.CharField(max_length=50)
     abbreviation = models.CharField(max_length=10)
     title = models.CharField(max_length=150, default="")
-    prereq = models.CharField(max_length=10)
+    prereqs = models.ManyToManyField('self', symmetrical=False, related_name='prerequisite_for', blank=True)
     term = models.CharField(max_length=50)
-    coreq = models.CharField(max_length=10)
+    coreqs = models.ManyToManyField('self', symmetrical=False, related_name='corequisite_for', blank=True)
     description = models.TextField()
     credits = models.IntegerField(default=0)
     editable_credits = models.BooleanField(default=False)

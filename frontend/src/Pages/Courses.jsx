@@ -18,6 +18,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import MenuItem from "@mui/material/MenuItem";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
+import Select from "@mui/material/Select";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Chip from "@mui/material/Chip";
+import Box from "@mui/material/Box";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -46,9 +50,9 @@ const Courses = () => {
     major: "",
     abbreviation: "",
     title: "",
-    prereq: "",
+    prereqs: [],
     term: "",
-    coreq: "",
+    coreqs: [],
     description: "",
     credits: "",
     elective_field: -1,
@@ -71,6 +75,19 @@ const Courses = () => {
   ];
 
   const handleClose = () => {
+    setFormData({
+      major: "",
+      abbreviation: "",
+      title: "",
+      prereqs: [],
+      term: "",
+      coreqs: [],
+      description: "",
+      credits: "",
+      elective_field: -1,
+      elective_field_name: "",
+      editable_credits: false,
+    });
     setOpenDialog(false);
   };
 
@@ -111,9 +128,9 @@ const Courses = () => {
       major: "",
       abbreviation: "",
       title: "",
-      prereq: "",
+      prereqs: [],
       term: "",
-      coreq: "",
+      coreqs: [],
       description: "",
       credits: "",
       elective_field: -1,
@@ -127,15 +144,66 @@ const Courses = () => {
     axios
       .get("http://localhost:8000/api/classes/")
       .then((res) => {
-        console.log("hello I am Here");
-        console.log(res.data);
-        console.log("yup right here");
         setClasses(res.data);
       })
       .catch((err) => {
         console.log(err);
       });
   }, []);
+
+  const class_options = classes.map((cls) => ({
+    value: cls.id,
+    label: `${cls.abbreviation} - ${cls.title}`,
+  }));
+
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 250,
+      },
+    },
+  };
+
+  // Handling change for MUI Select (adjusted for multi-select) for prereqs
+  const handlePrereqsChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      prereqs:
+        typeof value === "string"
+          ? value
+              .split(",")
+              .map(
+                (val) =>
+                  class_options.find((option) => option.label === val).value
+              )
+          : value,
+    }));
+  };
+
+  // Handling change for MUI Select for coreqs
+  const handleCoreqsChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      coreqs:
+        typeof value === "string"
+          ? value
+              .split(",")
+              .map(
+                (val) =>
+                  class_options.find((option) => option.label === val).value
+              )
+          : value,
+    }));
+  };
 
   return (
     <div style={{ padding: "25px" }}>
@@ -165,10 +233,7 @@ const Courses = () => {
                 id="major"
                 label="Major"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.major}
                 onChange={handleChange}
                 fullWidth
@@ -183,10 +248,7 @@ const Courses = () => {
                 id="abbreviation"
                 label="Class Abbreviation"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.abbreviation}
                 onChange={handleChange}
                 fullWidth
@@ -201,10 +263,7 @@ const Courses = () => {
                 id="title"
                 label="Class Name"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.title}
                 onChange={handleChange}
                 fullWidth
@@ -212,21 +271,39 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Prerequisite</div>
-              <TextField
-                required
-                autoFocus
-                margin="dense"
-                id="prereq"
-                label="Prerequisite"
-                type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
-                value={formData.prereq}
-                onChange={handleChange}
+              <Select
+                labelId="demo-multiple-prereq-label"
+                id="demo-multiple-prereq"
+                multiple
+                value={formData.prereqs} // This should be an array of selected ids
+                onChange={handlePrereqsChange}
                 fullWidth
-              />
+                label="Select"
+                input={
+                  <OutlinedInput
+                    id="select-multiple-prereq"
+                    label="Prerequisite"
+                  />
+                }
+                renderValue={(selectedIds) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selectedIds.map((id) => {
+                      // Find the label corresponding to the id
+                      const label =
+                        class_options.find((option) => option.value === id)
+                          ?.label || "";
+                      return <Chip key={id} label={label} />;
+                    })}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {class_options.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Offered Term(s)</div>
@@ -237,10 +314,7 @@ const Courses = () => {
                 id="term"
                 label="Offered Term(s)"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.term}
                 onChange={handleChange}
                 fullWidth
@@ -248,21 +322,51 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Corequisite</div>
-              <TextField
+              {/* <TextField
                 required
                 autoFocus
                 margin="dense"
                 id="coreq"
                 label="Corequisite"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.coreq}
                 onChange={handleChange}
                 fullWidth
-              />
+              /> */}
+              <Select
+                labelId="demo-multiple-coreq-label"
+                id="demo-multiple-coreq"
+                multiple
+                value={formData.coreqs} // This should be an array of selected ids
+                onChange={handleCoreqsChange}
+                fullWidth
+                label="Select"
+                input={
+                  <OutlinedInput
+                    id="select-multiple-coreq"
+                    label="Corequisite"
+                  />
+                }
+                renderValue={(selectedIds) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selectedIds.map((id) => {
+                      // Find the label corresponding to the id
+                      const label =
+                        class_options.find((option) => option.value === id)
+                          ?.label || "";
+                      return <Chip key={id} label={label} />;
+                    })}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {class_options.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Description</div>
@@ -273,10 +377,7 @@ const Courses = () => {
                 id="description"
                 label="Description"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.description}
                 onChange={handleChange}
                 fullWidth
@@ -291,10 +392,7 @@ const Courses = () => {
                 id="credits"
                 label="Credits"
                 type="text"
-                style={{
-                  paddingRight: "20px",
-                  paddingBottom: "10px",
-                }}
+                className="input_textfield"
                 value={formData.credits}
                 onChange={handleChange}
                 fullWidth
@@ -306,7 +404,7 @@ const Courses = () => {
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
-              <TextField
+              {/* <TextField
                 id="elective_field_num"
                 required
                 fullWidth
@@ -332,7 +430,7 @@ const Courses = () => {
                     {"Area " + field.num + ": " + field.name}
                   </MenuItem>
                 ))}
-              </TextField>
+              </TextField> */}
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -349,10 +447,9 @@ const Courses = () => {
           <TableHead>
             <TableRow>
               <StyledTableCell align="center">Course Name</StyledTableCell>
+              <StyledTableCell align="center">Full Name</StyledTableCell>
               <StyledTableCell align="center">Major</StyledTableCell>
-              <StyledTableCell align="center">Pre-requisite</StyledTableCell>
               <StyledTableCell align="center">Term</StyledTableCell>
-              <StyledTableCell align="center">Co-requisite</StyledTableCell>
               <StyledTableCell align="center">Credits</StyledTableCell>
               <StyledTableCell align="center">Elective Field</StyledTableCell>
             </TableRow>
@@ -363,13 +460,15 @@ const Courses = () => {
                 <StyledTableCell align="center" component="th" scope="row">
                   {row.abbreviation}
                 </StyledTableCell>
+                <StyledTableCell align="center">{row.title}</StyledTableCell>
                 <StyledTableCell align="center">{row.major}</StyledTableCell>
-                <StyledTableCell align="center">{row.prereq}</StyledTableCell>
                 <StyledTableCell align="center">{row.term}</StyledTableCell>
-                <StyledTableCell align="center">{row.coreq}</StyledTableCell>
                 <StyledTableCell align="center">{row.credits}</StyledTableCell>
                 <StyledTableCell align="center">
-                  {row.elective_field_num}
+                  {"Area " +
+                    row.elective_field +
+                    ": " +
+                    row.elective_field_name}
                 </StyledTableCell>
               </StyledTableRow>
             ))}

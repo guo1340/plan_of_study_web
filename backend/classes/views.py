@@ -1,6 +1,6 @@
 # from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from .models import Class
+from .models import Course
 from .serializers import ClassSerializer
 from rest_framework.response import Response
 
@@ -13,11 +13,11 @@ from rest_framework.response import Response
 #
 
 class ClassViewSet(ModelViewSet):
-    queryset = Class.objects.all()
+    queryset = Course.objects.all()
     serializer_class = ClassSerializer
 
     def list(self, request):
-        queryset = Class.objects.all()
+        queryset = Course.objects.all()
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
@@ -30,12 +30,12 @@ class ClassViewSet(ModelViewSet):
             return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
-        class_obj = Class.objects.all().get(pk=pk)
+        class_obj = Course.objects.all().get(pk=pk)
         serializer = self.serializer_class(class_obj)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
-        class_obj = Class.objects.all().get(pk=pk)
+        class_obj = Course.objects.all().get(pk=pk)
         serializer = self.serializer_class(class_obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -44,6 +44,6 @@ class ClassViewSet(ModelViewSet):
             return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
-        class_obj = Class.objects.all().get(pk=pk)
+        class_obj = Course.objects.all().get(pk=pk)
         class_obj.delete()
         return Response(status=204)
