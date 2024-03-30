@@ -22,6 +22,7 @@ import Select from "@mui/material/Select";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -45,6 +46,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const Courses = () => {
   const [classes, setClasses] = useState([]);
+  const [drawerOpen, setDrawerOpen] = useState(false); // state variable to control the visibility of the drawer
+  const [selectedCourseInfo, setSelectedCourseInfo] = useState(null); // state variable to hold the course that will be displayed in info
   const [currentEditCourse, setCurrentEditCourse] = useState(null); // state variable to hold the course being edited
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -94,6 +97,17 @@ const Courses = () => {
     setOpenDialog(true); // Open the dialog form
   };
 
+  const handleInfoClick = (course) => {
+    // event handler for the info button
+    setSelectedCourseInfo(course);
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    // event handler for the drawer
+    setDrawerOpen(false);
+  };
+
   const handleClose = () => {
     setFormData({
       major: "",
@@ -110,7 +124,7 @@ const Courses = () => {
     });
     setOpenDialog(false);
     // Reset form data and close the dialog
-    setCurrentEditCourse(null); 
+    setCurrentEditCourse(null);
   };
 
   const handleClickOpen = () => {
@@ -499,13 +513,50 @@ const Courses = () => {
                 </StyledTableCell>
                 <StyledTableCell align="center">
                   <Button onClick={() => handleEditClick(row)}>Edit</Button>
-                  <Button>Info</Button>
+                  <Button onClick={() => handleInfoClick(row)}>Info</Button>
                 </StyledTableCell>
               </StyledTableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerClose}>
+        <div style={{ width: 300, padding: 16 }}>
+          {selectedCourseInfo && (
+            <div>
+              <h2>Course Information</h2>
+              <p>
+                <b>Major:</b> {selectedCourseInfo.major}
+              </p>
+              <p>
+                <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
+              </p>
+              <p>
+                <b>Title:</b> {selectedCourseInfo.title}
+              </p>
+              <p>
+                <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
+              </p>
+              <p>
+                <b>Term:</b> {selectedCourseInfo.term}
+              </p>
+              <p>
+                <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
+              </p>
+              <p>
+                <b>Description:</b> {selectedCourseInfo.description}
+              </p>
+              <p>
+                <b>Credits:</b> {selectedCourseInfo.credits}
+              </p>
+              <p>
+                <b>Elective Field:</b> {selectedCourseInfo.elective_field_name}
+              </p>
+            </div>
+          )}
+        </div>
+      </Drawer>
     </div>
   );
 };
