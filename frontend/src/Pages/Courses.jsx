@@ -45,6 +45,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const Courses = () => {
   const [classes, setClasses] = useState([]);
+  const [currentEditCourse, setCurrentEditCourse] = useState(null); // state variable to hold the course being edited
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     major: "",
@@ -74,6 +75,25 @@ const Courses = () => {
     { num: 10, name: "Computational Biology and Bioinformatics" },
   ];
 
+  const handleEditClick = (course) => {
+    // Set the form data to the values from the course to be edited
+    setFormData({
+      major: course.major,
+      abbreviation: course.abbreviation,
+      title: course.title,
+      prereqs: course.prereqs,
+      term: course.term,
+      coreqs: course.coreqs,
+      description: course.description,
+      credits: course.credits,
+      elective_field: course.elective_field,
+      elective_field_name: course.elective_field_name,
+      editable_credits: course.editable_credits,
+    });
+    setCurrentEditCourse(course); // Save the current course being edited
+    setOpenDialog(true); // Open the dialog form
+  };
+
   const handleClose = () => {
     setFormData({
       major: "",
@@ -89,6 +109,8 @@ const Courses = () => {
       editable_credits: false,
     });
     setOpenDialog(false);
+    // Reset form data and close the dialog
+    setCurrentEditCourse(null); 
   };
 
   const handleClickOpen = () => {
@@ -105,9 +127,12 @@ const Courses = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const method = currentEditCourse ? "patch" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
+    const url = currentEditCourse
+      ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
+      : "http://localhost:8000/api/classes/";
     console.log(formData);
-    axios
-      .post("http://localhost:8000/api/classes/", formData)
+    axios[method](url, formData)
       .then(() => {
         axios
           .get("http://localhost:8000/api/classes/")
@@ -138,6 +163,7 @@ const Courses = () => {
       editable_credits: false,
     });
     setOpenDialog(false);
+    handleClose();
   };
 
   useEffect(() => {
@@ -404,7 +430,7 @@ const Courses = () => {
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
-              {/* <TextField
+              <TextField
                 id="elective_field_num"
                 required
                 fullWidth
@@ -430,7 +456,7 @@ const Courses = () => {
                     {"Area " + field.num + ": " + field.name}
                   </MenuItem>
                 ))}
-              </TextField> */}
+              </TextField>
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -452,6 +478,7 @@ const Courses = () => {
               <StyledTableCell align="center">Term</StyledTableCell>
               <StyledTableCell align="center">Credits</StyledTableCell>
               <StyledTableCell align="center">Elective Field</StyledTableCell>
+              <StyledTableCell align="center">Action</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -469,6 +496,10 @@ const Courses = () => {
                     row.elective_field +
                     ": " +
                     row.elective_field_name}
+                </StyledTableCell>
+                <StyledTableCell align="center">
+                  <Button onClick={() => handleEditClick(row)}>Edit</Button>
+                  <Button>Info</Button>
                 </StyledTableCell>
               </StyledTableRow>
             ))}
