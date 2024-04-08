@@ -48,7 +48,7 @@
 .sidebarStyle {
   height: 100vh;
   width: 250px;
-  background-color: #5e0606;
+  background-color: #7a1c27;
   position: relative;
   transition: 0.5s;
 }
@@ -67,7 +67,7 @@
 }
 
 .active {
-  background-color: #5e0606;
+  background-color: #7a1c27;
 }
 
 .icon {
@@ -118,8 +118,8 @@
 .top_bar {
   outline-style: solid;
   border-radius: 0px;
-  background-color: #e9967a;
-  outline-color: #e9967a;
+  background-color: #C0C0C0;
+  outline-color: #C0C0C0;
   padding: 40px 40px 40px 40px;
   display: flex;
   margin-left: 2px;
@@ -132,7 +132,7 @@
   height: 40px;
   border: none;
   border-radius: 6px;
-  background-color: #5e0606;
+  background-color: #7a1c27;
   color: white;
   cursor: pointer;
   position: absolute;
@@ -147,7 +147,7 @@
   height: 40px;
   border: none;
   border-radius: 6px;
-  background-color: #5e0606;
+  background-color: #7a1c27;
   color: white;
   cursor: pointer;
   position: absolute;
@@ -271,7 +271,7 @@
   width: 210px;
   height: 50px;
   color: #fff;
-  background: #5e0606;
+  background: #7a1c27;
   border-radius: 50px;
   font-size: 18px;
 }
@@ -281,13 +281,9 @@
 *css for Home page
 */
 
-.home_container {
-  
-}
-
 .welcome_message {
   --s: 0.1em;   /* the thickness of the line */
-  --c: #5e0606; /* the color */
+  --c: #7a1c27; /* the color */
   
   color: #0000;
   padding-bottom: var(--s);
@@ -305,4 +301,12 @@
 .input_textfield {
   padding-right: "20px";
   padding-bottom: "10px";
+}
+
+.addButton {
+  background: linear-gradient(#7a1c27, #FFD580);
+}
+
+.text {
+  color: #fff;
 }

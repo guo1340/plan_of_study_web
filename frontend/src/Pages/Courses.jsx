@@ -23,6 +23,8 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
+import { Fade } from "@mui/material";
+
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -77,7 +79,6 @@ const Courses = () => {
     { num: 9, name: "Intelligent Systems" },
     { num: 10, name: "Computational Biology and Bioinformatics" },
   ];
-
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
     setFormData({
@@ -247,7 +248,7 @@ const Courses = () => {
 
   return (
     <div style={{ padding: "25px" }}>
-      <Button
+      <Button className="addButton"
         variant="contained"
         size="medium"
         style={{ marginBottom: "20px", float: "right" }}
@@ -512,15 +513,25 @@ const Courses = () => {
                     row.elective_field_name}
                 </StyledTableCell>
                 <StyledTableCell align="center">
-                  <Button onClick={() => handleEditClick(row)}>Edit</Button>
-                  <Button onClick={() => handleInfoClick(row)}>Info</Button>
+                  <Button
+                    style={{background: '#7a1c27'}}
+                    onClick={() => handleEditClick(row)}
+                  >
+                    {" "}
+                    <div className="text"> Edit</div>
+                  </Button>
+                  <Button
+                    style={{background: '#7a1c27', right: "-20px"}}
+                    onClick={() => handleInfoClick(row)}
+                  >
+                    <div className="text">Info</div>
+                  </Button>
                 </StyledTableCell>
               </StyledTableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-
       <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerClose}>
         <div style={{ width: 300, padding: 16 }}>
           {selectedCourseInfo && (
