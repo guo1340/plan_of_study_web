@@ -23,7 +23,6 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
-import { Fade } from "@mui/material";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -97,7 +96,7 @@ const Courses = () => {
     setOpenDialog(true); // Open the dialog form
   };
 
-  const drawerWidth = 240;
+  const drawerWidth = 400;
 
   const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
     ({ theme, open }) => ({
@@ -520,88 +519,85 @@ const Courses = () => {
         </DialogContent>
       </Dialog>
       <Box sx={{ display: "flex" }}>
-        <Main drawerOpen={drawerOpen}>
-          <DrawerHeader>
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 700 }} aria-label="customized table">
-                <TableHead>
-                  <TableRow>
-                    <StyledTableCell align="center">
-                      Course Name
+        <Main open={drawerOpen}>
+          <DrawerHeader />
+          <TableContainer component={Paper}>
+            <Table sx={{ maxWidth: 1500}} aria-label="customized table">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell align="center">Course Name</StyledTableCell>
+                  <StyledTableCell align="center">Full Name</StyledTableCell>
+                  <StyledTableCell align="center">Major</StyledTableCell>
+                  <StyledTableCell align="center">Term</StyledTableCell>
+                  <StyledTableCell align="center">Credits</StyledTableCell>
+                  <StyledTableCell align="center">
+                    Elective Field
+                  </StyledTableCell>
+                  <StyledTableCell align="center">Action</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {classes.map((row) => (
+                  <StyledTableRow key={row.abbreviation}>
+                    <StyledTableCell align="center" component="th" scope="row">
+                      {row.abbreviation}
                     </StyledTableCell>
-                    <StyledTableCell align="center">Full Name</StyledTableCell>
-                    <StyledTableCell align="center">Major</StyledTableCell>
-                    <StyledTableCell align="center">Term</StyledTableCell>
-                    <StyledTableCell align="center">Credits</StyledTableCell>
                     <StyledTableCell align="center">
-                      Elective Field
+                      {row.title}
                     </StyledTableCell>
-                    <StyledTableCell align="center">Action</StyledTableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {classes.map((row) => (
-                    <StyledTableRow key={row.abbreviation}>
-                      <StyledTableCell
-                        align="center"
-                        component="th"
-                        scope="row"
+                    <StyledTableCell align="center">
+                      {row.major}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">{row.term}</StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.credits}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {"Area " +
+                        row.elective_field +
+                        ": " +
+                        row.elective_field_name}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      <Button
+                        style={{ background: "#7a1c27", bottom: "8px"}}
+                        onClick={() => handleEditClick(row)}
                       >
-                        {row.abbreviation}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.title}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.major}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.term}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.credits}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {"Area " +
-                          row.elective_field +
-                          ": " +
-                          row.elective_field_name}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        <Button
-                          style={{ background: "#7a1c27" }}
-                          onClick={() => handleEditClick(row)}
-                        >
-                          {" "}
-                          <div className="text"> Edit</div>
-                        </Button>
-                        <Button
-                          style={{ background: "#7a1c27", right: "-10px" }}
-                          onClick={() => handleInfoClick(row)}
-                        >
-                          <div className="text">Info</div>
-                        </Button>
-                      </StyledTableCell>
-                    </StyledTableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </DrawerHeader>
+                        {" "}
+                        <div className="text"> Edit</div>
+                      </Button>
+                      <Button
+                        style={{ background: "#7a1c27", top: "6px" }}
+                        onClick={() => handleInfoClick(row)}
+                      >
+                        <div className="text">Info</div>
+                      </Button>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Main>
         <Drawer
           sx={{
             width: drawerWidth,
             flexShrink: 0,
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
+              width: drawerWidth, top: 185, padding: "20px"
             },
           }}
           variant="persistent"
           anchor="right"
-          drawerOpen={drawerOpen}
+          open={drawerOpen}
+          
         >
-          <div>
+          <DrawerHeader>
+            <Button style={{ right: "10px", bottom: "20px"}} onClick={handleDrawerClose}>
+              <div style={{color: "black"}}>X</div>
+            </Button>
+          </DrawerHeader>
+          <div style={{marginTop: "-50px"}} >
             {selectedCourseInfo && (
               <div>
                 <h2>Course Information</h2>

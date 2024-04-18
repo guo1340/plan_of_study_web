@@ -318,24 +318,3 @@
 .text {
   color: #fff;
 }
-.drawer_container {
-  display: flex;
-  flex-direction: row;
-  transition: all 0.3s ease;
-}
-
-.drawerStyle {
-  flex-shrink: 0; /* Prevent the drawer from shrinking */
-  overflow: hidden; /* Prevent content from spilling out during transition */
-  width: 0; /* Drawer is initially closed with a width of 0 */
-  transition: width 0.3s ease; /* Animate width changes */
-}
-
-.drawerOpen {
-  width: 300px; /* Width of the open drawer */
-}
-
-.table_container {
-  flex-grow: 1; /* The table container will fill the available space */
-  transition: margin-right 0.3s ease; /* Animate margin changes */
-}
