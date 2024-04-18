@@ -25,7 +25,6 @@ import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import { Fade } from "@mui/material";
 
-
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.common.black,
@@ -97,6 +96,43 @@ const Courses = () => {
     setCurrentEditCourse(course); // Save the current course being edited
     setOpenDialog(true); // Open the dialog form
   };
+
+  const drawerWidth = 240;
+
+  const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
+    ({ theme, open }) => ({
+      flexGrow: 1,
+      padding: theme.spacing(3),
+      transition: theme.transitions.create("margin", {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+      }),
+      marginRight: -drawerWidth,
+      ...(open && {
+        transition: theme.transitions.create("margin", {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        marginRight: 0,
+      }),
+      /**
+       * This is necessary to enable the selection of content. In the DOM, the stacking order is determined
+       * by the order of appearance. Following this rule, elements appearing later in the markup will overlay
+       * those that appear earlier. Since the Drawer comes after the Main content, this adjustment ensures
+       * proper interaction with the underlying content.
+       */
+      position: "relative",
+    })
+  );
+
+  const DrawerHeader = styled("div")(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+    justifyContent: "flex-start",
+  }));
 
   const handleInfoClick = (course) => {
     // event handler for the info button
@@ -248,7 +284,8 @@ const Courses = () => {
 
   return (
     <div style={{ padding: "25px" }}>
-      <Button className="addButton"
+      <Button
+        className="addButton"
         variant="contained"
         size="medium"
         style={{ marginBottom: "20px", float: "right" }}
@@ -363,7 +400,7 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Corequisite</div>
-              {/* <TextField
+              <TextField
                 required
                 autoFocus
                 margin="dense"
@@ -374,7 +411,7 @@ const Courses = () => {
                 value={formData.coreq}
                 onChange={handleChange}
                 fullWidth
-              /> */}
+              />
               <Select
                 labelId="demo-multiple-coreq-label"
                 id="demo-multiple-coreq"
@@ -482,92 +519,125 @@ const Courses = () => {
           </form>
         </DialogContent>
       </Dialog>
-
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 700 }} aria-label="customized table">
-          <TableHead>
-            <TableRow>
-              <StyledTableCell align="center">Course Name</StyledTableCell>
-              <StyledTableCell align="center">Full Name</StyledTableCell>
-              <StyledTableCell align="center">Major</StyledTableCell>
-              <StyledTableCell align="center">Term</StyledTableCell>
-              <StyledTableCell align="center">Credits</StyledTableCell>
-              <StyledTableCell align="center">Elective Field</StyledTableCell>
-              <StyledTableCell align="center">Action</StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {classes.map((row) => (
-              <StyledTableRow key={row.abbreviation}>
-                <StyledTableCell align="center" component="th" scope="row">
-                  {row.abbreviation}
-                </StyledTableCell>
-                <StyledTableCell align="center">{row.title}</StyledTableCell>
-                <StyledTableCell align="center">{row.major}</StyledTableCell>
-                <StyledTableCell align="center">{row.term}</StyledTableCell>
-                <StyledTableCell align="center">{row.credits}</StyledTableCell>
-                <StyledTableCell align="center">
-                  {"Area " +
-                    row.elective_field +
-                    ": " +
-                    row.elective_field_name}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  <Button
-                    style={{background: '#7a1c27'}}
-                    onClick={() => handleEditClick(row)}
-                  >
-                    {" "}
-                    <div className="text"> Edit</div>
-                  </Button>
-                  <Button
-                    style={{background: '#7a1c27', right: "-20px"}}
-                    onClick={() => handleInfoClick(row)}
-                  >
-                    <div className="text">Info</div>
-                  </Button>
-                </StyledTableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerClose}>
-        <div style={{ width: 300, padding: 16 }}>
-          {selectedCourseInfo && (
-            <div>
-              <h2>Course Information</h2>
-              <p>
-                <b>Major:</b> {selectedCourseInfo.major}
-              </p>
-              <p>
-                <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
-              </p>
-              <p>
-                <b>Title:</b> {selectedCourseInfo.title}
-              </p>
-              <p>
-                <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
-              </p>
-              <p>
-                <b>Term:</b> {selectedCourseInfo.term}
-              </p>
-              <p>
-                <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
-              </p>
-              <p>
-                <b>Description:</b> {selectedCourseInfo.description}
-              </p>
-              <p>
-                <b>Credits:</b> {selectedCourseInfo.credits}
-              </p>
-              <p>
-                <b>Elective Field:</b> {selectedCourseInfo.elective_field_name}
-              </p>
-            </div>
-          )}
-        </div>
-      </Drawer>
+      <Box sx={{ display: "flex" }}>
+        <Main drawerOpen={drawerOpen}>
+          <DrawerHeader>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 700 }} aria-label="customized table">
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell align="center">
+                      Course Name
+                    </StyledTableCell>
+                    <StyledTableCell align="center">Full Name</StyledTableCell>
+                    <StyledTableCell align="center">Major</StyledTableCell>
+                    <StyledTableCell align="center">Term</StyledTableCell>
+                    <StyledTableCell align="center">Credits</StyledTableCell>
+                    <StyledTableCell align="center">
+                      Elective Field
+                    </StyledTableCell>
+                    <StyledTableCell align="center">Action</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {classes.map((row) => (
+                    <StyledTableRow key={row.abbreviation}>
+                      <StyledTableCell
+                        align="center"
+                        component="th"
+                        scope="row"
+                      >
+                        {row.abbreviation}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.title}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.major}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.term}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.credits}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {"Area " +
+                          row.elective_field +
+                          ": " +
+                          row.elective_field_name}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Button
+                          style={{ background: "#7a1c27" }}
+                          onClick={() => handleEditClick(row)}
+                        >
+                          {" "}
+                          <div className="text"> Edit</div>
+                        </Button>
+                        <Button
+                          style={{ background: "#7a1c27", right: "-10px" }}
+                          onClick={() => handleInfoClick(row)}
+                        >
+                          <div className="text">Info</div>
+                        </Button>
+                      </StyledTableCell>
+                    </StyledTableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DrawerHeader>
+        </Main>
+        <Drawer
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+            },
+          }}
+          variant="persistent"
+          anchor="right"
+          drawerOpen={drawerOpen}
+        >
+          <div>
+            {selectedCourseInfo && (
+              <div>
+                <h2>Course Information</h2>
+                <p>
+                  <b>Major:</b> {selectedCourseInfo.major}
+                </p>
+                <p>
+                  <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
+                </p>
+                <p>
+                  <b>Title:</b> {selectedCourseInfo.title}
+                </p>
+                <p>
+                  <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
+                </p>
+                <p>
+                  <b>Term:</b> {selectedCourseInfo.term}
+                </p>
+                <p>
+                  <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
+                </p>
+                <p>
+                  <b>Description:</b> {selectedCourseInfo.description}
+                </p>
+                <p>
+                  <b>Credits:</b> {selectedCourseInfo.credits}
+                </p>
+                <p>
+                  <b>Elective Field:</b>{" "}
+                  {selectedCourseInfo.elective_field_name}
+                </p>
+              </div>
+            )}
+          </div>
+        </Drawer>
+      </Box>
     </div>
   );
 };
