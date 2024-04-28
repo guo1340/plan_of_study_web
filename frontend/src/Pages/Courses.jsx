@@ -177,7 +177,7 @@ const Courses = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const method = currentEditCourse ? "patch" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
+    const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditCourse
       ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
       : "http://localhost:8000/api/classes/";
