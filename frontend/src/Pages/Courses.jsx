@@ -23,6 +23,7 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
+import { AiOutlineEdit, AiOutlineInfoCircle } from "react-icons/ai";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -564,13 +565,13 @@ const Courses = () => {
                         onClick={() => handleEditClick(row)}
                       >
                         {" "}
-                        <div className="text"> Edit</div>
+                        <div className="text"><AiOutlineEdit /></div>
                       </Button>
                       <Button
                         style={{ background: "#7a1c27", top: "6px" }}
                         onClick={() => handleInfoClick(row)}
                       >
-                        <div className="text">Info</div>
+                        <div className="text" ><AiOutlineInfoCircle /></div>
                       </Button>
                     </StyledTableCell>
                   </StyledTableRow>
