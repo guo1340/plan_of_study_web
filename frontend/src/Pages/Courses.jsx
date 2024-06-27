@@ -22,6 +22,12 @@ import Select from "@mui/material/Select";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import {
+  AiOutlineEdit,
+  AiOutlineInfoCircle,
+  AiTwotonePlusCircle,
+} from "react-icons/ai";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -45,6 +51,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const Courses = () => {
   const [classes, setClasses] = useState([]);
+  const [drawerOpen, setDrawerOpen] = useState(false); // state variable to control the visibility of the drawer
+  const [selectedCourseInfo, setSelectedCourseInfo] = useState(null); // state variable to hold the course that will be displayed in info
+  const [currentEditCourse, setCurrentEditCourse] = useState(null); // state variable to hold the course being edited
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     major: "",
@@ -73,6 +82,72 @@ const Courses = () => {
     { num: 9, name: "Intelligent Systems" },
     { num: 10, name: "Computational Biology and Bioinformatics" },
   ];
+  const handleEditClick = (course) => {
+    // Set the form data to the values from the course to be edited
+    setFormData({
+      major: course.major,
+      abbreviation: course.abbreviation,
+      title: course.title,
+      prereqs: course.prereqs,
+      term: course.term,
+      coreqs: course.coreqs,
+      description: course.description,
+      credits: course.credits,
+      elective_field: course.elective_field,
+      elective_field_name: course.elective_field_name,
+      editable_credits: course.editable_credits,
+    });
+    setCurrentEditCourse(course); // Save the current course being edited
+    setOpenDialog(true); // Open the dialog form
+  };
+
+  const drawerWidth = 400;
+
+  const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
+    ({ theme, open }) => ({
+      flexGrow: 1,
+      padding: theme.spacing(3),
+      transition: theme.transitions.create("margin", {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+      }),
+      marginRight: -drawerWidth,
+      ...(open && {
+        transition: theme.transitions.create("margin", {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        marginRight: 0,
+      }),
+      /**
+       * This is necessary to enable the selection of content. In the DOM, the stacking order is determined
+       * by the order of appearance. Following this rule, elements appearing later in the markup will overlay
+       * those that appear earlier. Since the Drawer comes after the Main content, this adjustment ensures
+       * proper interaction with the underlying content.
+       */
+      position: "relative",
+    })
+  );
+
+  const DrawerHeader = styled("div")(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+    justifyContent: "flex-start",
+  }));
+
+  const handleInfoClick = (course) => {
+    // event handler for the info button
+    setSelectedCourseInfo(course);
+    setDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    // event handler for the drawer
+    setDrawerOpen(false);
+  };
 
   const handleClose = () => {
     setFormData({
@@ -89,6 +164,8 @@ const Courses = () => {
       editable_credits: false,
     });
     setOpenDialog(false);
+    // Reset form data and close the dialog
+    setCurrentEditCourse(null);
   };
 
   const handleClickOpen = () => {
@@ -105,9 +182,12 @@ const Courses = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
+    const url = currentEditCourse
+      ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
+      : "http://localhost:8000/api/classes/";
     console.log(formData);
-    axios
-      .post("http://localhost:8000/api/classes/", formData)
+    axios[method](url, formData)
       .then(() => {
         axios
           .get("http://localhost:8000/api/classes/")
@@ -138,6 +218,7 @@ const Courses = () => {
       editable_credits: false,
     });
     setOpenDialog(false);
+    handleClose();
   };
 
   useEffect(() => {
@@ -208,12 +289,12 @@ const Courses = () => {
   return (
     <div style={{ padding: "25px" }}>
       <Button
-        variant="contained"
-        size="medium"
-        style={{ marginBottom: "20px", float: "right" }}
+        className="addButton"
+        // variant="contained"
+        // size="medium"
         onClick={handleClickOpen}
       >
-        Add
+        <AiTwotonePlusCircle />
       </Button>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
         <DialogTitle>
@@ -322,7 +403,7 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Corequisite</div>
-              {/* <TextField
+              <TextField
                 required
                 autoFocus
                 margin="dense"
@@ -333,7 +414,7 @@ const Courses = () => {
                 value={formData.coreq}
                 onChange={handleChange}
                 fullWidth
-              /> */}
+              />
               <Select
                 labelId="demo-multiple-coreq-label"
                 id="demo-multiple-coreq"
@@ -404,7 +485,7 @@ const Courses = () => {
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
-              {/* <TextField
+              <TextField
                 id="elective_field_num"
                 required
                 fullWidth
@@ -430,7 +511,7 @@ const Courses = () => {
                     {"Area " + field.num + ": " + field.name}
                   </MenuItem>
                 ))}
-              </TextField> */}
+              </TextField>
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -441,40 +522,129 @@ const Courses = () => {
           </form>
         </DialogContent>
       </Dialog>
-
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 700 }} aria-label="customized table">
-          <TableHead>
-            <TableRow>
-              <StyledTableCell align="center">Course Name</StyledTableCell>
-              <StyledTableCell align="center">Full Name</StyledTableCell>
-              <StyledTableCell align="center">Major</StyledTableCell>
-              <StyledTableCell align="center">Term</StyledTableCell>
-              <StyledTableCell align="center">Credits</StyledTableCell>
-              <StyledTableCell align="center">Elective Field</StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {classes.map((row) => (
-              <StyledTableRow key={row.abbreviation}>
-                <StyledTableCell align="center" component="th" scope="row">
-                  {row.abbreviation}
-                </StyledTableCell>
-                <StyledTableCell align="center">{row.title}</StyledTableCell>
-                <StyledTableCell align="center">{row.major}</StyledTableCell>
-                <StyledTableCell align="center">{row.term}</StyledTableCell>
-                <StyledTableCell align="center">{row.credits}</StyledTableCell>
-                <StyledTableCell align="center">
-                  {"Area " +
-                    row.elective_field +
-                    ": " +
-                    row.elective_field_name}
-                </StyledTableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box sx={{ display: "flex" }}>
+        <Main open={drawerOpen}>
+          <DrawerHeader />
+          <TableContainer component={Paper}>
+            <Table sx={{ maxWidth: 1500 }} aria-label="customized table">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell align="center">Course Name</StyledTableCell>
+                  <StyledTableCell align="center">Full Name</StyledTableCell>
+                  <StyledTableCell align="center">Major</StyledTableCell>
+                  <StyledTableCell align="center">Term</StyledTableCell>
+                  <StyledTableCell align="center">Credits</StyledTableCell>
+                  <StyledTableCell align="center">
+                    Elective Field
+                  </StyledTableCell>
+                  <StyledTableCell align="center">Action</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {classes.map((row) => (
+                  <StyledTableRow key={row.abbreviation}>
+                    <StyledTableCell align="center" component="th" scope="row">
+                      {row.abbreviation}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.title}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.major}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">{row.term}</StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.credits}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {"Area " +
+                        row.elective_field +
+                        ": " +
+                        row.elective_field_name}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      <Button
+                        // style={{ background: "#7a1c27" }}
+                        onClick={() => handleEditClick(row)}
+                      >
+                        {/* <div className="text"> */}
+                        <AiOutlineEdit />
+                        {/* </div> */}
+                      </Button>
+                      <Button
+                        // style={{ background: "#7a1c27" }}
+                        onClick={() => handleInfoClick(row)}
+                      >
+                        {/* <div className="text"> */}
+                        <AiOutlineInfoCircle />
+                        {/* </div> */}
+                      </Button>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Main>
+        <Drawer
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              top: 185,
+              padding: "20px",
+            },
+          }}
+          variant="persistent"
+          anchor="right"
+          open={drawerOpen}
+        >
+          <DrawerHeader>
+            <Button
+              style={{ right: "10px", bottom: "20px" }}
+              onClick={handleDrawerClose}
+            >
+              <div style={{ color: "black" }}>X</div>
+            </Button>
+          </DrawerHeader>
+          <div style={{ marginTop: "-50px" }}>
+            {selectedCourseInfo && (
+              <div>
+                <h2>Course Information</h2>
+                <p>
+                  <b>Major:</b> {selectedCourseInfo.major}
+                </p>
+                <p>
+                  <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
+                </p>
+                <p>
+                  <b>Title:</b> {selectedCourseInfo.title}
+                </p>
+                <p>
+                  <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
+                </p>
+                <p>
+                  <b>Term:</b> {selectedCourseInfo.term}
+                </p>
+                <p>
+                  <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
+                </p>
+                <p>
+                  <b>Description:</b> {selectedCourseInfo.description}
+                </p>
+                <p>
+                  <b>Credits:</b> {selectedCourseInfo.credits}
+                </p>
+                <p>
+                  <b>Elective Field:</b>{" "}
+                  {selectedCourseInfo.elective_field_name}
+                </p>
+              </div>
+            )}
+          </div>
+        </Drawer>
+      </Box>
     </div>
   );
 };
