@@ -312,7 +312,10 @@
 }
 
 .addButton {
-  background: linear-gradient(#7a1c27, #FFD580);
+  background: white;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }
 
 .text {

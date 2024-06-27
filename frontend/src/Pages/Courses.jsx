@@ -23,6 +23,11 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
+import {
+  AiOutlineEdit,
+  AiOutlineInfoCircle,
+  AiTwotonePlusCircle,
+} from "react-icons/ai";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -285,12 +290,11 @@ const Courses = () => {
     <div style={{ padding: "25px" }}>
       <Button
         className="addButton"
-        variant="contained"
-        size="medium"
-        style={{ marginBottom: "20px", float: "right" }}
+        // variant="contained"
+        // size="medium"
         onClick={handleClickOpen}
       >
-        Add
+        <AiTwotonePlusCircle />
       </Button>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
         <DialogTitle>
@@ -522,7 +526,7 @@ const Courses = () => {
         <Main open={drawerOpen}>
           <DrawerHeader />
           <TableContainer component={Paper}>
-            <Table sx={{ maxWidth: 1500}} aria-label="customized table">
+            <Table sx={{ maxWidth: 1500 }} aria-label="customized table">
               <TableHead>
                 <TableRow>
                   <StyledTableCell align="center">Course Name</StyledTableCell>
@@ -560,17 +564,20 @@ const Courses = () => {
                     </StyledTableCell>
                     <StyledTableCell align="center">
                       <Button
-                        style={{ background: "#7a1c27", bottom: "8px"}}
+                        // style={{ background: "#7a1c27" }}
                         onClick={() => handleEditClick(row)}
                       >
-                        {" "}
-                        <div className="text"> Edit</div>
+                        {/* <div className="text"> */}
+                        <AiOutlineEdit />
+                        {/* </div> */}
                       </Button>
                       <Button
-                        style={{ background: "#7a1c27", top: "6px" }}
+                        // style={{ background: "#7a1c27" }}
                         onClick={() => handleInfoClick(row)}
                       >
-                        <div className="text">Info</div>
+                        {/* <div className="text"> */}
+                        <AiOutlineInfoCircle />
+                        {/* </div> */}
                       </Button>
                     </StyledTableCell>
                   </StyledTableRow>
@@ -584,20 +591,24 @@ const Courses = () => {
             width: drawerWidth,
             flexShrink: 0,
             "& .MuiDrawer-paper": {
-              width: drawerWidth, top: 185, padding: "20px"
+              width: drawerWidth,
+              top: 185,
+              padding: "20px",
             },
           }}
           variant="persistent"
           anchor="right"
           open={drawerOpen}
-          
         >
           <DrawerHeader>
-            <Button style={{ right: "10px", bottom: "20px"}} onClick={handleDrawerClose}>
-              <div style={{color: "black"}}>X</div>
+            <Button
+              style={{ right: "10px", bottom: "20px" }}
+              onClick={handleDrawerClose}
+            >
+              <div style={{ color: "black" }}>X</div>
             </Button>
           </DrawerHeader>
-          <div style={{marginTop: "-50px"}} >
+          <div style={{ marginTop: "-50px" }}>
             {selectedCourseInfo && (
               <div>
                 <h2>Course Information</h2>
