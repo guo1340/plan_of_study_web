@@ -1,23 +1,15 @@
-# from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from .models import Course
-from .serializers import ClassSerializer
+from .models import ElectiveField
+from .serializers import ElectiveFieldSerializer
 from rest_framework.response import Response
 
 
-# Create your views here.
-# def classes_list(request):
-#     class_list = Class.objects.all()
-#     # classes = Class.object {"classes": classes}
-#     return render(request, 'classes/list.html', {"class_list": class_list})
-#
-
-class ClassViewSet(ModelViewSet):
-    queryset = Course.objects.all()
-    serializer_class = ClassSerializer
+class ElectiveFieldViewSet(ModelViewSet):
+    queryset = ElectiveField.objects.all()
+    serializer_class = ElectiveFieldSerializer
 
     def list(self, request):
-        queryset = Course.objects.all()
+        queryset = ElectiveField.objects.all()
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
@@ -30,13 +22,13 @@ class ClassViewSet(ModelViewSet):
             return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
-        class_obj = Course.objects.all().get(pk=pk)
-        serializer = self.serializer_class(class_obj)
+        elective_field_obj = ElectiveField.objects.all().get(pk=pk)
+        serializer = self.serializer_class(elective_field_obj)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
-        class_obj = Course.objects.all().get(pk=pk)
-        serializer = self.serializer_class(class_obj, data=request.data)
+        elective_field_obj = ElectiveField.objects.all().get(pk=pk)
+        serializer = self.serializer_class(elective_field_obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -44,6 +36,6 @@ class ClassViewSet(ModelViewSet):
             return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
-        class_obj = Course.objects.all().get(pk=pk)
-        class_obj.delete()
+        elective_field_obj = ElectiveField.objects.all().get(pk=pk)
+        elective_field_obj.delete()
         return Response(status=204)
