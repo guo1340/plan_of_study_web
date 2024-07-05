@@ -3,6 +3,7 @@ from classes.urls import class_router
 from semester.urls import semester_router
 from template.urls import template_router
 from elective_field.urls import elective_field_router
+from plan.urls import plan_router
 from django.urls import path, include
 
 class_routers = DefaultRouter()
@@ -13,10 +14,13 @@ template_routers = DefaultRouter()
 template_routers.registry.extend(template_router.registry)
 elective_field_routers = DefaultRouter()
 elective_field_routers.registry.extend(elective_field_router.registry)
+plan_routers = DefaultRouter()
+plan_routers.registry.extend(plan_router.registry)
 
 urlpatterns = [
     path('classes/', include(class_routers.urls)),
     path('semester/', include(semester_routers.urls)),
     path('template/', include(template_routers.urls)),
-    path('elective-field/', include(elective_field_routers.urls))
+    path('elective-field/', include(elective_field_routers.urls)),
+    path('plan/', include(plan_routers.urls))
 ]

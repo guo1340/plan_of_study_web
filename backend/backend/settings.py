@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'semester.apps.SemesterConfig',
     'template.apps.TemplateConfig',
     'elective_field.apps.ElectiveFieldConfig',
+    'plan.apps.PlanConfig',
+    'users.apps.UsersConfig',
 
     'rest_framework',
     'corsheaders'
