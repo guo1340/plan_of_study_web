@@ -39,7 +39,7 @@ const Sidebar = ({ children }) => {
     },
 
     {
-      path: "/faq",
+      path: "/tests",
       name: "FAQ",
       icon: <BsQuestionCircle />,
     },
@@ -67,10 +67,9 @@ const Sidebar = ({ children }) => {
           </NavLink>
         ))}
         <div className="toggle_container">
-          <div
-            className="extention_toggle"
-            onClick={toggle} 
-          > <div> {isOpen ? <IoMdClose /> : <AiOutlineMenu />} </div>
+          <div className="extention_toggle" onClick={toggle}>
+            {" "}
+            <div> {isOpen ? <IoMdClose /> : <AiOutlineMenu />} </div>
           </div>
         </div>
       </div>

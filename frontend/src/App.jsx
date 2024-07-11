@@ -9,6 +9,13 @@ import { useState } from "react";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import Courses from "./Pages/Courses";
+import Tests from "./Pages/Tests";
+import ElectiveFieldTest from "./Pages/Tests/ElectiveField";
+import CourseTest from "./Pages/Tests/Courses";
+import SemesterTest from "./Pages/Tests/Semesters";
+import TemplateTest from "./Pages/Tests/Templates";
+import PlansTest from "./Pages/Tests/Plans";
+import UsersTest from "./Pages/Tests/Users";
 
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -29,6 +36,16 @@ const App = () => {
             <Route path="/" element={<Home signedIn={signedIn} />} />
             <Route path="/home" element={<Home signedIn={signedIn} />} />
             <Route path="/courses" element={<Courses signedIn={signedIn} />} />
+            <Route path="/tests" element={<Tests signedIn={signedIn} />} />
+            <Route
+              path="/tests/elective-fields"
+              element={<ElectiveFieldTest />}
+            />
+            <Route path="/tests/courses" element={<CourseTest />} />
+            <Route path="/tests/semesters" element={<SemesterTest />} />
+            <Route path="/tests/templates" element={<TemplateTest />} />
+            <Route path="/tests/plans" element={<PlansTest />} />
+            <Route path="/tests/users" element={<UsersTest />} />
           </Routes>
         </Sidebar>
       </BrowserRouter>

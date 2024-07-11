@@ -27,6 +27,7 @@ import {
   AiOutlineEdit,
   AiOutlineInfoCircle,
   AiTwotonePlusCircle,
+  AiOutlineDelete,
 } from "react-icons/ai";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -142,6 +143,28 @@ const Courses = () => {
     // event handler for the info button
     setSelectedCourseInfo(course);
     setDrawerOpen(true);
+  };
+
+  const handleDelete = (course) => {
+    // event handler for the delete button
+    axios
+      .delete(`http://localhost:8000/api/classes/${course.id}`)
+      .then(() => {
+        axios
+          .get("http://localhost:8000/api/classes/")
+          .then((res) => {
+            console.log("hello I am Here");
+            console.log(res.data);
+            console.log("yup right here");
+            setClasses(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log("Error deleting course: ", err);
+      });
   };
 
   const handleDrawerClose = () => {
@@ -403,7 +426,7 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Corequisite</div>
-              <TextField
+              {/* <TextField
                 required
                 autoFocus
                 margin="dense"
@@ -414,7 +437,7 @@ const Courses = () => {
                 value={formData.coreq}
                 onChange={handleChange}
                 fullWidth
-              />
+              /> */}
               <Select
                 labelId="demo-multiple-coreq-label"
                 id="demo-multiple-coreq"
@@ -578,6 +601,9 @@ const Courses = () => {
                         {/* <div className="text"> */}
                         <AiOutlineInfoCircle />
                         {/* </div> */}
+                      </Button>
+                      <Button onClick={() => handleDelete(row)}>
+                        <AiOutlineDelete />
                       </Button>
                     </StyledTableCell>
                   </StyledTableRow>
