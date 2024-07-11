@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'classes.apps.ClassesConfig',
+    'semester.apps.SemesterConfig',
+    'template.apps.TemplateConfig',
+    'elective_field.apps.ElectiveFieldConfig',
+    'plan.apps.PlanConfig',
+    'users.apps.UsersConfig',
 
     'rest_framework',
     'corsheaders'
