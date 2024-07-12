@@ -43,7 +43,7 @@ class ClassViewSet(ModelViewSet):
         return Response(status=204)
 
     # localhost:8000/api/classes/by-elective-field/<elective-field-id>
-    @action(detail=False, methods=['get'], url_path='by-elective-field/(?P<elective_field_id>\d+)')
+    @action(detail=False, methods=['get'], url_path=r'by-elective-field/(?P<elective_field_id>\d+)')
     def list_by_elective_field(self, request, elective_field_id=None):
         queryset = Course.objects.filter(elective_field_id=elective_field_id)
         serializer = self.serializer_class(queryset, many=True)
@@ -57,7 +57,7 @@ class ClassViewSet(ModelViewSet):
         return Response(serializer.data)
 
     # localhost: 8000/api/classes/by-credits/<credit_count>
-    @action(detail=False, methods=['get'], url_path='by-credits/(?P<credit_count>\d+)')
+    @action(detail=False, methods=['get'], url_path=r'by-credits/(?P<credit_count>\d+)')
     def list_by_editable_credits(self, request, credit_count=None):
         queryset = Course.objects.filter(credits=credit_count)
         serializer = self.serializer_class(queryset, many=True)
@@ -85,26 +85,30 @@ class ClassViewSet(ModelViewSet):
         else:
             return Response({"error": "No major name provided"}, status=400)
 
-    # localhost:8000/api/classes/by-term/?term=<term>
-    @action(detail=False, methods=['get'], url_path='by-term')
+    # localhost:8000/api/classes/by-seasons/?season=<season>,<season>
+    @action(detail=False, methods=['get'], url_path='by-seasons')
     def list_by_term(self, request):
-        term = request.query_params.get('term', None)
-        if term:
-            queryset = Course.objects.filter(term=term)
+        seasons_param = request.query_params.get('season', None)
+        if seasons_param:
+            seasons = seasons_param.split(',')
+            queryset = Course.objects.filter(seasons__name=seasons[0]).distinct()
+            # print(queryset)
+            for i in range(1, len(seasons)):
+                queryset = queryset.filter(seasons__name=seasons[i]).distinct()
             serializer = self.serializer_class(queryset, many=True)
             return Response(serializer.data)
         else:
-            return Response({"error": "No term provided"}, status=400)
+            return Response({"error": "No seasons provided"}, status=400)
 
     # localhost:8000/api/classes/by-prereq/<id>/
-    @action(detail=False, methods=['get'], url_path='by-prereq/(?P<prereq_id>\d+)')
+    @action(detail=False, methods=['get'], url_path=r'by-prereq/(?P<prereq_id>\d+)')
     def list_by_prereq(self, request, prereq_id=None):
         queryset = Course.objects.filter(prereqs=prereq_id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
     # localhost:8000/api/classes/by-coreq/<id>/
-    @action(detail=False, methods=['get'], url_path='by-coreq/(?P<coreq_id>\d+)')
+    @action(detail=False, methods=['get'], url_path=r'by-coreq/(?P<coreq_id>\d+)')
     def list_by_coreq(self, request, coreq_id=None):
         queryset = Course.objects.filter(coreqs=coreq_id)
         serializer = self.serializer_class(queryset, many=True)
@@ -112,7 +116,7 @@ class ClassViewSet(ModelViewSet):
 
     # localhost:8000/api/classes/by-class-number/?search=<search-text>
     @action(detail=False, methods=['get'], url_path='by-class-number')
-    def list_by_description(self, request):
+    def list_by_class_number(self, request):
         search_text = request.query_params.get('search', None)
         if search_text:
             queryset = Course.objects.filter(class_number__icontains=search_text)

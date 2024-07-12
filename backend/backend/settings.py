@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'elective_field.apps.ElectiveFieldConfig',
     'plan.apps.PlanConfig',
     'users.apps.UsersConfig',
+    'season.apps.SeasonConfig',
 
     'rest_framework',
     'corsheaders'

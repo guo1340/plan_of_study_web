@@ -1,5 +1,6 @@
 from django.db import models
 from elective_field.models import ElectiveField
+from season.models import Season
 
 
 class Course(models.Model):
@@ -8,7 +9,7 @@ class Course(models.Model):
     class_number = models.CharField(max_length=10, default="XXXX")
     title = models.CharField(max_length=150, default="")
     prereqs = models.ManyToManyField('self', symmetrical=False, related_name='prerequisite_for', blank=True)
-    term = models.CharField(max_length=50)
+    seasons = models.ManyToManyField(Season)
     coreqs = models.ManyToManyField('self', symmetrical=False, related_name='corequisite_for', blank=True)
     description = models.TextField()
     credits = models.IntegerField(default=0)
