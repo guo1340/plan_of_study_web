@@ -14,6 +14,9 @@ class PlanViewSet(ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        name = request.data.get("name")
+        if Plan.objects.all().filter(name=name).exists():
+            return Response("A plan with the same name has already been created", status=400)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -27,6 +30,9 @@ class PlanViewSet(ModelViewSet):
         return Response(serializer.data)
 
     def update(self, request, pk=None):
+        name = request.data.get("name")
+        if Plan.objects.all().filter(name=name).exclude(pk=pk).exists():
+            return Response("A plan with the same name has already been created", status=400)
         plan_obj = Plan.objects.all().get(pk=pk)
         serializer = self.serializer_class(plan_obj, data=request.data)
         if serializer.is_valid():

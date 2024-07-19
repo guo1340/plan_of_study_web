@@ -5,6 +5,7 @@ from template.urls import template_router
 from elective_field.urls import elective_field_router
 from plan.urls import plan_router
 from season.urls import season_router
+from users.urls import user_router
 from django.urls import path, include
 
 class_routers = DefaultRouter()
@@ -19,6 +20,8 @@ plan_routers = DefaultRouter()
 plan_routers.registry.extend(plan_router.registry)
 season_routers = DefaultRouter()
 season_routers.registry.extend(season_router.registry)
+user_routers = DefaultRouter()
+user_routers.registry.extend(user_router.registry)
 
 urlpatterns = [
     path('classes/', include(class_routers.urls)),
@@ -26,5 +29,6 @@ urlpatterns = [
     path('template/', include(template_routers.urls)),
     path('elective-field/', include(elective_field_routers.urls)),
     path('plan/', include(plan_routers.urls)),
-    path('season/', include(season_routers.urls))
+    path('season/', include(season_routers.urls)),
+    path('user/', include(user_routers.urls))
 ]

@@ -33,7 +33,7 @@ class TemplateViewSet(ModelViewSet):
     def update(self, request, pk=None):
         template_obj = Template.objects.all().get(pk=pk)
         major = request.data.get('major')
-        if Template.objects.filter(major=major).exists():
+        if Template.objects.filter(major=major).exclude(pk=pk).exists():
             return Response({"error": "A template with this major already exists."}, status=400)
         serializer = self.serializer_class(template_obj, data=request.data)
         if serializer.is_valid():

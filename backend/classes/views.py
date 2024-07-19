@@ -1,4 +1,5 @@
 # from django.shortcuts import render
+from django.db.models import Q
 from rest_framework.viewsets import ModelViewSet
 from .models import Course
 from .serializers import ClassSerializer
@@ -16,6 +17,14 @@ class ClassViewSet(ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        major = request.data.get("major")
+        abbreviation = request.data.get("abbreviation")
+        class_number = request.data.get('class_number')
+        title = request.data.get("title")
+        if Course.objects.filter(Q(class_number=class_number) & Q(major=major)
+                                 & Q(abbreviation=abbreviation) & Q(title=title)).exists():
+            return Response({"error": "A class with the same major, class number, and title already exists."},
+                            status=400)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -29,6 +38,14 @@ class ClassViewSet(ModelViewSet):
         return Response(serializer.data)
 
     def update(self, request, pk=None):
+        major = request.data.get("major")
+        abbreviation = request.data.get("abbreviation")
+        class_number = request.data.get('class_number')
+        title = request.data.get("title")
+        if Course.objects.filter(Q(class_number=class_number) & Q(major=major)
+                                 & Q(abbreviation=abbreviation) & Q(title=title)).exclude(pk=pk).exists():
+            return Response({"error": "A class with the same major, class number, and title already exists."},
+                            status=400)
         class_obj = Course.objects.all().get(pk=pk)
         serializer = self.serializer_class(class_obj, data=request.data)
         if serializer.is_valid():
