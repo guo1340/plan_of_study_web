@@ -328,7 +328,7 @@ const Courses = () => {
             Please fill out the details of this new course.
           </DialogContentText>
           <form onSubmit={handleSubmit}>
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+            <div className="form-input-title">
               <div>Major</div>
               <TextField
                 required
