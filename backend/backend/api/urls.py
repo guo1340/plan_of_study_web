@@ -7,6 +7,10 @@ from plan.urls import plan_router
 from season.urls import season_router
 from users.urls import user_router
 from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 class_routers = DefaultRouter()
 class_routers.registry.extend(class_router.registry)
@@ -30,5 +34,7 @@ urlpatterns = [
     path('elective-field/', include(elective_field_routers.urls)),
     path('plan/', include(plan_routers.urls)),
     path('season/', include(season_routers.urls)),
-    path('user/', include(user_routers.urls))
+    path('user/', include(user_routers.urls)),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
