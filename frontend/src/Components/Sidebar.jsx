@@ -73,7 +73,7 @@ const Sidebar = ({ children, setOpenLogin, setSignUp }) => {
           </div>
         </div> */}
         <Tooltip title={isOpen ? "" : "Log In"} placement="right">
-          <NavLink className="link" onClick={() => setOpenLogin(true)}>
+          <NavLink key={0} className="link" onClick={() => setOpenLogin(true)}>
             <div className="icon">
               <AiOutlineLogin />
             </div>
@@ -86,7 +86,7 @@ const Sidebar = ({ children, setOpenLogin, setSignUp }) => {
           </NavLink>
         </Tooltip>
         <Tooltip title={isOpen ? "" : "Register"} placement="right">
-          <NavLink className="link" onClick={() => setSignUp(true)}>
+          <NavLink key={1} className="link" onClick={() => setSignUp(true)}>
             <div className="icon">
               <AiOutlineSolution />
             </div>

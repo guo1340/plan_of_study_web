@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import "react-notifications/lib/notifications.css";
 import axios from "axios";
 import Button from "@mui/material/Button";
-import {
-  NotificationContainer,
-  NotificationManager,
-} from "react-notifications";
+import { NotificationManager } from "react-notifications";
 import {
   Dialog,
   DialogContent,
@@ -47,16 +44,25 @@ const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
       NotificationManager.warning("Passwords do not match", "Warning", 5000);
     } else {
       axios
-        .post("http://localhost:8000/api/user/", {
-          user: {
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-          },
+        .post("http://localhost:8000/api/register/", {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        })
+        .then((response) => {
+          if (response.status === 201) {
+            console.log(response);
+            NotificationManager.success(
+              "Signed Up Successfully",
+              "Success",
+              5000
+            );
+          }
         })
         .catch((err) => {
           console.log(err);
         });
+
       handleClose();
     }
   };
@@ -139,7 +145,6 @@ const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
           </DialogActions>
         </form>
       </DialogContent>
-      <NotificationContainer />
     </Dialog>
   );
 };
