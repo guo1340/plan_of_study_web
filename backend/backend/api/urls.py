@@ -11,6 +11,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from users.views import (UserRegistrationView, LogoutView, LoginView)
+from rest_framework.authtoken.views import obtain_auth_token
 
 class_routers = DefaultRouter()
 class_routers.registry.extend(class_router.registry)
@@ -37,4 +39,7 @@ urlpatterns = [
     path('user/', include(user_routers.urls)),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('register/', UserRegistrationView.as_view(), name='user_register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
