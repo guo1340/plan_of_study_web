@@ -1,89 +1,146 @@
 import React, { useState } from "react";
 import "react-notifications/lib/notifications.css";
-import { BsFillPersonFill, BsEnvelopeFill, BsLockFill } from "react-icons/bs";
-import { Button } from "react-bootstrap-buttons";
-import { NotificationManager } from "react-notifications";
+import axios from "axios";
+import Button from "@mui/material/Button";
+import {
+  NotificationContainer,
+  NotificationManager,
+} from "react-notifications";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogContentText,
+  DialogActions,
+  TextField,
+} from "@mui/material";
 
-const SignUp = ({ signIn, closeSignUp }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirm_pass: "",
+  });
+
+  const handleClose = () => {
+    setFormData({
+      username: "",
+      email: "",
+      password: "",
+      confirm_pass: "",
+    });
+    closeSignUp(false);
+  };
+
+  const handleChange = (e) => {
+    const { id, value, type, checked } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [id]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirm_pass) {
+      NotificationManager.warning("Passwords do not match", "Warning", 5000);
+    } else {
+      axios
+        .post("http://localhost:8000/api/user/", {
+          user: {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      handleClose();
+    }
+  };
 
   return (
-    <div className="login_background">
-      <div className="login_container">
-        <div className="login_close">
-          <Button onClick={() => closeSignUp(false)}>X</Button>
-        </div>
-        <div className="login_header">
-          <div className="login_text"> Sign Up </div>
-        </div>
-        <div className="login_inputs">
-          <div className="login_spacing">
-            <div className="login_input">
-              <img src={<BsEnvelopeFill />} alt="" />
-              <input
-                type="email"
-                placeholder="Email"
-                onChange={(e) => setPassword(e.target.value)}
-                email="email"
-                id="email"
-                name="email"
-              />
-            </div>
-            <div className="login_input">
-              <img src={<BsFillPersonFill />} alt="" />
-              <input
-                type="text"
-                placeholder="Username"
-                onChange={(e) => setUsername(e.target.value)}
-                username="username"
-                id="username"
-                name="username"
-              />
-            </div>
-            <div className="login_input">
-              <img src={<BsLockFill />} alt="" />
-              <input
-                type="password"
-                placeholder="Password"
-                onChange={(e) => setPassword(e.target.value)}
-                password="password"
-                id="password"
-                name="password"
-              />
-            </div>
-            <div className="login_input">
-              <img src={<BsLockFill />} alt="" />
-              <input
-                type="confirm_password"
-                placeholder="Confirm password"
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                password="confirm_password"
-                id="confirm_password"
-                name="confirm_password"
-              />
-            </div>
+    <Dialog fullWidth open={openSignUp} onClose={handleClose}>
+      <DialogTitle>
+        <div style={{ fontSize: "35px" }}>Register</div>
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText style={{ paddingBottom: "10px" }}>
+          Please fill out the information below to register for a new account
+        </DialogContentText>
+        <form onSubmit={handleSubmit}>
+          <div className="form-input-title">
+            <div>Username</div>
+            <TextField
+              required
+              autoFocus
+              margin="dense"
+              id="username"
+              label="Username"
+              type="text"
+              className="input_textfield"
+              value={formData.username}
+              onChange={handleChange}
+              fullWidth
+            />
           </div>
-          <div className="submit_container">
-            <Button
-              className="login_submit"
-              onClick={(e) => {
-                closeSignUp(false);
-                NotificationManager.success(
-                  "You Have Successfully Created An Account!",
-                  "Success"
-                );
-              }}
-            >
-              {" "}
-              Sign Up
+          <div className="form-input-title">
+            <div>Email</div>
+            <TextField
+              required
+              autoFocus
+              margin="dense"
+              id="email"
+              label="Email"
+              type="text"
+              className="input_textfield"
+              value={formData.email}
+              onChange={handleChange}
+              fullWidth
+            />
+          </div>
+          <div className="form-input-title">
+            <div>Password</div>
+            <TextField
+              required
+              autoFocus
+              margin="dense"
+              id="password"
+              label="Password"
+              type="password"
+              className="input_textfield"
+              value={formData.password}
+              onChange={handleChange}
+              fullWidth
+            />
+          </div>
+          <div className="form-input-title">
+            <div>Confirm Password</div>
+            <TextField
+              required
+              autoFocus
+              margin="dense"
+              id="confirm_pass"
+              label="Confirm Password"
+              type="password"
+              className="input_textfield"
+              value={formData.confirm_pass}
+              onChange={handleChange}
+              fullWidth
+            />
+          </div>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button type="submit" color="primary">
+              Save
             </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+          </DialogActions>
+        </form>
+      </DialogContent>
+      <NotificationContainer />
+    </Dialog>
   );
 };
 

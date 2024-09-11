@@ -40,17 +40,70 @@
 /*
 *css for sidebar
 */
-.sidebar_container {
+.main_container {
   display: flex;
   height: 100vh;
 }
 
-.sidebarStyle {
-  height: 100vh;
-  width: 250px;
+.sidebar_container {
+  min-height: 100vh;
+  transition: 0.5s;
   background-color: #7a1c27;
   position: relative;
-  transition: 0.5s;
+}
+
+.profile_head {
+  padding: 10px;
+  display: flex;
+}
+
+.profile_head:hover {
+  cursor: pointer;
+  background-color: #5e0606;
+}
+
+#profile_img {
+  height: 80px;
+  width: 80px;
+  border-radius: 100%;
+  /* margin: 10px; */
+  /* margin-right: 20px; */
+  flex: 30%;
+}
+
+.profile_info {
+  padding-left: 10px;
+  align-content: center;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  flex: 70%;
+  /* height: 100%; */
+}
+
+.profile_username {
+  padding: 5px;
+}
+
+.profile_email {
+  padding: 5px;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: gray;
+  /* margin: 10px 0; */
+}
+
+.sidebarStyle {
+  /* width: 250px; */
+  
+  position: relative;
+}
+
+.link:hover {
+  cursor: pointer;
+  background-color: #5e0606;
 }
 
 .link {
@@ -104,7 +157,7 @@
   bottom: 0;
 }
 
-.main_container {
+.body_container {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -274,6 +327,11 @@
   background: #7a1c27;
   border-radius: 50px;
   font-size: 18px;
+}
+
+.form-input-title {
+  padding-top: 5px;
+  padding-bottom: 10px;
 }
 
 

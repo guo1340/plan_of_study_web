@@ -1,7 +1,6 @@
 import "./App.css";
 import Sidebar from "./Components/Sidebar";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Topbar from "./Components/Topbar";
 import Login from "./Components/Login";
 import Home from "./Pages/Home";
 import SignUp from "./Components/SignUp";
@@ -25,13 +24,7 @@ const App = () => {
   return (
     <div>
       <BrowserRouter>
-        <Sidebar>
-          <Topbar
-            signedIn={signedIn}
-            openLoginPage={setOpenLogin}
-            signIn={signIn}
-            openSignUpPage={setSignUp}
-          />
+        <Sidebar setOpenLogin={setOpenLogin} setSignUp={setSignUp}>
           <Routes>
             <Route path="/" element={<Home signedIn={signedIn} />} />
             <Route path="/home" element={<Home signedIn={signedIn} />} />
@@ -51,7 +44,7 @@ const App = () => {
       </BrowserRouter>
       {/* <NotificationContainer /> */}
       {openLogin && <Login signIn={signIn} closeLogin={setOpenLogin} />}
-      {openSignUp && <SignUp signIn={signIn} closeSignUp={setSignUp} />}
+      <SignUp openSignUp={openSignUp} signIn={signIn} closeSignUp={setSignUp} />
     </div>
   );
 };

@@ -1,5 +1,9 @@
 import { IoMdClose } from "react-icons/io";
-import { AiOutlineMenu } from "react-icons/ai";
+import {
+  AiOutlineMenu,
+  AiOutlineLogin,
+  AiOutlineSolution,
+} from "react-icons/ai";
 import {
   BsHouseDoor,
   BsMap,
@@ -9,8 +13,11 @@ import {
 } from "react-icons/bs";
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import Tooltip from "@mui/material/Tooltip";
+import default_profile_pic from "../Assets/profile_pic.jpg";
+import { Button } from "@mui/material";
 
-const Sidebar = ({ children }) => {
+const Sidebar = ({ children, setOpenLogin, setSignUp }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => setIsOpen(!isOpen);
   const barItem = [
@@ -44,27 +51,72 @@ const Sidebar = ({ children }) => {
       icon: <BsQuestionCircle />,
     },
   ];
+
   return (
-    <div className="sidebar_container">
+    <div className="main_container">
       <div
+        className="sidebar_container"
         style={{ width: isOpen ? "300px" : "100px" }}
-        className="sidebarStyle"
       >
-        {barItem.map((item, index) => (
-          <NavLink
-            to={item.path}
-            key={index}
-            className="link"
-            activeclassname="active"
+        {/* <div className="profile_head">
+          <img
+            id="profile_img"
+            src={default_profile_pic}
+            alt="Default profile"
+          />
+          <div
+            className="profile_info"
+            style={{ display: isOpen ? "block" : "none" }}
           >
-            <div className="icon">{item.icon}</div>
+            <div className="profile_username">Username</div>
+            <div className="profile_email">Email@email.com</div>
+          </div>
+        </div> */}
+        <Tooltip title={isOpen ? "" : "Log In"} placement="right">
+          <NavLink className="link" onClick={() => setOpenLogin(true)}>
+            <div className="icon">
+              <AiOutlineLogin />
+            </div>
             <div
               style={{ display: isOpen ? "block" : "none" }}
               className="link_text"
             >
-              {item.name}
+              Log In
             </div>
           </NavLink>
+        </Tooltip>
+        <Tooltip title={isOpen ? "" : "Register"} placement="right">
+          <NavLink className="link" onClick={() => setSignUp(true)}>
+            <div className="icon">
+              <AiOutlineSolution />
+            </div>
+            <div
+              style={{ display: isOpen ? "block" : "none" }}
+              className="link_text"
+            >
+              Register
+            </div>
+          </NavLink>
+        </Tooltip>
+        <div className="divider"></div>
+        {/* <div className="sidebarStyle"> */}
+        {barItem.map((item, index) => (
+          <Tooltip title={isOpen ? "" : item.name} placement="right">
+            <NavLink
+              to={item.path}
+              key={index}
+              className="link"
+              activeclassname="active"
+            >
+              <div className="icon">{item.icon}</div>
+              <div
+                style={{ display: isOpen ? "block" : "none" }}
+                className="link_text"
+              >
+                {item.name}
+              </div>
+            </NavLink>
+          </Tooltip>
         ))}
         <div className="toggle_container">
           <div className="extention_toggle" onClick={toggle}>
@@ -72,8 +124,9 @@ const Sidebar = ({ children }) => {
             <div> {isOpen ? <IoMdClose /> : <AiOutlineMenu />} </div>
           </div>
         </div>
+        {/* </div> */}
       </div>
-      <main className="main_container">{children}</main>
+      <main className="body_container">{children}</main>
     </div>
   );
 };
