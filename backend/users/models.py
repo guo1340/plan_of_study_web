@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from plan.models import Plan
 
 class Details(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="details")
     role = models.CharField(default="regular", max_length=50)
     plans = models.ManyToManyField(Plan, blank=True)
 

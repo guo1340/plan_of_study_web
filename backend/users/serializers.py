@@ -28,7 +28,8 @@ class DetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Details
-        fields = ('user', 'role', 'plans')
+        fields = '__all__'
+        read_only_fields = ['user']
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')

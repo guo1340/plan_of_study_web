@@ -10,34 +10,47 @@ from .serializers import UserSerializer
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = Details.objects.all()
     serializer_class = DetailsSerializer
-    permission_classes = [IsAuthenticated]  # Ensure that only authenticated users can access these views
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Check if the user is authenticated and filter the queryset based on the user's role
+        # Filter based on user role
         if self.request.user.is_authenticated:
             user_role = self.request.user.details.role  # Access the role from the related Details model
             if user_role == 'admin':
                 return Details.objects.all()  # Admin can see all details
             else:
-                return Details.objects.filter(user=self.request.user)  # Regular users can only see their own details
+                return Details.objects.filter(user=self.request.user)  # Regular users see their own details
         return Details.objects.none()
 
+    def perform_create(self, serializer):
+        # Automatically associate the authenticated user
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        # Ensure that the user cannot change the user field
+        serializer.save(user=self.request.user)
+
     def create(self, request, *args, **kwargs):
+        # Handle creation with the authenticated user
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)  # Associate the new details with the authenticated user
+            self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
+        # Handle update with permission checks
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -49,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         if serializer.is_valid():
-            serializer.save()
+            self.perform_update(serializer)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -62,7 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if instance.user != request.user and request.user.details.role != 'admin':
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        instance.user.delete()  # Deleting the associated User object
+        instance.user.delete()  # Delete the associated User object
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -86,7 +99,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -102,7 +114,7 @@ class UserRegistrationView(generics.CreateAPIView):
 
 
 class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         username = request.data.get("username")
@@ -117,8 +129,14 @@ class LoginView(APIView):
             return Response({"detail": "Invalid credentials."},
                             status=status.HTTP_401_UNAUTHORIZED)
 
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({"token": token.key}, status=status.HTTP_200_OK)
+        # token, created = Token.objects.get_or_create(user=user)
+        # return Response({"token": token.key}, status=status.HTTP_200_OK)
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+        return Response({
+            'refresh': str(refresh),
+            'access': str(access_token),
+        }, status=status.HTTP_200_OK)
 
 
 class LogoutView(APIView):
