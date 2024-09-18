@@ -5,6 +5,7 @@ import Login from "./Components/Login";
 import Home from "./Pages/Home";
 import SignUp from "./Components/SignUp";
 import { useState } from "react";
+import { NotificationContainer } from "react-notifications";
 // import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import Courses from "./Pages/Courses";
@@ -42,8 +43,14 @@ const App = () => {
           </Routes>
         </Sidebar>
       </BrowserRouter>
-      {/* <NotificationContainer /> */}
-      {openLogin && <Login signIn={signIn} closeLogin={setOpenLogin} />}
+      <NotificationContainer />
+      {openLogin && (
+        <Login
+          openLogin={openLogin}
+          signIn={signIn}
+          closeLogin={setOpenLogin}
+        />
+      )}
       <SignUp openSignUp={openSignUp} signIn={signIn} closeSignUp={setSignUp} />
     </div>
   );
