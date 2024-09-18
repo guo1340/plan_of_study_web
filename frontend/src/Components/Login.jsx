@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { BsFillPersonFill, BsEnvelopeFill, BsLockFill } from "react-icons/bs";
 import Button from "@mui/material/Button";
 import { NotificationManager } from "react-notifications";
 import axios from "axios";
@@ -7,10 +6,11 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogContentText,
   DialogActions,
   TextField,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
 const Login = ({ openLogin, signIn, closeLogin }) => {
   const [formData, setFormData] = useState({
     username: "",
@@ -33,41 +33,30 @@ const Login = ({ openLogin, signIn, closeLogin }) => {
     }));
   };
 
-  const handleSubmit = async () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       const response = await axios.post("http://localhost:8000/api/login/", {
         username: formData.username,
         password: formData.password,
       });
-      if (response.status === 200 && response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
+      if (response.status === 200 && response.data.access) {
+        localStorage.setItem("authToken", response.data.access);
+
+        NotificationManager.success("Login Successfull", "Success", 5000);
         signIn(true);
         closeLogin(false);
-        NotificationManager.success("Login Successfull", "Success", 5000);
+        navigate("/dashboard");
       }
-      // const response = await fetch("http://localhost:8000/api/token/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ email, password }),
-      // });
-
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   localStorage.setItem("token", data.access);
-      //   signIn(true);
-      //   closeLogin(false);
-      //   NotificationManager.success(
-      //     "You Are Successfully Logged In!",
-      //     "Success"
-      //   );
-      // } else {
-      //   NotificationManager.error("Invalid credentials", "Error");
-      // }
     } catch (error) {
       console.log(error);
-      NotificationManager.error("Login Failed", "Error", 5000);
+      NotificationManager.warning(
+        "The combination of entered username and password does not exist",
+        "Warning",
+        5000
+      );
     }
   };
 

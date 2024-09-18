@@ -1,6 +1,6 @@
 import React from "react";
 
-const Home = () => {
+const Home = ({ token }) => {
   return (
     <div className="home_container">
       <header>
