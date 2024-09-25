@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({ openLogin, signIn, closeLogin }) => {
+const Login = ({ openLogin, closeLogin, login }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -42,23 +42,39 @@ const Login = ({ openLogin, signIn, closeLogin }) => {
         username: formData.username,
         password: formData.password,
       });
-      if (response.status === 200 && response.data.access) {
-        localStorage.setItem("authToken", response.data.access);
+      if (response.status === 200) {
+        localStorage.setItem("accessToken", response.data.access);
+        localStorage.setItem("refreshToken", response.data.refresh);
 
-        NotificationManager.success("Login Successfull", "Success", 5000);
-        signIn(true);
+        // Optionally, store the access token expiration time (assuming it's a JWT token)
+        const decodedToken = parseJwt(response.data.access);
+        localStorage.setItem("accessTokenExpiration", decodedToken.exp * 1000);
+
+        NotificationManager.success("Login Successful", "Success", 5000);
         closeLogin(false);
+        login(true);
         navigate("/dashboard");
+      } else {
+        NotificationManager.warning(
+          "The combination of entered username and password does not exist",
+          "Warning",
+          5000
+        );
       }
     } catch (error) {
-      console.log(error);
-      NotificationManager.warning(
-        "The combination of entered username and password does not exist",
-        "Warning",
-        5000
-      );
+      console.error("Error during login:", error);
+      NotificationManager.error("Login Failed", "Error", 5000);
     }
   };
+
+  // Helper function to decode JWT token (JWT structure is "header.payload.signature")
+  function parseJwt(token) {
+    try {
+      return JSON.parse(atob(token.split(".")[1]));
+    } catch (e) {
+      return null;
+    }
+  }
 
   return (
     <Dialog fullWidth open={openLogin} onClose={handleClose}>

@@ -379,3 +379,10 @@
 .text {
   color: #fff;
 }
+
+/* css for dahsboard */
+
+.dashboard_title {
+  font-size: 50px;
+  margin: 10px;
+}

@@ -5,8 +5,10 @@ import Login from "./Components/Login";
 import Home from "./Pages/Home";
 import SignUp from "./Components/SignUp";
 import { useState, useEffect } from "react";
-import { NotificationContainer } from "react-notifications";
-// import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  NotificationContainer,
+  NotificationManager,
+} from "react-notifications";
 import React from "react";
 import Courses from "./Pages/Courses";
 import Tests from "./Pages/Tests";
@@ -17,32 +19,94 @@ import TemplateTest from "./Pages/Tests/Templates";
 import PlansTest from "./Pages/Tests/Plans";
 import UsersTest from "./Pages/Tests/Users";
 import Dashboard from "./Pages/Dashboard";
-import { NotificationManager } from "react-notifications";
+import axios from "axios";
 
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
   const [openSignUp, setSignUp] = useState(false);
-  const [token, setToken] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(
+    !!localStorage.getItem("accessToken")
+  );
+  const [userDetails, setUserDetails] = useState(null); // Store user details here
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessTokenExpiration");
+    setLoggedIn(false);
+    setUserDetails(null); // Clear user details on logout
+    NotificationManager.success("Logged out successfully", "Success", 5000);
+  };
 
   useEffect(() => {
-    // Retrieve the token from localStorage when the app mounts
-    const storedToken = localStorage.getItem("authToken");
-    if (storedToken) {
-      setToken(storedToken); // Save the token to state
-    }
+    const checkTokenAndRefresh = async () => {
+      const accessTokenExpiration = localStorage.getItem(
+        "accessTokenExpiration"
+      );
+      if (accessTokenExpiration && Date.now() > accessTokenExpiration) {
+        await refreshAccessToken(); // Refresh the token if it's expired
+      } else if (localStorage.getItem("accessToken")) {
+        fetchUser(); // Fetch user details if token is still valid
+      }
+    };
+    checkTokenAndRefresh();
   }, []);
 
-  const handleSignIn = (isSignedIn) => {
-    if (isSignedIn) {
-      const storedToken = localStorage.getItem("authToken");
-      setToken(storedToken); // Update token in state after login
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return;
+
+      const response = await axios.post(
+        "http://localhost:8000/api/token/refresh/",
+        { refresh: refreshToken }
+      );
+
+      if (response.status === 200) {
+        const { access } = response.data;
+        localStorage.setItem("accessToken", access);
+
+        const decodedToken = parseJwt(access);
+        localStorage.setItem("accessTokenExpiration", decodedToken.exp * 1000);
+
+        setLoggedIn(true);
+        fetchUser(); // Fetch user details after the token is refreshed
+      } else {
+        handleLogout();
+      }
+    } catch (error) {
+      console.error("Error during token refresh:", error);
+      handleLogout(); // Logout if refresh token fails
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken"); // Clear the token from localStorage
-    setToken(null); // Clear the token from state
-    NotificationManager.success("Log out Successfull", "Success", 5000);
+  const fetchUser = async () => {
+    setLoadingUser(true); // Start loading user details
+    try {
+      const response = await axios.get("http://localhost:8000/api/user/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      if (response.status === 200) {
+        setUserDetails(response.data[0]); // Set user details in state
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      handleLogout(); // Handle error by logging out or showing a notification
+    } finally {
+      setLoadingUser(false); // Stop loading user details
+    }
+  };
+
+  // Helper function to decode JWT token
+  const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split(".")[1]));
+    } catch (e) {
+      return null;
+    }
   };
 
   return (
@@ -52,13 +116,35 @@ const App = () => {
           setOpenLogin={setOpenLogin}
           setSignUp={setSignUp}
           handleLogout={handleLogout}
+          loggedIn={loggedIn}
         >
           <Routes>
-            <Route path="/" element={<Home token={token} />} />
-            <Route path="/home" element={<Home token={token} />} />
-            <Route path="/courses" element={<Courses token={token} />} />
-            <Route path="/tests" element={<Tests token={token} />} />
-            <Route path="/dashboard" element={<Dashboard token={token} />} />
+            <Route
+              path="/"
+              element={<Home token={localStorage.getItem("accessToken")} />}
+            />
+            <Route
+              path="/home"
+              element={<Home token={localStorage.getItem("accessToken")} />}
+            />
+            <Route
+              path="/courses"
+              element={<Courses token={localStorage.getItem("accessToken")} />}
+            />
+            <Route
+              path="/tests"
+              element={<Tests token={localStorage.getItem("accessToken")} />}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <Dashboard
+                  token={localStorage.getItem("accessToken")}
+                  userDetails={userDetails} // Pass user details to Dashboard
+                  loadingUser={loadingUser} // Pass loading state to Dashboard
+                />
+              }
+            />
             <Route
               path="/tests/elective-fields"
               element={<ElectiveFieldTest />}
@@ -73,15 +159,11 @@ const App = () => {
         {openLogin && (
           <Login
             openLogin={openLogin}
-            signIn={handleSignIn}
             closeLogin={setOpenLogin}
+            login={setLoggedIn}
           />
         )}
-        <SignUp
-          openSignUp={openSignUp}
-          signIn={handleSignIn}
-          closeSignUp={setSignUp}
-        />
+        <SignUp openSignUp={openSignUp} closeSignUp={setSignUp} />
       </BrowserRouter>
       <NotificationContainer />
     </div>
