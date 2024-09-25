@@ -5,11 +5,24 @@ from .models import Course
 from .serializers import ClassSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class ClassViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = ClassSerializer
+
+    # Override get_permissions to set different permissions for different actions
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'list_by_elective_field', 'list_by_editable_credits', 'list_by_credits',
+                           'list_by_description', 'list_by_major', 'list_by_term', 'list_by_prereq', 'list_by_coreq',
+                           'list_by_class_number']:
+            # Allow unauthenticated access to GET requests
+            permission_classes = [AllowAny]
+        else:
+            # Require authentication for non-GET requests (POST, PUT, DELETE, etc.)
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def list(self, request):
         queryset = Course.objects.all()
