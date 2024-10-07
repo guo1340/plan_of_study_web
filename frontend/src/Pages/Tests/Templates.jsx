@@ -21,7 +21,6 @@ import {
   AiOutlineInfoCircle,
   AiOutlineDelete,
 } from "react-icons/ai";
-
 import React, { useState, useEffect } from "react";
 
 const drawerWidth = 400;
@@ -74,6 +73,7 @@ const TemplateTest = () => {
   });
   const [currentEditTemplate, setCurrentEditTemplate] = useState(null); // state variable to hold the field being edited
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [elective_fields, setElectiveFields] = useState([]);
 
   const DrawerHeader = styled("div")(({ theme }) => ({
     display: "flex",
@@ -86,7 +86,11 @@ const TemplateTest = () => {
 
   const getListTemplates = () => {
     axios
-      .get("http://localhost:8000/api/template/")
+      .get("http://localhost:8000/api/template/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
       .then((res) => {
         setTemplates(res.data);
       })
@@ -100,6 +104,7 @@ const TemplateTest = () => {
   const toggleDrawer = () => {
     setOpenDrawer(!openDrawer);
     setCurrentEditTemplate(null);
+    setElectiveFields([]);
   };
   const handleCloseDialog = () => {
     setFormData({ type_name: "", major: "", field_name: "", field_number: "" });
@@ -115,7 +120,11 @@ const TemplateTest = () => {
     handleCloseDialog();
     // axios[method](url, formData).then(getListTemplates());
     try {
-      await axios[method](url, formData);
+      await axios[method](url, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
       handleCloseDialog();
       getListTemplates();
     } catch (error) {
@@ -134,7 +143,11 @@ const TemplateTest = () => {
   const handleDelete = async (template) => {
     // event handler for the delete button
     try {
-      await axios.delete(`http://localhost:8000/api/template/${template.id}`);
+      await axios.delete(`http://localhost:8000/api/template/${template.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
       handleCloseDialog();
       getListTemplates();
     } catch (error) {
@@ -142,12 +155,32 @@ const TemplateTest = () => {
     }
   };
 
-  const handleInfo = (template) => {
+  const handleInfo = async (template) => {
     // event handler for the info button
     if (!openDrawer || currentEditTemplate.id === template.id) {
       toggleDrawer();
+
+      setCurrentEditTemplate(template);
+      try {
+        const ids = template.elective_fields; // array of elective field ids
+        const promises = ids.map((id) =>
+          fetch(`http://localhost:8000/api/elective-field/${id}/`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }).then((res) => res.json())
+        );
+        let electiveFields = await Promise.all(promises); // get all elective field objects
+
+        electiveFields = electiveFields.sort(
+          (a, b) => a.field_number - b.field_number
+        );
+        // Store the fetched elective fields in state for display
+        setElectiveFields(electiveFields);
+      } catch (error) {
+        console.error("Error fetching elective fields:", error);
+      }
     }
-    setCurrentEditTemplate(template);
   };
 
   const handleEditClick = (template) => {
@@ -329,17 +362,35 @@ const TemplateTest = () => {
             {currentEditTemplate && (
               <div>
                 <h2>Template Info</h2>
-                <p>
-                  <b>Type Name:</b> {currentEditTemplate.type_name}
-                </p>
+
                 <p>
                   <b>Major:</b> {currentEditTemplate.major}
                 </p>
                 <p>
-                  <b>Template Name:</b> {currentEditTemplate.field_name}
+                  <b>Minimum Credits:</b> {currentEditTemplate.min_credits}
                 </p>
                 <p>
-                  <b>Template Number:</b> {currentEditTemplate.field_number}
+                  <b>Minimum Number of Elective Fields to Take:</b>{" "}
+                  {currentEditTemplate.min_elective_fields}
+                </p>
+                <p>
+                  <b>Minimum Number of Each Elective Fields to Take:</b>{" "}
+                  {currentEditTemplate.min_each_Elective}
+                </p>
+                <p>
+                  <b>Elective Fields:</b>{" "}
+                  {elective_fields.map((elective_field) => {
+                    return (
+                      <li>
+                        {elective_field.type_name +
+                          " " +
+                          elective_field.field_number +
+                          ": " +
+                          elective_field.field_name +
+                          "\n"}
+                      </li>
+                    );
+                  })}
                 </p>
               </div>
             )}

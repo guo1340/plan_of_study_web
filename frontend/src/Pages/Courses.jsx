@@ -23,6 +23,7 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
+import ListItemText from "@mui/material/ListItemText";
 import {
   AiOutlineEdit,
   AiOutlineInfoCircle,
@@ -70,19 +71,8 @@ const Courses = () => {
     editable_credits: false,
   });
 
-  const elective_fields = [
-    { num: 0, name: "Ethics and Research Methods" },
-    { num: 1, name: "Algorithms and Theory" },
-    { num: 2, name: "Computer Systems" },
-    { num: 3, name: "Programming Languages" },
-    { num: 4, name: "Numerical and Scientific Computing" },
-    { num: 5, name: "Computer Architecture and Networking" },
-    { num: 6, name: "Data and Information" },
-    { num: 7, name: "Software Engineering" },
-    { num: 8, name: "Human-Computer Interaction" },
-    { num: 9, name: "Intelligent Systems" },
-    { num: 10, name: "Computational Biology and Bioinformatics" },
-  ];
+  const [majors, setMajors] = useState([]);
+  const [elective_fields, setElectiveFields] = useState([]);
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
     setFormData({
@@ -139,6 +129,32 @@ const Courses = () => {
     justifyContent: "flex-start",
   }));
 
+  const getlistMajors = () => {
+    axios
+      .get("http://localhost:8000/api/template/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
+      .then((res) => {
+        setMajors(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching major template data:", error);
+      });
+  };
+
+  const getListCourses = () => {
+    axios
+      .get("http://localhost:8000/api/classes/")
+      .then((res) => {
+        setClasses(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   const handleInfoClick = (course) => {
     // event handler for the info button
     setSelectedCourseInfo(course);
@@ -148,19 +164,13 @@ const Courses = () => {
   const handleDelete = (course) => {
     // event handler for the delete button
     axios
-      .delete(`http://localhost:8000/api/classes/${course.id}`)
+      .delete(`http://localhost:8000/api/classes/${course.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
       .then(() => {
-        axios
-          .get("http://localhost:8000/api/classes/")
-          .then((res) => {
-            console.log("hello I am Here");
-            console.log(res.data);
-            console.log("yup right here");
-            setClasses(res.data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        getListCourses();
       })
       .catch((err) => {
         console.log("Error deleting course: ", err);
@@ -210,7 +220,11 @@ const Courses = () => {
       ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
       : "http://localhost:8000/api/classes/";
     console.log(formData);
-    axios[method](url, formData)
+    axios[method](url, formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    })
       .then(() => {
         axios
           .get("http://localhost:8000/api/classes/")
@@ -245,14 +259,8 @@ const Courses = () => {
   };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/classes/")
-      .then((res) => {
-        setClasses(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    getlistMajors();
+    getListCourses();
   }, []);
 
   const class_options = classes.map((cls) => ({
@@ -309,6 +317,55 @@ const Courses = () => {
     }));
   };
 
+  const handleChangeMajor = async (e) => {
+    const { name, value } = e.target; // Get the selected major value
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value, // Update the form data with the selected major
+    }));
+
+    // Fetch elective fields for the selected major
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/elective-field/`,
+        {
+          params: { major: value }, // Pass the selected major as a query parameter
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      const electiveFields = response.data.sort(
+        (a, b) => a.field_number - b.field_number
+      );
+
+      // Set the elective fields for the selected major in the state
+      setElectiveFields(electiveFields);
+    } catch (error) {
+      console.error("Error fetching elective fields:", error);
+    }
+  };
+
+  const handleChangeElectiveField = (event) => {
+    const { value } = event.target;
+
+    // Assuming the value is a string like "Area 1: Computer Science"
+    const selectedElectiveField = elective_fields.find(
+      (field) =>
+        field.type_name + " " + field.field_number + ": " + field.field_name ===
+        value
+    );
+
+    if (selectedElectiveField) {
+      // Update the formData with the selected elective field's information
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        elective_field: selectedElectiveField.field_number, // Assuming field_number is the ID or key of the elective field
+        elective_field_name: selectedElectiveField.field_name, // Store the elective field name if needed
+      }));
+    }
+  };
+
   return (
     <div style={{ padding: "25px" }}>
       <Button
@@ -330,7 +387,7 @@ const Courses = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-input-title">
               <div>Major</div>
-              <TextField
+              {/* <TextField
                 required
                 autoFocus
                 margin="dense"
@@ -341,7 +398,21 @@ const Courses = () => {
                 value={formData.major}
                 onChange={handleChange}
                 fullWidth
-              />
+              /> */}
+              <Select
+                labelId="demo-single-select-label"
+                name="major" // Make sure this matches the field name in formData
+                fullWidth
+                value={formData.major} // This is now a string
+                onChange={handleChangeMajor}
+                input={<OutlinedInput label="Major" />} // Updated label
+              >
+                {majors.map((template) => (
+                  <MenuItem key={template.major} value={template.major}>
+                    <ListItemText primary={template.major} />
+                  </MenuItem>
+                ))}
+              </Select>
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Class Abbreviation</div>
@@ -508,7 +579,32 @@ const Courses = () => {
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
-              <TextField
+              <Select
+                labelId="elective_field_select"
+                name="elective_field" // Make sure this matches the field name in formData
+                fullWidth
+                value={formData.elective_field} // This is now a string
+                onChange={handleChangeElectiveField}
+                input={<OutlinedInput label="ElectiveField" />} // Updated label
+              >
+                {elective_fields.map((elective_field) => (
+                  <MenuItem
+                    key={elective_field.field_number}
+                    value={elective_field.field_number}
+                  >
+                    <ListItemText
+                      primary={
+                        elective_field.type_name +
+                        " " +
+                        elective_field.field_number +
+                        ": " +
+                        elective_field.field_name
+                      }
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+              {/* <TextField
                 id="elective_field_num"
                 required
                 fullWidth
@@ -531,10 +627,14 @@ const Courses = () => {
               >
                 {elective_fields.map((field) => (
                   <MenuItem key={field.num} value={field.num}>
-                    {"Area " + field.num + ": " + field.name}
+                    {field.type_name +
+                      " " +
+                      field.field_number +
+                      ": " +
+                      field.field_name}
                   </MenuItem>
                 ))}
-              </TextField>
+              </TextField> */}
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -545,132 +645,125 @@ const Courses = () => {
           </form>
         </DialogContent>
       </Dialog>
-      <Box sx={{ display: "flex" }}>
-        <Main open={drawerOpen}>
-          <DrawerHeader />
-          <TableContainer component={Paper}>
-            <Table sx={{ maxWidth: 1500 }} aria-label="customized table">
-              <TableHead>
-                <TableRow>
-                  <StyledTableCell align="center">Course Name</StyledTableCell>
-                  <StyledTableCell align="center">Full Name</StyledTableCell>
-                  <StyledTableCell align="center">Major</StyledTableCell>
-                  <StyledTableCell align="center">Term</StyledTableCell>
-                  <StyledTableCell align="center">Credits</StyledTableCell>
-                  <StyledTableCell align="center">
-                    Elective Field
+      {/* <Box sx={{ display: "flex" }}> */}
+      <Main open={drawerOpen}>
+        <DrawerHeader />
+        <TableContainer component={Paper}>
+          <Table aria-label="customized table">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell align="center">Course Name</StyledTableCell>
+                <StyledTableCell align="center">Full Name</StyledTableCell>
+                <StyledTableCell align="center">Major</StyledTableCell>
+                <StyledTableCell align="center">Term</StyledTableCell>
+                <StyledTableCell align="center">Credits</StyledTableCell>
+                <StyledTableCell align="center">Elective Field</StyledTableCell>
+                <StyledTableCell align="center">Action</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {classes.map((row) => (
+                <StyledTableRow key={row.abbreviation}>
+                  <StyledTableCell align="center" component="th" scope="row">
+                    {row.abbreviation}
                   </StyledTableCell>
-                  <StyledTableCell align="center">Action</StyledTableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {classes.map((row) => (
-                  <StyledTableRow key={row.abbreviation}>
-                    <StyledTableCell align="center" component="th" scope="row">
-                      {row.abbreviation}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.title}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.major}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">{row.term}</StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.credits}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {"Area " +
-                        row.elective_field +
-                        ": " +
-                        row.elective_field_name}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      <Button
-                        // style={{ background: "#7a1c27" }}
-                        onClick={() => handleEditClick(row)}
-                      >
-                        {/* <div className="text"> */}
-                        <AiOutlineEdit />
-                        {/* </div> */}
-                      </Button>
-                      <Button
-                        // style={{ background: "#7a1c27" }}
-                        onClick={() => handleInfoClick(row)}
-                      >
-                        {/* <div className="text"> */}
-                        <AiOutlineInfoCircle />
-                        {/* </div> */}
-                      </Button>
-                      <Button onClick={() => handleDelete(row)}>
-                        <AiOutlineDelete />
-                      </Button>
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Main>
-        <Drawer
-          sx={{
+                  <StyledTableCell align="center">{row.title}</StyledTableCell>
+                  <StyledTableCell align="center">{row.major}</StyledTableCell>
+                  <StyledTableCell align="center">{row.term}</StyledTableCell>
+                  <StyledTableCell align="center">
+                    {row.credits}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    {"Area " +
+                      row.elective_field +
+                      ": " +
+                      row.elective_field_name}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    <Button
+                      // style={{ background: "#7a1c27" }}
+                      onClick={() => handleEditClick(row)}
+                    >
+                      {/* <div className="text"> */}
+                      <AiOutlineEdit />
+                      {/* </div> */}
+                    </Button>
+                    <Button
+                      // style={{ background: "#7a1c27" }}
+                      onClick={() => handleInfoClick(row)}
+                    >
+                      {/* <div className="text"> */}
+                      <AiOutlineInfoCircle />
+                      {/* </div> */}
+                    </Button>
+                    <Button onClick={() => handleDelete(row)}>
+                      <AiOutlineDelete />
+                    </Button>
+                  </StyledTableCell>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Main>
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
             width: drawerWidth,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              top: 185,
-              padding: "20px",
-            },
-          }}
-          variant="persistent"
-          anchor="right"
-          open={drawerOpen}
-        >
-          <DrawerHeader>
-            <Button
-              style={{ right: "10px", bottom: "20px" }}
-              onClick={handleDrawerClose}
-            >
-              <div style={{ color: "black" }}>X</div>
-            </Button>
-          </DrawerHeader>
-          <div style={{ marginTop: "-50px" }}>
-            {selectedCourseInfo && (
-              <div>
-                <h2>Course Information</h2>
-                <p>
-                  <b>Major:</b> {selectedCourseInfo.major}
-                </p>
-                <p>
-                  <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
-                </p>
-                <p>
-                  <b>Title:</b> {selectedCourseInfo.title}
-                </p>
-                <p>
-                  <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
-                </p>
-                <p>
-                  <b>Term:</b> {selectedCourseInfo.term}
-                </p>
-                <p>
-                  <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
-                </p>
-                <p>
-                  <b>Description:</b> {selectedCourseInfo.description}
-                </p>
-                <p>
-                  <b>Credits:</b> {selectedCourseInfo.credits}
-                </p>
-                <p>
-                  <b>Elective Field:</b>{" "}
-                  {selectedCourseInfo.elective_field_name}
-                </p>
-              </div>
-            )}
-          </div>
-        </Drawer>
-      </Box>
+            top: 185,
+            padding: "20px",
+          },
+        }}
+        variant="persistent"
+        anchor="right"
+        open={drawerOpen}
+      >
+        <DrawerHeader>
+          <Button
+            style={{ right: "10px", bottom: "20px" }}
+            onClick={handleDrawerClose}
+          >
+            <div style={{ color: "black" }}>X</div>
+          </Button>
+        </DrawerHeader>
+        <div style={{ marginTop: "-50px" }}>
+          {selectedCourseInfo && (
+            <div>
+              <h2>Course Information</h2>
+              <p>
+                <b>Major:</b> {selectedCourseInfo.major}
+              </p>
+              <p>
+                <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
+              </p>
+              <p>
+                <b>Title:</b> {selectedCourseInfo.title}
+              </p>
+              <p>
+                <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
+              </p>
+              <p>
+                <b>Term:</b> {selectedCourseInfo.term}
+              </p>
+              <p>
+                <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
+              </p>
+              <p>
+                <b>Description:</b> {selectedCourseInfo.description}
+              </p>
+              <p>
+                <b>Credits:</b> {selectedCourseInfo.credits}
+              </p>
+              <p>
+                <b>Elective Field:</b> {selectedCourseInfo.elective_field_name}
+              </p>
+            </div>
+          )}
+        </div>
+      </Drawer>
+      {/* </Box> */}
     </div>
   );
 };

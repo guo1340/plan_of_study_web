@@ -21,8 +21,11 @@ import {
   AiOutlineInfoCircle,
   AiOutlineDelete,
 } from "react-icons/ai";
-
+import ListItemText from "@mui/material/ListItemText";
+import Select from "@mui/material/Select";
 import React, { useState, useEffect } from "react";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import MenuItem from "@mui/material/MenuItem";
 
 const drawerWidth = 400;
 
@@ -64,6 +67,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 
 const ElectiveFieldTest = () => {
   const [elective_fields, setFields] = useState([]);
+  const [majors, setMajors] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     type_name: "",
@@ -83,9 +87,28 @@ const ElectiveFieldTest = () => {
     justifyContent: "flex-start",
   }));
 
+  const getlistMajors = () => {
+    axios
+      .get("http://localhost:8000/api/template/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
+      .then((res) => {
+        setMajors(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching major template data:", error);
+      });
+  };
+
   const getListFields = () => {
     axios
-      .get("http://localhost:8000/api/elective-field/")
+      .get("http://localhost:8000/api/elective-field/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
       .then((res) => {
         setFields(res.data);
       })
@@ -104,21 +127,84 @@ const ElectiveFieldTest = () => {
     setFormData({ type_name: "", major: "", field_name: "", field_number: "" });
     setOpenDialog(false);
   };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const method = currentEditField ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
+  // const url = currentEditField
+  //   ? `http://localhost:8000/api/elective-field/${currentEditField.id}/` // If editing, use the field ID
+  //   : "http://localhost:8000/api/elective-field/";
+  //   console.log(formData);
+  //   handleCloseDialog();
+  //   // axios[method](url, formData).then(getListFields());
+  //   try {
+  //     await axios[method](url, formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //       },
+  //     });
+  //     handleCloseDialog();
+  //     getListFields();
+  //   } catch (error) {
+  //     console.error("Error submitting elective field data:", error);
+  //   }
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = currentEditField ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
+    const method = currentEditField ? "put" : "post"; // Determine the HTTP method for elective field
     const url = currentEditField
       ? `http://localhost:8000/api/elective-field/${currentEditField.id}/` // If editing, use the field ID
       : "http://localhost:8000/api/elective-field/";
-    console.log(formData);
-    handleCloseDialog();
-    // axios[method](url, formData).then(getListFields());
+
     try {
-      await axios[method](url, formData);
+      // Step 1: Create or update the elective field
+      const electiveFieldResponse = await axios[method](url, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      // Step 2: Update the Template with the same major
+      const major = formData.major; // Get the major from formData
+      if (major) {
+        // Fetch the Template that has the same major
+        const templateResponse = await axios.get(
+          `http://localhost:8000/api/template/?major=${major}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+
+        const template = templateResponse.data[0]; // Assuming only one template matches the major
+        if (template) {
+          // Step 3: Add the new elective field to the template (assuming elective_fields is a ManyToMany relation)
+          await axios.put(
+            `http://localhost:8000/api/template/${template.id}/`,
+            {
+              ...template, // Spread the current template data
+              elective_fields: [
+                ...template.elective_fields,
+                electiveFieldResponse.data.id,
+              ], // Add the new elective field
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
+        }
+      }
+
+      // Step 4: Handle closing dialog and refreshing data
       handleCloseDialog();
       getListFields();
     } catch (error) {
-      console.error("Error submitting elective field data:", error);
+      console.error(
+        "Error submitting elective field data or updating template:",
+        error
+      );
     }
   };
 
@@ -130,11 +216,24 @@ const ElectiveFieldTest = () => {
     }));
   };
 
+  const handleChangeMajor = (e) => {
+    const { name, value } = e.target; // Use 'name' instead of 'id'
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value, // Update with the selected value directly
+    }));
+  };
+
   const handleDelete = async (field) => {
     // event handler for the delete button
     try {
       await axios.delete(
-        `http://localhost:8000/api/elective-field/${field.id}`
+        `http://localhost:8000/api/elective-field/${field.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
       );
       handleCloseDialog();
       getListFields();
@@ -164,6 +263,7 @@ const ElectiveFieldTest = () => {
 
   useEffect(() => {
     getListFields();
+    getlistMajors();
   }, []);
 
   return (
@@ -243,7 +343,7 @@ const ElectiveFieldTest = () => {
               </div>
               <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
                 <div>Major</div>
-                <TextField
+                {/* <TextField
                   required
                   autoFocus
                   margin="dense"
@@ -254,7 +354,21 @@ const ElectiveFieldTest = () => {
                   value={formData.major}
                   onChange={handleChange}
                   fullWidth
-                />
+                /> */}
+                <Select
+                  labelId="demo-single-select-label"
+                  name="major" // Make sure this matches the field name in formData
+                  fullWidth
+                  value={formData.major} // This is now a string
+                  onChange={handleChangeMajor}
+                  input={<OutlinedInput label="Major" />} // Updated label
+                >
+                  {majors.map((template) => (
+                    <MenuItem key={template.major} value={template.major}>
+                      <ListItemText primary={template.major} />
+                    </MenuItem>
+                  ))}
+                </Select>
               </div>
               <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
                 <div>Field Name</div>
