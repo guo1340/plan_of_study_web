@@ -7,8 +7,11 @@ import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TableFooter from "@mui/material/TableFooter";
+import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -27,13 +30,19 @@ import ListItemText from "@mui/material/ListItemText";
 import {
   AiOutlineEdit,
   AiOutlineInfoCircle,
-  AiTwotonePlusCircle,
   AiOutlineDelete,
 } from "react-icons/ai";
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import LastPageIcon from "@mui/icons-material/LastPage";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { useTheme } from "@mui/material/styles";
+import PropTypes from "prop-types";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
+    backgroundColor: "#800000",
     color: theme.palette.common.white,
   },
   [`&.${tableCellClasses.body}`]: {
@@ -50,6 +59,75 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     border: 0,
   },
 }));
+
+const TablePaginationActions = (props) => {
+  const theme = useTheme();
+  const { count, page, rowsPerPage, onPageChange } = props;
+
+  const handleFirstPageButtonClick = (event) => {
+    onPageChange(event, 0);
+  };
+
+  const handleBackButtonClick = (event) => {
+    onPageChange(event, page - 1);
+  };
+
+  const handleNextButtonClick = (event) => {
+    onPageChange(event, page + 1);
+  };
+
+  const handleLastPageButtonClick = (event) => {
+    onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
+  };
+
+  return (
+    <Box sx={{ flexShrink: 0, ml: 2.5 }}>
+      <IconButton
+        onClick={handleFirstPageButtonClick}
+        disabled={page === 0}
+        aria-label="first page"
+      >
+        {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
+      </IconButton>
+      <IconButton
+        onClick={handleBackButtonClick}
+        disabled={page === 0}
+        aria-label="previous page"
+      >
+        {theme.direction === "rtl" ? (
+          <KeyboardArrowRight />
+        ) : (
+          <KeyboardArrowLeft />
+        )}
+      </IconButton>
+      <IconButton
+        onClick={handleNextButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="next page"
+      >
+        {theme.direction === "rtl" ? (
+          <KeyboardArrowLeft />
+        ) : (
+          <KeyboardArrowRight />
+        )}
+      </IconButton>
+      <IconButton
+        onClick={handleLastPageButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="last page"
+      >
+        {theme.direction === "rtl" ? <FirstPageIcon /> : <LastPageIcon />}
+      </IconButton>
+    </Box>
+  );
+};
+
+TablePaginationActions.propTypes = {
+  count: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+  page: PropTypes.number.isRequired,
+  rowsPerPage: PropTypes.number.isRequired,
+};
 
 const Courses = (props) => {
   const [classes, setClasses] = useState([]);
@@ -72,8 +150,18 @@ const Courses = (props) => {
 
   const [majors, setMajors] = useState([]);
   const [form_elective_fields, setFormElectiveFields] = useState([]);
-  const [elective_fields, setElectiveFields] = useState([]);
   const [all_seasons, setSeasons] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const emptyRows =
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - classes.length) : 0;
 
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
@@ -94,32 +182,6 @@ const Courses = (props) => {
   };
 
   const drawerWidth = 400;
-
-  const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
-    ({ theme, open }) => ({
-      flexGrow: 1,
-      padding: theme.spacing(3),
-      transition: theme.transitions.create("margin", {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
-      marginRight: -drawerWidth,
-      ...(open && {
-        transition: theme.transitions.create("margin", {
-          easing: theme.transitions.easing.easeOut,
-          duration: theme.transitions.duration.enteringScreen,
-        }),
-        marginRight: 0,
-      }),
-      /**
-       * This is necessary to enable the selection of content. In the DOM, the stacking order is determined
-       * by the order of appearance. Following this rule, elements appearing later in the markup will overlay
-       * those that appear earlier. Since the Drawer comes after the Main content, this adjustment ensures
-       * proper interaction with the underlying content.
-       */
-      position: "relative",
-    })
-  );
 
   const DrawerHeader = styled("div")(({ theme }) => ({
     display: "flex",
@@ -443,15 +505,7 @@ const Courses = (props) => {
   };
 
   return (
-    <div style={{ padding: "25px" }}>
-      <Button
-        className="addButton"
-        // variant="contained"
-        // size="medium"
-        onClick={handleClickOpen}
-      >
-        <AiTwotonePlusCircle />
-      </Button>
+    <div>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
         <DialogTitle>
           <div style={{ fontSize: "35px" }}>Add Course</div>
@@ -463,18 +517,7 @@ const Courses = (props) => {
           <form onSubmit={handleSubmit}>
             <div className="form-input-title">
               <div>Major</div>
-              {/* <TextField
-                required
-                autoFocus
-                margin="dense"
-                id="major"
-                label="Major"
-                type="text"
-                className="input_textfield"
-                value={formData.major}
-                onChange={handleChange}
-                fullWidth
-              /> */}
+
               <Select
                 labelId="demo-single-select-label"
                 name="major" // Make sure this matches the field name in formData
@@ -691,73 +734,112 @@ const Courses = (props) => {
           </form>
         </DialogContent>
       </Dialog>
-      {/* <Box sx={{ display: "flex" }}> */}
-      <Main open={drawerOpen}>
-        <DrawerHeader />
-        <TableContainer component={Paper}>
-          <Table aria-label="customized table">
-            <TableHead>
-              <TableRow>
-                <StyledTableCell align="center">Course Name</StyledTableCell>
-                <StyledTableCell align="center">Full Name</StyledTableCell>
-                <StyledTableCell align="center">Major</StyledTableCell>
-                <StyledTableCell align="center">Term</StyledTableCell>
-                <StyledTableCell align="center">Credits</StyledTableCell>
-                <StyledTableCell align="center">Elective Field</StyledTableCell>
-                <StyledTableCell align="center">Action</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {classes.map((row) => (
-                <StyledTableRow key={row.abbreviation}>
-                  <StyledTableCell align="center" component="th" scope="row">
-                    {row.abbreviation}
-                  </StyledTableCell>
-                  <StyledTableCell align="center">{row.title}</StyledTableCell>
-                  <StyledTableCell align="center">{row.major}</StyledTableCell>
+      <div className="course-main" open={drawerOpen}>
+        <div className="course-search-bar"></div>
+        {/* <DrawerHeader /> */}
+        <div className="course-table">
+          <TableContainer
+            sx={{ borderRadius: "10px", overflow: "hidden", boxShadow: "3" }}
+            component={Paper}
+          >
+            <Table sx={{ minWidth: 700 }} aria-label="customized table">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell align="center">Course Name</StyledTableCell>
+                  <StyledTableCell align="center">Full Name</StyledTableCell>
+                  <StyledTableCell align="center">Major</StyledTableCell>
+                  <StyledTableCell align="center">Term</StyledTableCell>
+                  <StyledTableCell align="center">Credits</StyledTableCell>
                   <StyledTableCell align="center">
-                    {row.seasons.map((season) => {
-                      const matchedSeason = all_seasons.find(
-                        (temp_season) => temp_season.id === season
-                      );
-                      return <li>{matchedSeason.name}</li>;
-                    })}
+                    Elective Field
                   </StyledTableCell>
-                  <StyledTableCell align="center">
-                    {row.credits}
-                  </StyledTableCell>
-                  <StyledTableCell align="center">
-                    {row.elective_field_object
-                      ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
-                      : "Elective Field Not Found"}
-                  </StyledTableCell>
-                  <StyledTableCell align="center">
-                    <Button
-                      // style={{ background: "#7a1c27" }}
-                      onClick={() => handleEditClick(row)}
-                    >
-                      {/* <div className="text"> */}
-                      <AiOutlineEdit />
-                      {/* </div> */}
-                    </Button>
-                    <Button
-                      // style={{ background: "#7a1c27" }}
-                      onClick={() => handleInfoClick(row)}
-                    >
-                      {/* <div className="text"> */}
-                      <AiOutlineInfoCircle />
-                      {/* </div> */}
-                    </Button>
-                    <Button onClick={() => handleDelete(row)}>
-                      <AiOutlineDelete />
-                    </Button>
-                  </StyledTableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Main>
+                  <StyledTableCell align="center">Action</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {classes.map((row) => (
+                  <StyledTableRow key={row.id}>
+                    <StyledTableCell align="center" component="th" scope="row">
+                      {row.abbreviation}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.title}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.major}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.seasons.map((season) => {
+                        const matchedSeason = all_seasons.find(
+                          (temp_season) => temp_season.id === season
+                        );
+                        return (
+                          <li
+                            style={{ "list-style-type": "none" }}
+                            key={matchedSeason.name}
+                          >
+                            {matchedSeason.name}
+                          </li>
+                        );
+                      })}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.credits}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      {row.elective_field_object
+                        ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
+                        : "Elective Field Not Found"}
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      <Button onClick={() => handleEditClick(row)}>
+                        <AiOutlineEdit />
+                      </Button>
+                      <Button onClick={() => handleInfoClick(row)}>
+                        <AiOutlineInfoCircle />
+                      </Button>
+                      <Button onClick={() => handleDelete(row)}>
+                        <AiOutlineDelete />
+                      </Button>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
+              </TableBody>
+              <TableFooter className="table-footer">
+                <TableRow sx={{ width: "100%" }}>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    colSpan={7}
+                    count={classes.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    ActionsComponent={TablePaginationActions}
+                  />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
+        </div>
+        <IconButton
+          className="add-course-button"
+          aria-label="add"
+          onClick={handleClickOpen}
+          sx={{
+            position: "absolute",
+            bottom: "20px", // Adjust to your preference
+            right: "20px", // Adjust to your preference
+            backgroundColor: "#800000", // Button color
+            color: "#fff", // Text/icon color
+            "&:hover": {
+              backgroundColor: "#600000", // Darker shade on hover
+            },
+          }}
+        >
+          <AddCircleOutlineIcon />
+        </IconButton>
+      </div>
       <Drawer
         sx={{
           width: drawerWidth,
@@ -802,7 +884,14 @@ const Courses = (props) => {
                   const matchedSeason = all_seasons.find(
                     (temp_season) => temp_season.id === season
                   );
-                  return <li>{matchedSeason.name}</li>;
+                  return (
+                    <li
+                      style={{ "list-style-type": "none" }}
+                      key={matchedSeason.name}
+                    >
+                      {matchedSeason.name}
+                    </li>
+                  );
                 })}
               </p>
               <p>
@@ -818,7 +907,6 @@ const Courses = (props) => {
           )}
         </div>
       </Drawer>
-      {/* </Box> */}
     </div>
   );
 };

@@ -369,13 +369,6 @@
   padding-bottom: "10px";
 }
 
-.addButton {
-  background: white;
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-}
-
 .text {
   color: #fff;
 }
@@ -385,4 +378,40 @@
 .dashboard_title {
   font-size: 50px;
   margin: 10px;
+}
+
+/* css for course page */
+
+/* For course-main container */
+.course-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  box-sizing: border-box;
+}
+
+/* For the table container */
+.course-table {
+  flex: 1; /* Allow the table to take up available space */
+  width: 100%; /* Ensure the table container is 100% of its parent */
+  max-width: 100%; /* Prevent the container from exceeding the screen width */
+  box-sizing: border-box; /* Ensure padding/margin are part of the width */
+  padding: 0 15px; /* Add padding without causing overflow */
+  overflow-x: auto; /* Enable horizontal scroll only when needed */
+}
+
+
+.course-search-bar {
+  /* padding: 10px; */
+  margin: 20px;
+  min-height: 100px;
+  outline-style: solid;
+  outline-color: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+}
+
+.table-footer {
+  border-top: 1px solid #ddd; /* Adds a dividing line between the table and pagination */
 }
