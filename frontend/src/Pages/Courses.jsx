@@ -51,7 +51,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const Courses = () => {
+const Courses = (props) => {
   const [classes, setClasses] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false); // state variable to control the visibility of the drawer
   const [selectedCourseInfo, setSelectedCourseInfo] = useState(null); // state variable to hold the course that will be displayed in info
@@ -62,17 +62,19 @@ const Courses = () => {
     abbreviation: "",
     title: "",
     prereqs: [],
-    term: "",
+    seasons: [],
     coreqs: [],
     description: "",
     credits: "",
     elective_field: -1,
-    elective_field_name: "",
     editable_credits: false,
   });
 
   const [majors, setMajors] = useState([]);
+  const [form_elective_fields, setFormElectiveFields] = useState([]);
   const [elective_fields, setElectiveFields] = useState([]);
+  const [all_seasons, setSeasons] = useState([]);
+
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
     setFormData({
@@ -80,12 +82,11 @@ const Courses = () => {
       abbreviation: course.abbreviation,
       title: course.title,
       prereqs: course.prereqs,
-      term: course.term,
+      seasons: course.seasons,
       coreqs: course.coreqs,
       description: course.description,
       credits: course.credits,
       elective_field: course.elective_field,
-      elective_field_name: course.elective_field_name,
       editable_credits: course.editable_credits,
     });
     setCurrentEditCourse(course); // Save the current course being edited
@@ -129,7 +130,7 @@ const Courses = () => {
     justifyContent: "flex-start",
   }));
 
-  const getlistMajors = () => {
+  const getListMajors = () => {
     axios
       .get("http://localhost:8000/api/template/", {
         headers: {
@@ -144,14 +145,61 @@ const Courses = () => {
       });
   };
 
-  const getListCourses = () => {
+  const getListCourses = async () => {
+    try {
+      const courseResponse = await axios.get(
+        "http://localhost:8000/api/classes/"
+      );
+      const coursesData = courseResponse.data;
+
+      const coursesWithElectiveFields = await Promise.all(
+        coursesData.map(async (course) => {
+          try {
+            const electiveFieldResponse = await axios.get(
+              `http://localhost:8000/api/elective-field/${course.elective_field}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "accessToken"
+                  )}`,
+                },
+              }
+            );
+
+            const electiveFieldData = electiveFieldResponse.data;
+
+            // Assign the elective field object to the course
+            course.elective_field_object = electiveFieldData;
+            return course;
+          } catch (error) {
+            console.error(
+              "Error fetching elective field for course:",
+              course.id,
+              error
+            );
+            return course;
+          }
+        })
+      );
+
+      setClasses(coursesWithElectiveFields);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+  const getListSeasons = () => {
     axios
-      .get("http://localhost:8000/api/classes/")
-      .then((res) => {
-        setClasses(res.data);
+      .get("http://localhost:8000/api/season/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
       })
-      .catch((err) => {
-        console.log(err);
+      .then((res) => {
+        setSeasons(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching seasons data:", error);
       });
   };
 
@@ -188,12 +236,11 @@ const Courses = () => {
       abbreviation: "",
       title: "",
       prereqs: [],
-      term: "",
+      seasons: [],
       coreqs: [],
       description: "",
       credits: "",
       elective_field: -1,
-      elective_field_name: "",
       editable_credits: false,
     });
     setOpenDialog(false);
@@ -246,12 +293,11 @@ const Courses = () => {
       abbreviation: "",
       title: "",
       prereqs: [],
-      term: "",
+      seasons: [],
       coreqs: [],
       description: "",
       credits: "",
       elective_field: -1,
-      elective_field_name: "",
       editable_credits: false,
     });
     setOpenDialog(false);
@@ -259,8 +305,24 @@ const Courses = () => {
   };
 
   useEffect(() => {
-    getlistMajors();
-    getListCourses();
+    const fetchDataAfterTokenRefresh = async () => {
+      try {
+        // Wait for checkTokenAndRefresh to finish
+        await props.checkTokenAndRefresh();
+
+        // Only after token check is done, fetch the other data
+        getListMajors();
+        getListCourses();
+        getListSeasons();
+      } catch (error) {
+        console.error("Error in token refresh or data fetching:", error);
+      }
+    };
+
+    // Run the async function
+    fetchDataAfterTokenRefresh();
+
+    // Empty dependency array ensures this only runs once
   }, []);
 
   const class_options = classes.map((cls) => ({
@@ -340,7 +402,7 @@ const Courses = () => {
       );
 
       // Set the elective fields for the selected major in the state
-      setElectiveFields(electiveFields);
+      setFormElectiveFields(electiveFields);
     } catch (error) {
       console.error("Error fetching elective fields:", error);
     }
@@ -349,21 +411,35 @@ const Courses = () => {
   const handleChangeElectiveField = (event) => {
     const { value } = event.target;
 
-    // Assuming the value is a string like "Area 1: Computer Science"
-    const selectedElectiveField = elective_fields.find(
-      (field) =>
-        field.type_name + " " + field.field_number + ": " + field.field_name ===
-        value
+    const selectedElectiveField = form_elective_fields.find(
+      (field) => field.id === value
     );
 
     if (selectedElectiveField) {
-      // Update the formData with the selected elective field's information
       setFormData((prevFormData) => ({
         ...prevFormData,
-        elective_field: selectedElectiveField.field_number, // Assuming field_number is the ID or key of the elective field
-        elective_field_name: selectedElectiveField.field_name, // Store the elective field name if needed
+        elective_field: selectedElectiveField.id,
       }));
     }
+  };
+
+  const handleChangeSeason = (event) => {
+    const {
+      target: { value },
+    } = event;
+
+    // Update formData by mapping selected season names to their corresponding ids
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      seasons: value
+        .map((selectedName) => {
+          const matchedSeason = all_seasons.find(
+            (season) => season.name === selectedName
+          );
+          return matchedSeason ? matchedSeason.id : null;
+        })
+        .filter((id) => id !== null), // Ensure only valid IDs are stored
+    }));
   };
 
   return (
@@ -482,33 +558,37 @@ const Courses = () => {
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Offered Term(s)</div>
-              <TextField
-                required
-                autoFocus
-                margin="dense"
-                id="term"
-                label="Offered Term(s)"
-                type="text"
-                className="input_textfield"
-                value={formData.term}
-                onChange={handleChange}
+              <Select
+                labelId="seasons_select"
+                name="seasons"
                 fullWidth
-              />
+                multiple
+                value={formData.seasons.map((seasonId) => {
+                  const matchedSeason = all_seasons.find(
+                    (season) => season.id === seasonId
+                  );
+                  return matchedSeason ? matchedSeason.name : "";
+                })}
+                onChange={handleChangeSeason}
+                input={<OutlinedInput label="Season" />}
+                renderValue={(selectedNames) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selectedNames.map((name) => (
+                      <Chip key={name} label={name} />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {all_seasons.map((season) => (
+                  <MenuItem key={season.id} value={season.name}>
+                    <ListItemText primary={season.name} />
+                  </MenuItem>
+                ))}
+              </Select>
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Corequisite</div>
-              {/* <TextField
-                required
-                autoFocus
-                margin="dense"
-                id="coreq"
-                label="Corequisite"
-                type="text"
-                className="input_textfield"
-                value={formData.coreq}
-                onChange={handleChange}
-                fullWidth
-              /> */}
               <Select
                 labelId="demo-multiple-coreq-label"
                 id="demo-multiple-coreq"
@@ -587,11 +667,8 @@ const Courses = () => {
                 onChange={handleChangeElectiveField}
                 input={<OutlinedInput label="ElectiveField" />} // Updated label
               >
-                {elective_fields.map((elective_field) => (
-                  <MenuItem
-                    key={elective_field.field_number}
-                    value={elective_field.field_number}
-                  >
+                {form_elective_fields.map((elective_field) => (
+                  <MenuItem key={elective_field.id} value={elective_field.id}>
                     <ListItemText
                       primary={
                         elective_field.type_name +
@@ -604,37 +681,6 @@ const Courses = () => {
                   </MenuItem>
                 ))}
               </Select>
-              {/* <TextField
-                id="elective_field_num"
-                required
-                fullWidth
-                select
-                label="Select"
-                helperText="Please select the course's elective field"
-                onChange={(event) => {
-                  const selectedNum = event.target.value;
-                  const selectedField = elective_fields.find(
-                    (option) => option.num === parseInt(selectedNum)
-                  );
-                  setFormData({
-                    ...formData,
-                    elective_field: selectedNum,
-                    elective_field_name: selectedField
-                      ? selectedField.name
-                      : "",
-                  });
-                }}
-              >
-                {elective_fields.map((field) => (
-                  <MenuItem key={field.num} value={field.num}>
-                    {field.type_name +
-                      " " +
-                      field.field_number +
-                      ": " +
-                      field.field_name}
-                  </MenuItem>
-                ))}
-              </TextField> */}
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -669,15 +715,21 @@ const Courses = () => {
                   </StyledTableCell>
                   <StyledTableCell align="center">{row.title}</StyledTableCell>
                   <StyledTableCell align="center">{row.major}</StyledTableCell>
-                  <StyledTableCell align="center">{row.term}</StyledTableCell>
+                  <StyledTableCell align="center">
+                    {row.seasons.map((season) => {
+                      const matchedSeason = all_seasons.find(
+                        (temp_season) => temp_season.id === season
+                      );
+                      return <li>{matchedSeason.name}</li>;
+                    })}
+                  </StyledTableCell>
                   <StyledTableCell align="center">
                     {row.credits}
                   </StyledTableCell>
                   <StyledTableCell align="center">
-                    {"Area " +
-                      row.elective_field +
-                      ": " +
-                      row.elective_field_name}
+                    {row.elective_field_object
+                      ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
+                      : "Elective Field Not Found"}
                   </StyledTableCell>
                   <StyledTableCell align="center">
                     <Button
@@ -745,7 +797,13 @@ const Courses = () => {
                 <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
               </p>
               <p>
-                <b>Term:</b> {selectedCourseInfo.term}
+                <b>Term:</b>{" "}
+                {selectedCourseInfo.seasons.map((season) => {
+                  const matchedSeason = all_seasons.find(
+                    (temp_season) => temp_season.id === season
+                  );
+                  return <li>{matchedSeason.name}</li>;
+                })}
               </p>
               <p>
                 <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
@@ -755,9 +813,6 @@ const Courses = () => {
               </p>
               <p>
                 <b>Credits:</b> {selectedCourseInfo.credits}
-              </p>
-              <p>
-                <b>Elective Field:</b> {selectedCourseInfo.elective_field_name}
               </p>
             </div>
           )}

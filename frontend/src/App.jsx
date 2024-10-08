@@ -40,18 +40,17 @@ const App = () => {
   };
 
   useEffect(() => {
-    const checkTokenAndRefresh = async () => {
-      const accessTokenExpiration = localStorage.getItem(
-        "accessTokenExpiration"
-      );
-      if (accessTokenExpiration && Date.now() > accessTokenExpiration) {
-        await refreshAccessToken(); // Refresh the token if it's expired
-      } else if (localStorage.getItem("accessToken")) {
-        fetchUser(); // Fetch user details if token is still valid
-      }
-    };
     checkTokenAndRefresh();
   }, []);
+
+  const checkTokenAndRefresh = async () => {
+    const accessTokenExpiration = localStorage.getItem("accessTokenExpiration");
+    if (accessTokenExpiration && Date.now() > accessTokenExpiration) {
+      await refreshAccessToken(); // Refresh the token if it's expired
+    } else if (localStorage.getItem("accessToken")) {
+      fetchUser(); // Fetch user details if token is still valid
+    }
+  };
 
   const refreshAccessToken = async () => {
     try {
@@ -129,7 +128,12 @@ const App = () => {
             />
             <Route
               path="/courses"
-              element={<Courses token={localStorage.getItem("accessToken")} />}
+              element={
+                <Courses
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                />
+              }
             />
             <Route
               path="/tests"
