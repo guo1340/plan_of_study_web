@@ -3,11 +3,21 @@ from .models import Template
 from .serializers import TemplateSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class TemplateViewSet(ModelViewSet):
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            # Allow unauthenticated access to GET requests
+            permission_classes = [AllowAny]
+        else:
+            # Require authentication for non-GET requests (POST, PUT, DELETE, etc.)
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def list(self, request):
         queryset = Template.objects.all()

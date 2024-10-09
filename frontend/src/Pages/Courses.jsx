@@ -194,11 +194,7 @@ const Courses = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/template/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      })
+      .get("http://localhost:8000/api/template/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -252,11 +248,7 @@ const Courses = (props) => {
 
   const getListSeasons = () => {
     axios
-      .get("http://localhost:8000/api/season/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      })
+      .get("http://localhost:8000/api/season/")
       .then((res) => {
         setSeasons(res.data);
       })
@@ -385,6 +377,7 @@ const Courses = (props) => {
     fetchDataAfterTokenRefresh();
 
     // Empty dependency array ensures this only runs once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const class_options = classes.map((cls) => ({
@@ -454,9 +447,6 @@ const Courses = (props) => {
         `http://localhost:8000/api/elective-field/`,
         {
           params: { major: value }, // Pass the selected major as a query parameter
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
         }
       );
       const electiveFields = response.data.sort(
