@@ -160,8 +160,8 @@ const Courses = (props) => {
     setPage(0);
   };
 
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - classes.length) : 0;
+  // const emptyRows =
+  //   page > 0 ? Math.max(0, (1 + page) * rowsPerPage - classes.length) : 0;
 
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
@@ -214,14 +214,7 @@ const Courses = (props) => {
         coursesData.map(async (course) => {
           try {
             const electiveFieldResponse = await axios.get(
-              `http://localhost:8000/api/elective-field/${course.elective_field}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem(
-                    "accessToken"
-                  )}`,
-                },
-              }
+              `http://localhost:8000/api/elective-field/${course.elective_field}`
             );
 
             const electiveFieldData = electiveFieldResponse.data;
