@@ -39,6 +39,7 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useTheme } from "@mui/material/styles";
 import PropTypes from "prop-types";
+import Tooltip from "@mui/material/Tooltip";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -729,7 +730,7 @@ const Courses = (props) => {
               <TableHead>
                 <TableRow>
                   <StyledTableCell align="center">Course Name</StyledTableCell>
-                  <StyledTableCell align="center">Full Name</StyledTableCell>
+                  {/* <StyledTableCell align="center">Full Name</StyledTableCell> */}
                   <StyledTableCell align="center">Major</StyledTableCell>
                   <StyledTableCell align="center">Term</StyledTableCell>
                   <StyledTableCell align="center">Credits</StyledTableCell>
@@ -742,12 +743,22 @@ const Courses = (props) => {
               <TableBody>
                 {classes.map((row) => (
                   <StyledTableRow key={row.id}>
-                    <StyledTableCell align="center" component="th" scope="row">
-                      {row.abbreviation}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
+                    <Tooltip
+                      title={"Full Name: " + row.title}
+                      placement="right"
+                    >
+                      <StyledTableCell
+                        align="center"
+                        component="th"
+                        scope="row"
+                      >
+                        {row.abbreviation}
+                      </StyledTableCell>
+                    </Tooltip>
+
+                    {/* <StyledTableCell align="center">
                       {row.title}
-                    </StyledTableCell>
+                    </StyledTableCell> */}
                     <StyledTableCell align="center">
                       {row.major}
                     </StyledTableCell>

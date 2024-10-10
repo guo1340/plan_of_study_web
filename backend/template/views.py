@@ -27,10 +27,7 @@ class TemplateViewSet(ModelViewSet):
     def create(self, request):
         major = request.data.get('major')
         if Template.objects.filter(major=major).exists():
-            return Response({"error": "An Template with this major already exists."}, status=400)
-        data = request.data.copy()
-        if 'elective_fields' not in data:
-            data['elective_fields'] = []
+            return Response({"error": "A Template with this major already exists."}, status=400)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
