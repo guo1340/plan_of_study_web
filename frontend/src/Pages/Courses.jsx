@@ -13,6 +13,7 @@ import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
+import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -25,7 +26,6 @@ import Select from "@mui/material/Select";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
 import ListItemText from "@mui/material/ListItemText";
 import {
   AiOutlineEdit,
@@ -132,9 +132,8 @@ TablePaginationActions.propTypes = {
 
 const Courses = (props) => {
   const [classes, setClasses] = useState([]);
-  const [drawerOpen, setDrawerOpen] = useState(false); // state variable to control the visibility of the drawer
-  const [selectedCourseInfo, setSelectedCourseInfo] = useState(null); // state variable to hold the course that will be displayed in info
   const [currentEditCourse, setCurrentEditCourse] = useState(null); // state variable to hold the course being edited
+  const [openInfo, setOpenInfo] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     major: "",
@@ -181,17 +180,6 @@ const Courses = (props) => {
     setCurrentEditCourse(course); // Save the current course being edited
     setOpenDialog(true); // Open the dialog form
   };
-
-  const drawerWidth = 400;
-
-  const DrawerHeader = styled("div")(({ theme }) => ({
-    display: "flex",
-    alignItems: "center",
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: "flex-start",
-  }));
 
   const getListMajors = () => {
     axios
@@ -251,10 +239,8 @@ const Courses = (props) => {
       });
   };
 
-  const handleInfoClick = (course) => {
-    // event handler for the info button
-    setSelectedCourseInfo(course);
-    setDrawerOpen(true);
+  const handleInfoClick = (courseId) => {
+    setOpenInfo(openInfo === courseId ? null : courseId); // Toggle the collapse for the clicked course
   };
 
   const handleDelete = (course) => {
@@ -271,11 +257,6 @@ const Courses = (props) => {
       .catch((err) => {
         console.log("Error deleting course: ", err);
       });
-  };
-
-  const handleDrawerClose = () => {
-    // event handler for the drawer
-    setDrawerOpen(false);
   };
 
   const handleClose = () => {
@@ -718,7 +699,7 @@ const Courses = (props) => {
           </form>
         </DialogContent>
       </Dialog>
-      <div className="course-main" open={drawerOpen}>
+      <div className="course-main">
         <div className="course-search-bar"></div>
         {/* <DrawerHeader /> */}
         <div className="course-table">
@@ -742,61 +723,94 @@ const Courses = (props) => {
               </TableHead>
               <TableBody>
                 {classes.map((row) => (
-                  <StyledTableRow key={row.id}>
-                    <Tooltip
-                      title={"Full Name: " + row.title}
-                      placement="right"
-                    >
-                      <StyledTableCell
-                        align="center"
-                        component="th"
-                        scope="row"
+                  <React.Fragment key={row.id}>
+                    <StyledTableRow>
+                      <Tooltip
+                        title={"Full Name: " + row.title}
+                        placement="right"
                       >
-                        {row.abbreviation}
+                        <StyledTableCell
+                          align="center"
+                          component="th"
+                          scope="row"
+                        >
+                          {row.abbreviation}
+                        </StyledTableCell>
+                      </Tooltip>
+                      <StyledTableCell align="center">
+                        {row.major}
                       </StyledTableCell>
-                    </Tooltip>
-
-                    {/* <StyledTableCell align="center">
-                      {row.title}
-                    </StyledTableCell> */}
-                    <StyledTableCell align="center">
-                      {row.major}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.seasons.map((season) => {
-                        const matchedSeason = all_seasons.find(
-                          (temp_season) => temp_season.id === season
-                        );
-                        return (
-                          <li
-                            style={{ "list-style-type": "none" }}
-                            key={matchedSeason.name}
-                          >
-                            {matchedSeason.name}
-                          </li>
-                        );
-                      })}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.credits}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {row.elective_field_object
-                        ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
-                        : "Elective Field Not Found"}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      <Button onClick={() => handleEditClick(row)}>
-                        <AiOutlineEdit />
-                      </Button>
-                      <Button onClick={() => handleInfoClick(row)}>
-                        <AiOutlineInfoCircle />
-                      </Button>
-                      <Button onClick={() => handleDelete(row)}>
-                        <AiOutlineDelete />
-                      </Button>
-                    </StyledTableCell>
-                  </StyledTableRow>
+                      <StyledTableCell align="center">
+                        {row.seasons.map((season) => {
+                          const matchedSeason = all_seasons.find(
+                            (temp_season) => temp_season.id === season
+                          );
+                          return (
+                            <li
+                              style={{ "list-style-type": "none" }}
+                              key={matchedSeason.name}
+                            >
+                              {matchedSeason.name}
+                            </li>
+                          );
+                        })}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.credits}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {row.elective_field_object
+                          ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
+                          : "Elective Field Not Found"}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Button onClick={() => handleEditClick(row)}>
+                          <AiOutlineEdit />
+                        </Button>
+                        <Button onClick={() => handleInfoClick(row.id)}>
+                          <AiOutlineInfoCircle />
+                        </Button>
+                        <Button onClick={() => handleDelete(row)}>
+                          <AiOutlineDelete />
+                        </Button>
+                      </StyledTableCell>
+                    </StyledTableRow>
+                    <TableCell colSpan={6} style={{ padding: "0 0 0 20px" }}>
+                      <Collapse
+                        in={openInfo === row.id}
+                        timeout="auto"
+                        unmountOnExit
+                      >
+                        <Box sx={{ margin: 1 }}>
+                          <h4>Course Information</h4>
+                          <p>
+                            <b>Major:</b> {row.major}
+                          </p>
+                          <p>
+                            <b>Abbreviation:</b> {row.abbreviation}
+                          </p>
+                          <p>
+                            <b>Title:</b> {row.title}
+                          </p>
+                          <p>
+                            <b>Prerequisites:</b> {row.prereqs.join(", ")}
+                          </p>
+                          <p>
+                            <b>Term:</b> {row.seasons.join(", ")}
+                          </p>
+                          <p>
+                            <b>Corequisites:</b> {row.coreqs.join(", ")}
+                          </p>
+                          <p>
+                            <b>Description:</b> {row.description}
+                          </p>
+                          <p>
+                            <b>Credits:</b> {row.credits}
+                          </p>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </React.Fragment>
                 ))}
               </TableBody>
               <TableFooter className="table-footer">
@@ -834,73 +848,6 @@ const Courses = (props) => {
           <AddCircleOutlineIcon />
         </IconButton>
       </div>
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            top: 185,
-            padding: "20px",
-          },
-        }}
-        variant="persistent"
-        anchor="right"
-        open={drawerOpen}
-      >
-        <DrawerHeader>
-          <Button
-            style={{ right: "10px", bottom: "20px" }}
-            onClick={handleDrawerClose}
-          >
-            <div style={{ color: "black" }}>X</div>
-          </Button>
-        </DrawerHeader>
-        <div style={{ marginTop: "-50px" }}>
-          {selectedCourseInfo && (
-            <div>
-              <h2>Course Information</h2>
-              <p>
-                <b>Major:</b> {selectedCourseInfo.major}
-              </p>
-              <p>
-                <b>Abbreviation:</b> {selectedCourseInfo.abbreviation}
-              </p>
-              <p>
-                <b>Title:</b> {selectedCourseInfo.title}
-              </p>
-              <p>
-                <b>Prerequisites:</b> {selectedCourseInfo.prereqs.join(", ")}
-              </p>
-              <p>
-                <b>Term:</b>{" "}
-                {selectedCourseInfo.seasons.map((season) => {
-                  const matchedSeason = all_seasons.find(
-                    (temp_season) => temp_season.id === season
-                  );
-                  return (
-                    <li
-                      style={{ "list-style-type": "none" }}
-                      key={matchedSeason.name}
-                    >
-                      {matchedSeason.name}
-                    </li>
-                  );
-                })}
-              </p>
-              <p>
-                <b>Corequisites:</b> {selectedCourseInfo.coreqs.join(", ")}
-              </p>
-              <p>
-                <b>Description:</b> {selectedCourseInfo.description}
-              </p>
-              <p>
-                <b>Credits:</b> {selectedCourseInfo.credits}
-              </p>
-            </div>
-          )}
-        </div>
-      </Drawer>
     </div>
   );
 };

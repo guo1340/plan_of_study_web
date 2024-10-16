@@ -41,6 +41,7 @@ const App = () => {
 
   useEffect(() => {
     checkTokenAndRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkTokenAndRefresh = async () => {
