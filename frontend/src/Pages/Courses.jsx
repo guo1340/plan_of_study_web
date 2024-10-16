@@ -807,15 +807,17 @@ const Courses = (props) => {
                         unmountOnExit
                       >
                         <Box sx={{ margin: 1 }}>
-                          <h4>Course Information</h4>
-                          <p>
+                          {/* <p>
                             <b>Major:</b> {row.major}
                           </p>
                           <p>
                             <b>Abbreviation:</b> {row.abbreviation}
-                          </p>
+                          </p> */}
                           <p>
                             <b>Title:</b> {row.title}
+                          </p>
+                          <p>
+                            <b>Description:</b> {row.description}
                           </p>
                           <p>
                             <b>Prerequisites:</b>{" "}
@@ -825,12 +827,12 @@ const Courses = (props) => {
                                   .join(", ")
                               : "No Prerequisites for this course"}
                           </p>
-                          <p>
+                          {/* <p>
                             <b>Term:</b>{" "}
                             {row.season_objects
                               .map((season) => season.name)
                               .join(", ")}
-                          </p>
+                          </p> */}
                           <p>
                             <b>Corequisites:</b>{" "}
                             {row.coreqs[0]
@@ -839,12 +841,9 @@ const Courses = (props) => {
                                   .join(", ")
                               : "No Corequisites for this course"}
                           </p>
-                          <p>
-                            <b>Description:</b> {row.description}
-                          </p>
-                          <p>
+                          {/* <p>
                             <b>Credits:</b> {row.credits}
-                          </p>
+                          </p> */}
                         </Box>
                       </Collapse>
                     </TableCell>

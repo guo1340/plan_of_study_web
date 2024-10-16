@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 from django.db.models import Q
 from rest_framework.viewsets import ModelViewSet
@@ -15,14 +17,21 @@ class ClassViewSet(ModelViewSet):
 
     # Override get_permissions to set different permissions for different actions
     def get_permissions(self):
+        # Allow unauthenticated access to certain actions
         if self.action in ['list', 'retrieve', 'list_by_elective_field', 'list_by_editable_credits', 'list_by_credits',
                            'list_by_description', 'list_by_major', 'list_by_term', 'list_by_prereq', 'list_by_coreq',
                            'list_by_class_number']:
-            # Allow unauthenticated access to GET requests
-            permission_classes = [AllowAny]
+
+            # Allow unauthenticated access to both GET and POST requests for the 'search' action
+            if self.action == 'search' and self.request.method == 'POST':
+                permission_classes = [AllowAny]
+            else:
+                # Allow unauthenticated access to GET requests for all listed actions
+                permission_classes = [AllowAny]
         else:
-            # Require authentication for non-GET requests (POST, PUT, DELETE, etc.)
+            # Require authentication for all other actions
             permission_classes = [IsAuthenticated]
+
         return [permission() for permission in permission_classes]
 
     def check_admin_permission(self, request):
@@ -75,85 +84,92 @@ class ClassViewSet(ModelViewSet):
         class_obj.delete()
         return Response(status=204)
 
-    # localhost:8000/api/classes/by-elective-field/<elective-field-id>
-    @action(detail=False, methods=['get'], url_path=r'by-elective-field/(?P<elective_field_id>\d+)')
-    def list_by_elective_field(self, request, elective_field_id=None):
-        queryset = Course.objects.filter(elective_field_id=elective_field_id)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+    def list(self, request):
+        # Get the 'search' parameter from the query string
+        search_param = request.query_params.get('search', None)
 
-    # localhost:8000/api/classes/by-editable-credits/<0(false) or 1(true)>
-    @action(detail=False, methods=['get'], url_path='by-editable-credits/(?P<editable_credits>[01])')
-    def list_by_editable_credits(self, request, editable_credits=None):
-        queryset = Course.objects.filter(editable_credits=bool(int(editable_credits)))
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-    # localhost: 8000/api/classes/by-credits/<credit_count>
-    @action(detail=False, methods=['get'], url_path=r'by-credits/(?P<credit_count>\d+)')
-    def list_by_editable_credits(self, request, credit_count=None):
-        queryset = Course.objects.filter(credits=credit_count)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-    # localhost:8000/api/classes/by-description/?search=<search-text>
-    @action(detail=False, methods=['get'], url_path='by-description')
-    def list_by_description(self, request):
-        search_text = request.query_params.get('search', None)
-        if search_text:
-            queryset = Course.objects.filter(description__icontains=search_text)
-            serializer = self.serializer_class(queryset, many=True)
-            return Response(serializer.data)
+        if search_param:
+            try:
+                # Parse the JSON from the query string
+                search_data = json.loads(search_param)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON format"}, status=400)
         else:
-            return Response({"error": "No search text provided"}, status=400)
+            search_data = {}
 
-    # localhost:8000/api/classes/by-major/?major=<major>
-    @action(detail=False, methods=['get'], url_path='by-major')
-    def list_by_major(self, request):
-        major_name = request.query_params.get('major', None)
-        if major_name:
-            queryset = Course.objects.filter(major=major_name)
-            serializer = self.serializer_class(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({"error": "No major name provided"}, status=400)
+        # Log the parsed search data for debugging purposes
+        print(f"Search data received: {search_data}")
 
-    # localhost:8000/api/classes/by-seasons/?season=<season>,<season>
-    @action(detail=False, methods=['get'], url_path='by-seasons')
-    def list_by_term(self, request):
-        seasons_param = request.query_params.get('season', None)
+        # Start with all courses
+        queryset = Course.objects.all()
+        print(f"Initial queryset count: {queryset.count()}")
+
+        # 1. Filter by major (exact match, case-insensitive)
+        major = search_data.get('major', None)
+        if major:
+            queryset = queryset.filter(major__iexact=major)
+            print(f"Filtered by major, queryset count: {queryset.count()}")
+        # 2. Filter by abbreviation (exact match, case-insensitive)
+        abbreviation = search_data.get('abbreviation', None)
+        if abbreviation:
+            queryset = queryset.filter(abbreviation__iexact=abbreviation)
+            print(f"Filtered by abbreviation, queryset count: {queryset.count()}")
+
+        # 3. Filter by class number (contains search, case-insensitive)
+        class_number_search = search_data.get('class_number', None)
+        if class_number_search:
+            queryset = queryset.filter(class_number__icontains=class_number_search)
+            print(f"Filtered by class_number, queryset count: {queryset.count()}")
+
+        # 4. Filter by title (exact match, case-insensitive)
+        title = search_data.get('title', None)
+        if title:
+            queryset = queryset.filter(title__iexact=title)
+            print(f"Filtered by title, queryset count: {queryset.count()}")
+
+        # 5. Filter by description (contains search, case-insensitive)
+        description_search = search_data.get('description', None)
+        if description_search:
+            queryset = queryset.filter(description__icontains=description_search)
+            print(f"Filtered by description, queryset count: {queryset.count()}")
+
+        # 6. Filter by credits (exact integer match)
+        credit_count = search_data.get('credits', None)
+        if credit_count is not None:
+            queryset = queryset.filter(credits=credit_count)
+            print(f"Filtered by credits, queryset count: {queryset.count()}")
+
+        # 7. Filter by editable credits (boolean field)
+        editable_credits = search_data.get('editable_credits', None)
+        if editable_credits is not None:
+            queryset = queryset.filter(editable_credits=bool(int(editable_credits)))
+            print(f"Filtered by editable_credits, queryset count: {queryset.count()}")
+
+        # 8. Filter by elective field ID
+        elective_field_id = search_data.get('elective_field_id', None)
+        if elective_field_id:
+            queryset = queryset.filter(elective_field_id=elective_field_id)
+            print(f"Filtered by elective_field_id, queryset count: {queryset.count()}")
+
+        # 9. Filter by prerequisites (exact match by ID)
+        prereq_id = search_data.get('prereq_id', None)
+        if prereq_id:
+            queryset = queryset.filter(prereqs=prereq_id)
+            print(f"Filtered by prereqs, queryset count: {queryset.count()}")
+
+        # 10. Filter by seasons (comma-separated string, matches multiple seasons)
+        seasons_param = search_data.get('seasons', None)
         if seasons_param:
             seasons = seasons_param.split(',')
-            queryset = Course.objects.filter(seasons__name=seasons[0]).distinct()
-            # print(queryset)
-            for i in range(1, len(seasons)):
-                queryset = queryset.filter(seasons__name=seasons[i]).distinct()
-            serializer = self.serializer_class(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({"error": "No seasons provided"}, status=400)
+            queryset = queryset.filter(seasons__name__in=seasons).distinct()
+            print(f"Filtered by seasons, queryset count: {queryset.count()}")
 
-    # localhost:8000/api/classes/by-prereq/<id>/
-    @action(detail=False, methods=['get'], url_path=r'by-prereq/(?P<prereq_id>\d+)')
-    def list_by_prereq(self, request, prereq_id=None):
-        queryset = Course.objects.filter(prereqs=prereq_id)
+        # 11. Filter by corequisites (exact match by ID)
+        coreq_id = search_data.get('coreq_id', None)
+        if coreq_id:
+            queryset = queryset.filter(coreqs=coreq_id)
+            print(f"Filtered by coreqs, queryset count: {queryset.count()}")
+
+        # Serialize the filtered queryset
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
-
-    # localhost:8000/api/classes/by-coreq/<id>/
-    @action(detail=False, methods=['get'], url_path=r'by-coreq/(?P<coreq_id>\d+)')
-    def list_by_coreq(self, request, coreq_id=None):
-        queryset = Course.objects.filter(coreqs=coreq_id)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-    # localhost:8000/api/classes/by-class-number/?search=<search-text>
-    @action(detail=False, methods=['get'], url_path='by-class-number')
-    def list_by_class_number(self, request):
-        search_text = request.query_params.get('search', None)
-        if search_text:
-            queryset = Course.objects.filter(class_number__icontains=search_text)
-            serializer = self.serializer_class(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({"error": "No search text provided"}, status=400)
