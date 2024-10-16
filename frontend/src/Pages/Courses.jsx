@@ -205,11 +205,36 @@ const Courses = (props) => {
             const electiveFieldResponse = await axios.get(
               `http://localhost:8000/api/elective-field/${course.elective_field}`
             );
+            let courseSeasons = [];
+            course.seasons.map(async (season) => {
+              const seasonResponse = await axios.get(
+                `http://localhost:8000/api/season/${season}`
+              );
+              courseSeasons.push(seasonResponse.data);
+            });
+            let coursePrereqs = [];
+            course.prereqs.map(async (prereq) => {
+              const prereqResponse = await axios.get(
+                `http://localhost:8000/api/classes/${prereq}`
+              );
+              coursePrereqs.push(prereqResponse.data);
+            });
+            let courseCoreqs = [];
+            course.coreqs.map(async (coreq) => {
+              const coreqResponse = await axios.get(
+                `http://localhost:8000/api/classes/${coreq}`
+              );
+              courseCoreqs.push(coreqResponse.data);
+            });
 
             const electiveFieldData = electiveFieldResponse.data;
 
             // Assign the elective field object to the course
             course.elective_field_object = electiveFieldData;
+            course.season_objects = courseSeasons;
+            course.prereq_objects = coursePrereqs;
+            course.coreq_objects = courseCoreqs;
+            console.log(course);
             return course;
           } catch (error) {
             console.error(
@@ -793,13 +818,26 @@ const Courses = (props) => {
                             <b>Title:</b> {row.title}
                           </p>
                           <p>
-                            <b>Prerequisites:</b> {row.prereqs.join(", ")}
+                            <b>Prerequisites:</b>{" "}
+                            {row.prereqs[0]
+                              ? row.prereq_objects
+                                  .map((course) => course.abbreviation)
+                                  .join(", ")
+                              : "No Prerequisites for this course"}
                           </p>
                           <p>
-                            <b>Term:</b> {row.seasons.join(", ")}
+                            <b>Term:</b>{" "}
+                            {row.season_objects
+                              .map((season) => season.name)
+                              .join(", ")}
                           </p>
                           <p>
-                            <b>Corequisites:</b> {row.coreqs.join(", ")}
+                            <b>Corequisites:</b>{" "}
+                            {row.coreqs[0]
+                              ? row.coreq_objects
+                                  .map((course) => course.abbreviation)
+                                  .join(", ")
+                              : "No Corequisites for this course"}
                           </p>
                           <p>
                             <b>Description:</b> {row.description}
