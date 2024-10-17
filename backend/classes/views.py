@@ -1,7 +1,7 @@
 import json
 
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework.viewsets import ModelViewSet
 from .models import Course
 from .serializers import ClassSerializer
@@ -152,23 +152,33 @@ class ClassViewSet(ModelViewSet):
             print(f"Filtered by elective_field_id, queryset count: {queryset.count()}")
 
         # 9. Filter by prerequisites (exact match by ID)
-        prereq_id = search_data.get('prereq_id', None)
-        if prereq_id:
-            queryset = queryset.filter(prereqs=prereq_id)
-            print(f"Filtered by prereqs, queryset count: {queryset.count()}")
+        prereq_ids = search_data.get('prereq_id', None)
+        if prereq_ids:
+            prereq_id_list = prereq_ids.split(',')
+            # Filter courses that have all the given prereq_ids
+            queryset = queryset.filter(prereqs__in=prereq_id_list).annotate(num_prereqs=Count('prereqs')).filter(
+                num_prereqs=len(prereq_id_list))
+        print(f"Filtered by all given prereqs, queryset count: {queryset.count()}")
 
         # 10. Filter by seasons (comma-separated string, matches multiple seasons)
         seasons_param = search_data.get('seasons', None)
         if seasons_param:
             seasons = seasons_param.split(',')
-            queryset = queryset.filter(seasons__name__in=seasons).distinct()
+            seasons = [int(season) for season in seasons]
+            # First filter by seasons__name__in to only include matching seasons
+            queryset = queryset.filter(seasons__in=seasons).distinct()
+            queryset = queryset.annotate(num_matching_seasons=Count('seasons', filter=Q(seasons__in=seasons))).filter(
+                num_matching_seasons=len(seasons))
             print(f"Filtered by seasons, queryset count: {queryset.count()}")
 
         # 11. Filter by corequisites (exact match by ID)
-        coreq_id = search_data.get('coreq_id', None)
-        if coreq_id:
-            queryset = queryset.filter(coreqs=coreq_id)
-            print(f"Filtered by coreqs, queryset count: {queryset.count()}")
+        coreq_ids = search_data.get('coreq_id', None)
+        if coreq_ids:
+            coreq_id_list = coreq_ids.split(',')
+            # Filter courses that have all the given coreq_ids
+            queryset = queryset.filter(coreqs__in=coreq_id_list).annotate(num_coreqs=Count('coreqs')).filter(
+                num_coreqs=len(coreq_id_list))
+        print(f"Filtered by all given coreqs, queryset count: {queryset.count()}")
 
         # Serialize the filtered queryset
         serializer = self.serializer_class(queryset, many=True)
