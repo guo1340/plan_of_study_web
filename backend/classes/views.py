@@ -147,7 +147,7 @@ class ClassViewSet(ModelViewSet):
 
         # 8. Filter by elective field ID
         elective_field_id = search_data.get('elective_field_id', None)
-        if elective_field_id:
+        if elective_field_id is not None:
             queryset = queryset.filter(elective_field_id=elective_field_id)
             print(f"Filtered by elective_field_id, queryset count: {queryset.count()}")
 

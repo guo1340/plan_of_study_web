@@ -40,6 +40,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useTheme } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Tooltip from "@mui/material/Tooltip";
+import CourseSearchBar from "../Components/Courses/CourseSearchbar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -297,6 +298,7 @@ const Courses = (props) => {
       elective_field: -1,
       editable_credits: false,
     });
+    setFormElectiveFields([]);
     setOpenDialog(false);
     // Reset form data and close the dialog
     setCurrentEditCourse(null);
@@ -314,34 +316,19 @@ const Courses = (props) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditCourse
       ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
       : "http://localhost:8000/api/classes/";
     console.log(formData);
-    axios[method](url, formData, {
+    await axios[method](url, formData, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       },
-    })
-      .then(() => {
-        axios
-          .get("http://localhost:8000/api/classes/")
-          .then((res) => {
-            console.log("hello I am Here");
-            console.log(res.data);
-            console.log("yup right here");
-            setClasses(res.data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    });
+    getListCourses();
     setFormData({
       major: "",
       abbreviation: "",
@@ -692,7 +679,7 @@ const Courses = (props) => {
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <div>Elective Field</div>
-              <Select
+              {/* <Select
                 labelId="elective_field_select"
                 name="elective_field" // Make sure this matches the field name in formData
                 fullWidth
@@ -713,6 +700,28 @@ const Courses = (props) => {
                     />
                   </MenuItem>
                 ))}
+              </Select> */}
+              <Select
+                labelId="elective_field_select"
+                name="elective_field"
+                fullWidth
+                value={
+                  formData.elective_field !== -1 ? formData.elective_field : ""
+                }
+                onChange={handleChangeElectiveField}
+                input={<OutlinedInput label="ElectiveField" />}
+              >
+                <MenuItem value="">
+                  <em>None</em>{" "}
+                  {/* Option for "None" or no elective field selected */}
+                </MenuItem>
+                {form_elective_fields.map((elective_field) => (
+                  <MenuItem key={elective_field.id} value={elective_field.id}>
+                    <ListItemText
+                      primary={`${elective_field.type_name} ${elective_field.field_number}: ${elective_field.field_name}`}
+                    />
+                  </MenuItem>
+                ))}
               </Select>
             </div>
             <DialogActions>
@@ -725,7 +734,7 @@ const Courses = (props) => {
         </DialogContent>
       </Dialog>
       <div className="course-main">
-        <div className="course-search-bar"></div>
+        <CourseSearchBar setClasses={setClasses} />
         {/* <DrawerHeader /> */}
         <div className="course-table">
           <TableContainer
@@ -772,7 +781,7 @@ const Courses = (props) => {
                           );
                           return (
                             <li
-                              style={{ "list-style-type": "none" }}
+                              style={{ listStyleType: "none" }}
                               key={matchedSeason.name}
                             >
                               {matchedSeason.name}
@@ -800,53 +809,55 @@ const Courses = (props) => {
                         </Button>
                       </StyledTableCell>
                     </StyledTableRow>
-                    <TableCell colSpan={6} style={{ padding: "0 0 0 20px" }}>
-                      <Collapse
-                        in={openInfo === row.id}
-                        timeout="auto"
-                        unmountOnExit
-                      >
-                        <Box sx={{ margin: 1 }}>
-                          {/* <p>
+                    <StyledTableRow>
+                      <TableCell colSpan={6} style={{ padding: "0 0 0 20px" }}>
+                        <Collapse
+                          in={openInfo === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            {/* <p>
                             <b>Major:</b> {row.major}
                           </p>
                           <p>
                             <b>Abbreviation:</b> {row.abbreviation}
                           </p> */}
-                          <p>
-                            <b>Title:</b> {row.title}
-                          </p>
-                          <p>
-                            <b>Description:</b> {row.description}
-                          </p>
-                          <p>
-                            <b>Prerequisites:</b>{" "}
-                            {row.prereqs[0]
-                              ? row.prereq_objects
-                                  .map((course) => course.abbreviation)
-                                  .join(", ")
-                              : "No Prerequisites for this course"}
-                          </p>
-                          {/* <p>
+                            <p>
+                              <b>Title:</b> {row.title}
+                            </p>
+                            <p>
+                              <b>Description:</b> {row.description}
+                            </p>
+                            <p>
+                              <b>Prerequisites:</b>{" "}
+                              {row.prereqs[0]
+                                ? row.prereq_objects
+                                    .map((course) => course.abbreviation)
+                                    .join(", ")
+                                : "No Prerequisites for this course"}
+                            </p>
+                            {/* <p>
                             <b>Term:</b>{" "}
                             {row.season_objects
                               .map((season) => season.name)
                               .join(", ")}
                           </p> */}
-                          <p>
-                            <b>Corequisites:</b>{" "}
-                            {row.coreqs[0]
-                              ? row.coreq_objects
-                                  .map((course) => course.abbreviation)
-                                  .join(", ")
-                              : "No Corequisites for this course"}
-                          </p>
-                          {/* <p>
+                            <p>
+                              <b>Corequisites:</b>{" "}
+                              {row.coreqs[0]
+                                ? row.coreq_objects
+                                    .map((course) => course.abbreviation)
+                                    .join(", ")
+                                : "No Corequisites for this course"}
+                            </p>
+                            {/* <p>
                             <b>Credits:</b> {row.credits}
                           </p> */}
-                        </Box>
-                      </Collapse>
-                    </TableCell>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </StyledTableRow>
                   </React.Fragment>
                 ))}
               </TableBody>
