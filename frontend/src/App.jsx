@@ -133,6 +133,7 @@ const App = () => {
                 <Courses
                   token={localStorage.getItem("accessToken")}
                   checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
                 />
               }
             />

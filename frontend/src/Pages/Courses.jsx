@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Autocomplete from "@mui/material/Autocomplete";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -9,6 +10,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableFooter from "@mui/material/TableFooter";
 import TablePagination from "@mui/material/TablePagination";
+import Checkbox from "@mui/material/Checkbox";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -19,14 +21,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import MenuItem from "@mui/material/MenuItem";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
-import Select from "@mui/material/Select";
-import OutlinedInput from "@mui/material/OutlinedInput";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
-import ListItemText from "@mui/material/ListItemText";
 import {
   AiOutlineEdit,
   AiOutlineInfoCircle,
@@ -41,6 +39,11 @@ import { useTheme } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Tooltip from "@mui/material/Tooltip";
 import CourseSearchBar from "../Components/Courses/CourseSearchbar";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -154,6 +157,7 @@ const Courses = (props) => {
   const [all_seasons, setSeasons] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [formTitle, setFormTitle] = useState("");
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
@@ -161,8 +165,8 @@ const Courses = (props) => {
     setPage(0);
   };
 
-  // const emptyRows =
-  //   page > 0 ? Math.max(0, (1 + page) * rowsPerPage - classes.length) : 0;
+  const [seasonError, setSeasonError] = useState(false);
+  const [electiveError, setElectiveError] = useState(false);
 
   const handleEditClick = (course) => {
     // Set the form data to the values from the course to be edited
@@ -178,6 +182,7 @@ const Courses = (props) => {
       elective_field: course.elective_field,
       editable_credits: course.editable_credits,
     });
+    setFormTitle("Edit Course");
     setCurrentEditCourse(course); // Save the current course being edited
     setOpenDialog(true); // Open the dialog form
   };
@@ -306,6 +311,7 @@ const Courses = (props) => {
 
   const handleClickOpen = () => {
     setOpenDialog(true);
+    setFormTitle("Add Course");
   };
 
   const handleChange = (e) => {
@@ -318,31 +324,37 @@ const Courses = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
-    const url = currentEditCourse
-      ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
-      : "http://localhost:8000/api/classes/";
-    console.log(formData);
-    await axios[method](url, formData, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    getListCourses();
-    setFormData({
-      major: "",
-      abbreviation: "",
-      title: "",
-      prereqs: [],
-      seasons: [],
-      coreqs: [],
-      description: "",
-      credits: "",
-      elective_field: -1,
-      editable_credits: false,
-    });
-    setOpenDialog(false);
-    handleClose();
+    if (formData.seasons.length === 0) {
+      setSeasonError(true);
+    } else if (formData.elective_field === -1) {
+      setElectiveError(true);
+    } else {
+      const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
+      const url = currentEditCourse
+        ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
+        : "http://localhost:8000/api/classes/";
+      console.log(formData);
+      await axios[method](url, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      getListCourses();
+      setFormData({
+        major: "",
+        abbreviation: "",
+        title: "",
+        prereqs: [],
+        seasons: [],
+        coreqs: [],
+        description: "",
+        credits: "",
+        elective_field: -1,
+        editable_credits: false,
+      });
+      setOpenDialog(false);
+      handleClose();
+    }
   };
 
   useEffect(() => {
@@ -372,60 +384,27 @@ const Courses = (props) => {
     label: `${cls.abbreviation} - ${cls.title}`,
   }));
 
-  const ITEM_HEIGHT = 48;
-  const ITEM_PADDING_TOP = 8;
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-      },
-    },
-  };
-
   // Handling change for MUI Select (adjusted for multi-select) for prereqs
-  const handlePrereqsChange = (event) => {
-    const {
-      target: { value },
-    } = event;
+  const handlePrereqsChange = (event, newValue) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      prereqs:
-        typeof value === "string"
-          ? value
-              .split(",")
-              .map(
-                (val) =>
-                  class_options.find((option) => option.label === val).value
-              )
-          : value,
+      prereqs: newValue ? newValue.map((option) => option.value) : [], // Ensure prereqs is always an array
     }));
   };
 
   // Handling change for MUI Select for coreqs
-  const handleCoreqsChange = (event) => {
-    const {
-      target: { value },
-    } = event;
+  const handleCoreqsChange = (event, newValue) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      coreqs:
-        typeof value === "string"
-          ? value
-              .split(",")
-              .map(
-                (val) =>
-                  class_options.find((option) => option.label === val).value
-              )
-          : value,
+      coreqs: newValue ? newValue.map((option) => option.value) : [], // Ensure coreqs is always an array
     }));
   };
 
-  const handleChangeMajor = async (e) => {
-    const { name, value } = e.target; // Get the selected major value
+  const handleChangeMajor = async (e, newValue) => {
+    const { value } = e.target; // Get the selected major value
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: value, // Update the form data with the selected major
+      major: newValue ? newValue.major : "", // Update formData with the selected major or set to empty string
     }));
 
     // Fetch elective fields for the selected major
@@ -447,45 +426,27 @@ const Courses = (props) => {
     }
   };
 
-  const handleChangeElectiveField = (event) => {
-    const { value } = event.target;
-
-    const selectedElectiveField = form_elective_fields.find(
-      (field) => field.id === value
-    );
-
-    if (selectedElectiveField) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        elective_field: selectedElectiveField.id,
-      }));
-    }
-  };
-
-  const handleChangeSeason = (event) => {
-    const {
-      target: { value },
-    } = event;
-
-    // Update formData by mapping selected season names to their corresponding ids
+  const handleChangeElectiveField = (event, newValue) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      seasons: value
-        .map((selectedName) => {
-          const matchedSeason = all_seasons.find(
-            (season) => season.name === selectedName
-          );
-          return matchedSeason ? matchedSeason.id : null;
-        })
-        .filter((id) => id !== null), // Ensure only valid IDs are stored
+      elective_field: newValue ? newValue.id : -1, // Update elective field ID, or -1 if none selected
     }));
+    setElectiveError(false);
+  };
+
+  const handleChangeSeason = (event, newValue) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      seasons: newValue ? newValue.map((option) => option.id) : [], // Ensure coreqs is always an array
+    }));
+    setSeasonError(false);
   };
 
   return (
     <div>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
         <DialogTitle>
-          <div style={{ fontSize: "35px" }}>Add Course</div>
+          <div style={{ fontSize: "35px" }}>{formTitle}</div>
         </DialogTitle>
         <DialogContent>
           <DialogContentText style={{ paddingBottom: "10px" }}>
@@ -493,25 +454,28 @@ const Courses = (props) => {
           </DialogContentText>
           <form onSubmit={handleSubmit}>
             <div className="form-input-title">
-              <div>Major</div>
-
-              <Select
-                labelId="demo-single-select-label"
-                name="major" // Make sure this matches the field name in formData
-                fullWidth
-                value={formData.major} // This is now a string
+              <Autocomplete
+                disablePortal
+                options={majors} // Array of major options
+                getOptionLabel={(option) => option.major} // Extract major from the object
+                value={
+                  majors.find((major) => major.major === formData.major) || null
+                } // Handle controlled value
+                // onChange={handleChangeMajor} // Handle change
                 onChange={handleChangeMajor}
-                input={<OutlinedInput label="Major" />} // Updated label
-              >
-                {majors.map((template) => (
-                  <MenuItem key={template.major} value={template.major}>
-                    <ListItemText primary={template.major} />
-                  </MenuItem>
-                ))}
-              </Select>
+                sx={{ width: "100%" }} // Set width to full
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Major"
+                    variant="outlined"
+                    fullWidth
+                    required
+                  />
+                )}
+              />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Class Abbreviation</div>
               <TextField
                 required
                 autoFocus
@@ -526,7 +490,6 @@ const Courses = (props) => {
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Class Name</div>
               <TextField
                 required
                 autoFocus
@@ -541,110 +504,156 @@ const Courses = (props) => {
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Prerequisite</div>
-              <Select
-                labelId="demo-multiple-prereq-label"
-                id="demo-multiple-prereq"
+              <Autocomplete
                 multiple
-                value={formData.prereqs} // This should be an array of selected ids
-                onChange={handlePrereqsChange}
-                fullWidth
-                label="Select"
-                input={
-                  <OutlinedInput
-                    id="select-multiple-prereq"
-                    label="Prerequisite"
-                  />
-                }
-                renderValue={(selectedIds) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selectedIds.map((id) => {
-                      // Find the label corresponding to the id
-                      const label =
+                options={class_options} // Array of prerequisite options
+                getOptionLabel={(option) => option.label} // Get the label for display
+                value={
+                  Array.isArray(formData.prereqs) // Check if formData.prereqs is an array
+                    ? formData.prereqs.map((id) =>
                         class_options.find((option) => option.value === id)
-                          ?.label || "";
-                      return <Chip key={id} label={label} />;
-                    })}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {class_options.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Offered Term(s)</div>
-              <Select
-                labelId="seasons_select"
-                name="seasons"
-                fullWidth
-                multiple
-                value={formData.seasons.map((seasonId) => {
-                  const matchedSeason = all_seasons.find(
-                    (season) => season.id === seasonId
+                      )
+                    : [] // Default to empty array if formData.prereqs is not an array
+                }
+                onChange={handlePrereqsChange} // Handle change
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <li key={key} {...optionProps}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
+                      />
+                      {option.label}
+                    </li>
                   );
-                  return matchedSeason ? matchedSeason.name : "";
-                })}
-                onChange={handleChangeSeason}
-                input={<OutlinedInput label="Season" />}
-                renderValue={(selectedNames) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selectedNames.map((name) => (
-                      <Chip key={name} label={name} />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {all_seasons.map((season) => (
-                  <MenuItem key={season.id} value={season.name}>
-                    <ListItemText primary={season.name} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Corequisite</div>
-              <Select
-                labelId="demo-multiple-coreq-label"
-                id="demo-multiple-coreq"
-                multiple
-                value={formData.coreqs} // This should be an array of selected ids
-                onChange={handleCoreqsChange}
-                fullWidth
-                label="Select"
-                input={
-                  <OutlinedInput
-                    id="select-multiple-coreq"
-                    label="Corequisite"
+                }}
+                renderTags={(selectedOptions, getTagProps) =>
+                  selectedOptions.map((option, index) => (
+                    <Chip
+                      key={option.value}
+                      label={option.label}
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                } // Render chips for selected values
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Prerequisites"
+                    variant="outlined"
+                    fullWidth
                   />
-                }
-                renderValue={(selectedIds) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selectedIds.map((id) => {
-                      // Find the label corresponding to the id
-                      const label =
-                        class_options.find((option) => option.value === id)
-                          ?.label || "";
-                      return <Chip key={id} label={label} />;
-                    })}
-                  </Box>
                 )}
-                MenuProps={MenuProps}
-              >
-                {class_options.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
+                sx={{ width: "100%" }} // Full width
+              />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Description</div>
+              <Autocomplete
+                multiple
+                options={all_seasons} // Array of season options
+                getOptionLabel={(option) => option.name} // Get the season name for display
+                value={
+                  Array.isArray(formData.seasons)
+                    ? formData.seasons
+                        .map((id) =>
+                          all_seasons.find((season) => season.id === id)
+                        )
+                        .filter((season) => season !== undefined)
+                    : []
+                } // Map the selected season IDs to corresponding objects
+                onChange={handleChangeSeason} // Handle change
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <li key={key} {...optionProps}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
+                      />
+                      {option.name}
+                    </li>
+                  );
+                }}
+                renderTags={(selectedSeasons, getTagProps) =>
+                  selectedSeasons.map((option, index) => (
+                    <Chip
+                      key={option.id}
+                      label={option.name}
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                } // Render chips for selected seasons
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Seasons *"
+                    variant="outlined"
+                    fullWidth
+                    error={seasonError}
+                    helperText={
+                      seasonError ? "Please select at least one season" : ""
+                    }
+                  />
+                )}
+                sx={{ width: "100%" }} // Full width
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <Autocomplete
+                multiple
+                options={class_options} // Array of corequisite options
+                getOptionLabel={(option) => option.label} // Extract the label for display
+                value={
+                  Array.isArray(formData.coreqs) // Check if formData.coreqs is an array
+                    ? formData.coreqs.map((id) =>
+                        class_options.find((option) => option.value === id)
+                      )
+                    : [] // Default to empty array if formData.coreqs is not an array
+                }
+                onChange={handleCoreqsChange} // Handle change
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <li key={key} {...optionProps}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
+                      />
+                      {option.label}
+                    </li>
+                  );
+                }}
+                renderTags={(selectedOptions, getTagProps) =>
+                  selectedOptions.map((option, index) => (
+                    <Chip
+                      key={option.value}
+                      label={option.label}
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                } // Render chips for selected coreqs
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Corequisites"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+                sx={{ width: "100%" }} // Full width
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
                 required
                 autoFocus
@@ -659,7 +668,6 @@ const Courses = (props) => {
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Credits</div>
               <TextField
                 required
                 autoFocus
@@ -678,51 +686,34 @@ const Courses = (props) => {
               control={<Switch id="editable_credits" onChange={handleChange} />}
             />
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Elective Field</div>
-              {/* <Select
-                labelId="elective_field_select"
-                name="elective_field" // Make sure this matches the field name in formData
-                fullWidth
-                value={formData.elective_field} // This is now a string
-                onChange={handleChangeElectiveField}
-                input={<OutlinedInput label="ElectiveField" />} // Updated label
-              >
-                {form_elective_fields.map((elective_field) => (
-                  <MenuItem key={elective_field.id} value={elective_field.id}>
-                    <ListItemText
-                      primary={
-                        elective_field.type_name +
-                        " " +
-                        elective_field.field_number +
-                        ": " +
-                        elective_field.field_name
-                      }
-                    />
-                  </MenuItem>
-                ))}
-              </Select> */}
-              <Select
-                labelId="elective_field_select"
-                name="elective_field"
-                fullWidth
+              <Autocomplete
+                options={form_elective_fields} // Array of elective field options
+                getOptionLabel={(option) =>
+                  `${option.type_name} ${option.field_number}: ${option.field_name}`
+                } // Define how each option is labeled in the dropdown
                 value={
-                  formData.elective_field !== -1 ? formData.elective_field : ""
-                }
-                onChange={handleChangeElectiveField}
-                input={<OutlinedInput label="ElectiveField" />}
-              >
-                <MenuItem value="">
-                  <em>None</em>{" "}
-                  {/* Option for "None" or no elective field selected */}
-                </MenuItem>
-                {form_elective_fields.map((elective_field) => (
-                  <MenuItem key={elective_field.id} value={elective_field.id}>
-                    <ListItemText
-                      primary={`${elective_field.type_name} ${elective_field.field_number}: ${elective_field.field_name}`}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
+                  formData.elective_field !== -1
+                    ? form_elective_fields.find(
+                        (elective_field) =>
+                          elective_field.id === formData.elective_field
+                      )
+                    : null
+                } // Map the selected elective field ID to the corresponding object
+                onChange={handleChangeElectiveField} // Handle the change event
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Elective Field *"
+                    variant="outlined"
+                    fullWidth
+                    error={electiveError}
+                    helperText={
+                      electiveError ? "Please select a elective field" : ""
+                    }
+                  />
+                )}
+                sx={{ width: "100%" }} // Full width
+              />
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
@@ -734,8 +725,12 @@ const Courses = (props) => {
         </DialogContent>
       </Dialog>
       <div className="course-main">
-        <CourseSearchBar setClasses={setClasses} />
-        {/* <DrawerHeader /> */}
+        <CourseSearchBar
+          token={props.token}
+          checkTokenAndRefresh={props.checkTokenAndRefresh}
+          userDetails={props.userDetails}
+          setClasses={setClasses}
+        />
         <div className="course-table">
           <TableContainer
             sx={{ borderRadius: "10px", overflow: "hidden", boxShadow: "3" }}
@@ -745,7 +740,6 @@ const Courses = (props) => {
               <TableHead>
                 <TableRow>
                   <StyledTableCell align="center">Course Name</StyledTableCell>
-                  {/* <StyledTableCell align="center">Full Name</StyledTableCell> */}
                   <StyledTableCell align="center">Major</StyledTableCell>
                   <StyledTableCell align="center">Term</StyledTableCell>
                   <StyledTableCell align="center">Credits</StyledTableCell>
@@ -756,110 +750,112 @@ const Courses = (props) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {classes.map((row) => (
-                  <React.Fragment key={row.id}>
-                    <StyledTableRow>
-                      <Tooltip
-                        title={"Full Name: " + row.title}
-                        placement="right"
-                      >
-                        <StyledTableCell
-                          align="center"
-                          component="th"
-                          scope="row"
+                {classes
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <React.Fragment key={row.id}>
+                      <StyledTableRow>
+                        <Tooltip
+                          title={"Full Name: " + row.title}
+                          placement="right"
                         >
-                          {row.abbreviation}
+                          <StyledTableCell
+                            align="center"
+                            component="th"
+                            scope="row"
+                          >
+                            {row.abbreviation}
+                          </StyledTableCell>
+                        </Tooltip>
+                        <StyledTableCell align="center">
+                          {row.major}
                         </StyledTableCell>
-                      </Tooltip>
-                      <StyledTableCell align="center">
-                        {row.major}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.seasons.map((season) => {
-                          const matchedSeason = all_seasons.find(
-                            (temp_season) => temp_season.id === season
-                          );
-                          return (
-                            <li
-                              style={{ listStyleType: "none" }}
-                              key={matchedSeason.name}
-                            >
-                              {matchedSeason.name}
-                            </li>
-                          );
-                        })}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.credits}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {row.elective_field_object
-                          ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
-                          : "Elective Field Not Found"}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        <Button onClick={() => handleEditClick(row)}>
-                          <AiOutlineEdit />
-                        </Button>
-                        <Button onClick={() => handleInfoClick(row.id)}>
-                          <AiOutlineInfoCircle />
-                        </Button>
-                        <Button onClick={() => handleDelete(row)}>
-                          <AiOutlineDelete />
-                        </Button>
-                      </StyledTableCell>
-                    </StyledTableRow>
-                    <StyledTableRow>
-                      <TableCell colSpan={6} style={{ padding: "0 0 0 20px" }}>
-                        <Collapse
-                          in={openInfo === row.id}
-                          timeout="auto"
-                          unmountOnExit
+                        <StyledTableCell align="center">
+                          {row.seasons.map((season) => {
+                            const matchedSeason = all_seasons.find(
+                              (temp_season) => temp_season.id === season
+                            );
+                            return (
+                              <li
+                                style={{ listStyleType: "none" }}
+                                key={matchedSeason.name}
+                              >
+                                {matchedSeason.name}
+                              </li>
+                            );
+                          })}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {row.credits}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {row.elective_field_object
+                            ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
+                            : "Elective Field Not Found"}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {props.userDetails &&
+                            props.userDetails.role === "admin" && (
+                              <Button
+                                sx={{ color: "black" }}
+                                onClick={() => handleEditClick(row)}
+                              >
+                                <AiOutlineEdit />
+                              </Button>
+                            )}
+                          <Button onClick={() => handleInfoClick(row.id)}>
+                            <AiOutlineInfoCircle />
+                          </Button>
+                          {props.userDetails &&
+                            props.userDetails.role === "admin" && (
+                              <Button
+                                sx={{ color: "red" }}
+                                onClick={() => handleDelete(row)}
+                              >
+                                <AiOutlineDelete />
+                              </Button>
+                            )}
+                        </StyledTableCell>
+                      </StyledTableRow>
+                      <StyledTableRow>
+                        <TableCell
+                          colSpan={6}
+                          style={{ padding: "0 0 0 20px" }}
                         >
-                          <Box sx={{ margin: 1 }}>
-                            {/* <p>
-                            <b>Major:</b> {row.major}
-                          </p>
-                          <p>
-                            <b>Abbreviation:</b> {row.abbreviation}
-                          </p> */}
-                            <p>
-                              <b>Title:</b> {row.title}
-                            </p>
-                            <p>
-                              <b>Description:</b> {row.description}
-                            </p>
-                            <p>
-                              <b>Prerequisites:</b>{" "}
-                              {row.prereqs[0]
-                                ? row.prereq_objects
-                                    .map((course) => course.abbreviation)
-                                    .join(", ")
-                                : "No Prerequisites for this course"}
-                            </p>
-                            {/* <p>
-                            <b>Term:</b>{" "}
-                            {row.season_objects
-                              .map((season) => season.name)
-                              .join(", ")}
-                          </p> */}
-                            <p>
-                              <b>Corequisites:</b>{" "}
-                              {row.coreqs[0]
-                                ? row.coreq_objects
-                                    .map((course) => course.abbreviation)
-                                    .join(", ")
-                                : "No Corequisites for this course"}
-                            </p>
-                            {/* <p>
-                            <b>Credits:</b> {row.credits}
-                          </p> */}
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </StyledTableRow>
-                  </React.Fragment>
-                ))}
+                          <Collapse
+                            in={openInfo === row.id}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            <Box sx={{ margin: 1 }}>
+                              <p>
+                                <b>Title:</b> {row.title}
+                              </p>
+                              <p>
+                                <b>Description:</b> {row.description}
+                              </p>
+                              <p>
+                                <b>Prerequisites:</b>{" "}
+                                {row.prereqs[0]
+                                  ? row.prereq_objects
+                                      .map((course) => course.abbreviation)
+                                      .join(", ")
+                                  : "No Prerequisites for this course"}
+                              </p>
+                              <p>
+                                <b>Corequisites:</b>{" "}
+                                {row.coreqs[0]
+                                  ? row.coreq_objects
+                                      .map((course) => course.abbreviation)
+                                      .join(", ")
+                                  : "No Corequisites for this course"}
+                              </p>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </StyledTableRow>
+                    </React.Fragment>
+                  ))}
               </TableBody>
               <TableFooter className="table-footer">
                 <TableRow sx={{ width: "100%" }}>
@@ -878,23 +874,25 @@ const Courses = (props) => {
             </Table>
           </TableContainer>
         </div>
-        <IconButton
-          className="add-course-button"
-          aria-label="add"
-          onClick={handleClickOpen}
-          sx={{
-            position: "absolute",
-            bottom: "20px", // Adjust to your preference
-            right: "20px", // Adjust to your preference
-            backgroundColor: "#800000", // Button color
-            color: "#fff", // Text/icon color
-            "&:hover": {
-              backgroundColor: "#600000", // Darker shade on hover
-            },
-          }}
-        >
-          <AddCircleOutlineIcon />
-        </IconButton>
+        {props.userDetails && props.userDetails.role === "admin" && (
+          <IconButton
+            className="add-course-button"
+            aria-label="add"
+            onClick={handleClickOpen}
+            sx={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              backgroundColor: "#800000",
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "#600000",
+              },
+            }}
+          >
+            <AddCircleOutlineIcon />
+          </IconButton>
+        )}
       </div>
     </div>
   );
