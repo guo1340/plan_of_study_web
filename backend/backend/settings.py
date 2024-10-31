@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'plan.apps.PlanConfig',
     'users.apps.UsersConfig',
     'season.apps.SeasonConfig',
+    'major.apps.MajorConfig',
+    'requirement.apps.RequirementConfig',
 
     'rest_framework',
     'rest_framework.authtoken',

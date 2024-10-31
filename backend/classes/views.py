@@ -1,14 +1,22 @@
 import json
 
-from django.shortcuts import render
 from django.db.models import Q, Count
 from rest_framework.viewsets import ModelViewSet
 from .models import Course
 from .serializers import ClassSerializer
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
+
+
+def check_admin_permission(request):
+    # Ensure the user is authenticated
+    if not request.user.is_authenticated:
+        raise PermissionDenied("You must be logged in to perform this action.")
+
+    # Check if the user has a 'details' object and if their role is 'admin'
+    if not hasattr(request.user, 'details') or request.user.details.role != 'admin':
+        raise PermissionDenied("You do not have permission to perform this action.")
 
 
 class ClassViewSet(ModelViewSet):
@@ -34,17 +42,8 @@ class ClassViewSet(ModelViewSet):
 
         return [permission() for permission in permission_classes]
 
-    def check_admin_permission(self, request):
-        # Ensure the user is authenticated
-        if not request.user.is_authenticated:
-            raise PermissionDenied("You must be logged in to perform this action.")
-
-        # Check if the user has a 'details' object and if their role is 'admin'
-        if not hasattr(request.user, 'details') or request.user.details.role != 'admin':
-            raise PermissionDenied("You do not have permission to perform this action.")
-
-    def create(self, request):
-        self.check_admin_permission(request)  # Ensure user has admin role
+    def create(self, request, *args, **kwargs):
+        check_admin_permission(request)  # Ensure user has admin role
         major = request.data.get("major")
         abbreviation = request.data.get("abbreviation")
         class_number = request.data.get('class_number')
@@ -60,8 +59,8 @@ class ClassViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def update(self, request, pk=None):
-        self.check_admin_permission(request)  # Ensure user has admin role
+    def update(self, request, pk=None, *args, **kwargs):
+        check_admin_permission(request)  # Ensure user has admin role
         major = request.data.get("major")
         abbreviation = request.data.get("abbreviation")
         class_number = request.data.get('class_number')
@@ -78,13 +77,13 @@ class ClassViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def destroy(self, request, pk=None):
-        self.check_admin_permission(request)  # Ensure user has admin role
+    def destroy(self, request, pk=None, *args, **kwargs):
+        check_admin_permission(request)  # Ensure user has admin role
         class_obj = Course.objects.all().get(pk=pk)
         class_obj.delete()
         return Response(status=204)
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         # Get the 'search' parameter from the query string
         search_param = request.query_params.get('search', None)
 

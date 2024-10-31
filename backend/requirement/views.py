@@ -1,13 +1,15 @@
 import json
+
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
-from .models import Major
-from .serializers import MajorSerializer
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.viewsets import ModelViewSet
+from .models import Requirement
 from django.db.models import Q
+from .serializers import RequirememtSerializer
 from rest_framework.response import Response
 
 
+# Create your views here.
 def check_admin_permission(request):
     # Ensure the user is authenticated
     if not request.user.is_authenticated:
@@ -18,9 +20,9 @@ def check_admin_permission(request):
         raise PermissionDenied("You do not have permission to perform this action.")
 
 
-class MajorViewSet(ModelViewSet):
-    queryset = Major.objects.all()
-    serializer_class = MajorSerializer
+class RequirementViewSet(ModelViewSet):
+    queryset = Requirement.objects.all()
+    serializer_class = RequirememtSerializer
 
     def get_permissions(self):
         # Allow unauthenticated access to certain actions
@@ -40,10 +42,9 @@ class MajorViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         check_admin_permission(request)
-        name = request.data.get("name")
-        abbreviation = request.data.get("abbreviation")
-        if Major.objects.filter(Q(name=name) & Q(abbreviation=abbreviation)).exists():
-            return Response({"error": "A major with the same name or abbreviation already exists"}, status=400)
+        attribute = request.data.get("attribute")
+        if Requirement.objects.filter(Q(attribute=attribute)).exists():
+            return Response({"error": "A requirement with the same attribute already exists"}, status=400)
 
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -54,14 +55,13 @@ class MajorViewSet(ModelViewSet):
 
     def update(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
-        name = request.data.get("name")
-        abbreviation = request.data.get("abbreviation")
-        if (Major.objects.filter(Q(name=name) & Q(abbreviation=abbreviation))
+        attribute = request.data.get("attribute")
+        if (Requirement.objects.filter(Q(attribute=attribute))
                 .exclude(pk=pk).exists()):
             return Response({"error": "A class with the same major, class number, and title already exists."},
                             status=400)
-        major_obj = Major.objects.all().get(pk=pk)
-        serializer = self.serializer_class(major_obj, data=request.data)
+        req_obj = Requirement.objects.all().get(pk=pk)
+        serializer = self.serializer_class(req_obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -70,8 +70,8 @@ class MajorViewSet(ModelViewSet):
 
     def destroy(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
-        major_obj = Major.objects.all().get(pk=pk)
-        major_obj.delete()
+        req_obj = Requirement.objects.all().get(pk=pk)
+        req_obj.delete()
         return Response(status=204)
 
     def list(self, request, *args, **kwargs):
@@ -91,18 +91,13 @@ class MajorViewSet(ModelViewSet):
         print(f"Search data received: {search_data}")
 
         # Start with all majors
-        queryset = Major.objects.all()
+        queryset = Requirement.objects.all()
         print(f"Initial queryset count: {queryset.count()}")
 
-        name = search_data.get("name", None)
-        if name:
-            queryset = queryset.filter(name__iexact=name)
-            print(f"Filtered by name, queryset count: {queryset.count()}")
-
-        abbreviation = search_data.get("abbreviation", None)
-        if name:
-            queryset = queryset.filter(abbreviation__iexact=abbreviation)
-            print(f"Filtered by abbreviation, queryset count: {queryset.count()}")
+        attribute = search_data.get("attribute", None)
+        if attribute:
+            queryset = queryset.filter(attribute__iexact=attribute)
+            print(f"Filtered by attribute, queryset count: {queryset.count()}")
 
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
