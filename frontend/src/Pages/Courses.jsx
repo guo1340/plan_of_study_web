@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import ConfirmationDialog from "../Components/ConfirmationDialog";
 import Autocomplete from "@mui/material/Autocomplete";
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
@@ -158,6 +159,7 @@ const Courses = (props) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [formTitle, setFormTitle] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
@@ -168,7 +170,7 @@ const Courses = (props) => {
   const [seasonError, setSeasonError] = useState(false);
   const [electiveError, setElectiveError] = useState(false);
 
-  const handleEditClick = (course) => {
+  const handleEditClick = async (course) => {
     // Set the form data to the values from the course to be edited
     setFormData({
       major: course.major,
@@ -182,6 +184,22 @@ const Courses = (props) => {
       elective_field: course.elective_field,
       editable_credits: course.editable_credits,
     });
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/elective-field/`,
+        {
+          params: { major: course.major }, // Pass the selected major as a query parameter
+        }
+      );
+      const electiveFields = response.data.sort(
+        (a, b) => a.field_number - b.field_number
+      );
+
+      // Set the elective fields for the selected major in the state
+      setFormElectiveFields(electiveFields);
+    } catch (error) {
+      console.error("Error fetching elective fields:", error);
+    }
     setFormTitle("Edit Course");
     setCurrentEditCourse(course); // Save the current course being edited
     setOpenDialog(true); // Open the dialog form
@@ -274,8 +292,9 @@ const Courses = (props) => {
     setOpenInfo(openInfo === courseId ? null : courseId); // Toggle the collapse for the clicked course
   };
 
-  const handleDelete = (course) => {
+  const handleDelete = async (course) => {
     // event handler for the delete button
+    await props.checkTokenAndRefresh();
     axios
       .delete(`http://localhost:8000/api/classes/${course.id}`, {
         headers: {
@@ -334,6 +353,7 @@ const Courses = (props) => {
         ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
         : "http://localhost:8000/api/classes/";
       console.log(formData);
+      await props.checkTokenAndRefresh();
       await axios[method](url, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -717,7 +737,7 @@ const Courses = (props) => {
             </div>
             <DialogActions>
               <Button onClick={handleClose}>Cancel</Button>
-              <Button type="submit" color="primary">
+              <Button type="submit" variant="contained" color="primary">
                 Save
               </Button>
             </DialogActions>
@@ -810,11 +830,22 @@ const Courses = (props) => {
                             props.userDetails.role === "admin" && (
                               <Button
                                 sx={{ color: "red" }}
-                                onClick={() => handleDelete(row)}
+                                onClick={() => setDeleteConfirmation(true)}
                               >
                                 <AiOutlineDelete />
                               </Button>
                             )}
+                          <ConfirmationDialog
+                            open={deleteConfirmation}
+                            handleClose={() => {
+                              setDeleteConfirmation(false);
+                            }}
+                            message="Are you sure you wan to delete this course from the database?"
+                            handleSubmit={() => {
+                              handleDelete(row);
+                              setDeleteConfirmation(false);
+                            }}
+                          />
                         </StyledTableCell>
                       </StyledTableRow>
                       <StyledTableRow>
