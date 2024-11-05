@@ -470,7 +470,7 @@ const Courses = (props) => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText style={{ paddingBottom: "10px" }}>
-            Please fill out the details of this new course.
+            Please fill out the details of this course.
           </DialogContentText>
           <form onSubmit={handleSubmit}>
             <div className="form-input-title">

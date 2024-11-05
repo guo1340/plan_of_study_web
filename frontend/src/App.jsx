@@ -19,6 +19,7 @@ import TemplateTest from "./Pages/Tests/Templates";
 import PlansTest from "./Pages/Tests/Plans";
 import UsersTest from "./Pages/Tests/Users";
 import Dashboard from "./Pages/Dashboard";
+import Major from "./Pages/Admin/major";
 import axios from "axios";
 
 const App = () => {
@@ -160,6 +161,16 @@ const App = () => {
             <Route path="/tests/templates" element={<TemplateTest />} />
             <Route path="/tests/plans" element={<PlansTest />} />
             <Route path="/tests/users" element={<UsersTest />} />
+            <Route
+              path="major"
+              element={
+                <Major
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
+                />
+              }
+            />
           </Routes>
         </Sidebar>
         {openLogin && (

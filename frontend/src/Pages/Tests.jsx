@@ -9,6 +9,7 @@ const Tests = () => {
     { path: "/tests/templates", name: "Templates" },
     { path: "/tests/plans", name: "Plans" },
     { path: "/tests/users", name: "Users" },
+    { path: "/major", name: "Major" },
   ];
   return (
     <div>
