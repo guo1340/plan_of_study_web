@@ -4,6 +4,7 @@ from .serializers import ElectiveFieldSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from major.models import Major
 
 
 class ElectiveFieldViewSet(ModelViewSet):
@@ -19,15 +20,19 @@ class ElectiveFieldViewSet(ModelViewSet):
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = ElectiveField.objects.all()
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
-        major = request.data.get('major')
+    def create(self, request, *args, **kwargs):
+        major_id = request.data.get('major')
         field_name = request.data.get('field_name')
         field_number = request.data.get('field_number')
+        try:
+            major = Major.objects.get(pk=major_id)
+        except Major.DoesNotExist:
+            return Response({"error": "The specified major does not exist."}, status=400)
         if ElectiveField.objects.filter(major=major, field_name=field_name).exists():
             return Response({"error": "An elective field with this major and field name already exists."}, status=400)
         if ElectiveField.objects.filter(major=major, field_number=field_number).exists():
@@ -39,16 +44,21 @@ class ElectiveFieldViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, *args, **kwargs):
         elective_field_obj = ElectiveField.objects.all().get(pk=pk)
         serializer = self.serializer_class(elective_field_obj)
         return Response(serializer.data)
 
-    def update(self, request, pk=None):
+    def update(self, request, pk=None, *args, **kwargs):
         elective_field_obj = ElectiveField.objects.all().get(pk=pk)
-        major = request.data.get('major')
+        major_id = request.data.get('major')
         field_name = request.data.get('field_name')
         field_number = request.data.get('field_number')
+        try:
+            major = Major.objects.get(pk=major_id)
+        except Major.DoesNotExist:
+            return Response({"error": "The specified major does not exist."}, status=400)
+
         if ElectiveField.objects.filter(major=major, field_name=field_name).exclude(pk=pk).exists():
             return Response({"error": "An elective field with this major and field name already exists."}, status=400)
         if ElectiveField.objects.filter(major=major, field_number=field_number).exclude(pk=pk).exists():
@@ -61,14 +71,14 @@ class ElectiveFieldViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, pk=None, *args, **kwargs):
         elective_field_obj = ElectiveField.objects.all().get(pk=pk)
         elective_field_obj.delete()
         return Response(status=204)
 
     @action(detail=False, methods=['get'], url_path='major/(?P<major>[^/.]+)')
-    def list_by_major(self, request, major=None):
-        queryset = ElectiveField.objects.filter(major=major)
+    def list_by_major(self, request, major_id=None):
+        queryset = ElectiveField.objects.filter(major__pk=major_id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 

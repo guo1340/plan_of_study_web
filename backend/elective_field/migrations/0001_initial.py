@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='ElectiveField',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type_name', models.CharField(default='Area')),
+                ('type_name', models.CharField(max_length=20, default="Area")),
                 ('major', models.TextField(default='')),
-                ('field_name', models.CharField(default='test')),
+                ('field_name', models.CharField(max_length=100, default="NONE")),
                 ('field_number', models.IntegerField(default=-1)),
             ],
         ),

@@ -8,6 +8,7 @@ from season.urls import season_router
 from users.urls import user_router
 from major.urls import major_router
 from requirement.urls import requirement_router
+from credit_type.urls import credit_type_router
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -32,6 +33,8 @@ user_routers = DefaultRouter()
 user_routers.registry.extend(user_router.registry)
 major_routers = DefaultRouter()
 major_routers.registry.extend(major_router.registry)
+credit_type_routers = DefaultRouter()
+credit_type_routers.registry.extend(credit_type_router.registry)
 requirement_routers = DefaultRouter()
 requirement_routers.registry.extend(requirement_router.registry)
 
@@ -46,6 +49,7 @@ urlpatterns = [
     path('user/', include(user_routers.urls)),
     path('major/', include(major_routers.urls)),
     path('requirement/', include(requirement_routers.urls)),
+    path('credit_type/', include(credit_type_routers.urls)),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', UserRegistrationView.as_view(), name='user_register'),

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'season.apps.SeasonConfig',
     'major.apps.MajorConfig',
     'requirement.apps.RequirementConfig',
+    'credit_type.apps.CreditTypeConfig',
 
     'rest_framework',
     'rest_framework.authtoken',

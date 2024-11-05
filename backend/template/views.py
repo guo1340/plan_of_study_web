@@ -19,15 +19,16 @@ class TemplateViewSet(ModelViewSet):
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = Template.objects.all()
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         major = request.data.get('major')
-        if Template.objects.filter(major=major).exists():
-            return Response({"error": "A Template with this major already exists."}, status=400)
+        level = request.data.get('level')
+        if Template.objects.filter(major=major, level=level).exists():
+            return Response({"error": "A Template with this major and level already exists."}, status=400)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -35,15 +36,16 @@ class TemplateViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, *args, **kwargs):
         template_obj = Template.objects.all().get(pk=pk)
         serializer = self.serializer_class(template_obj)
         return Response(serializer.data)
 
-    def update(self, request, pk=None):
+    def update(self, request, pk=None, *args, **kwargs):
         template_obj = Template.objects.all().get(pk=pk)
         major = request.data.get('major')
-        if Template.objects.filter(major=major).exclude(pk=pk).exists():
+        level = request.data.get('level')
+        if Template.objects.filter(major=major, level=level).exclude(pk=pk).exists():
             return Response({"error": "A template with this major already exists."}, status=400)
         serializer = self.serializer_class(template_obj, data=request.data)
         if serializer.is_valid():
@@ -52,7 +54,7 @@ class TemplateViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=400)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, pk=None, *args, **kwargs):
         template_obj = Template.objects.all().get(pk=pk)
         template_obj.delete()
         return Response(status=204)

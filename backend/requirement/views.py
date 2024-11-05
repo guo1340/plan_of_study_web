@@ -43,8 +43,18 @@ class RequirementViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         check_admin_permission(request)
         attribute = request.data.get("attribute")
-        if Requirement.objects.filter(Q(attribute=attribute)).exists():
-            return Response({"error": "A requirement with the same attribute already exists"}, status=400)
+        attribute_value = request.data.get("attribute_value")
+        attribute_min = request.data.get("attribute_min")
+        attribute_max = request.data.get("attribute_max")
+        major = request.data.get("major")
+        requirement_size = request.data.get("requirement_size")
+        requirement_type = request.data.get("requirement_type")
+        if Requirement.objects.filter(
+                Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
+                    attribute_min=attribute_min) & Q(attribute_max=attribute_max) & Q(
+                    major=major) & Q(requirement_size=requirement_size) & Q(
+                    requirement_type=requirement_type)).exists():
+            return Response({"error": "A requirement with the same everything already exists"}, status=400)
 
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -56,7 +66,17 @@ class RequirementViewSet(ModelViewSet):
     def update(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
         attribute = request.data.get("attribute")
-        if (Requirement.objects.filter(Q(attribute=attribute))
+        attribute_value = request.data.get("attribute_value")
+        attribute_min = request.data.get("attribute_min")
+        attribute_max = request.data.get("attribute_max")
+        major = request.data.get("major")
+        requirement_size = request.data.get("requirement_size")
+        requirement_type = request.data.get("requirement_type")
+        if (Requirement.objects.filter(
+                Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
+                    attribute_min=attribute_min) & Q(attribute_max=attribute_max) & Q(
+                    major=major) & Q(requirement_size=requirement_size) & Q(
+                    requirement_type=requirement_type))
                 .exclude(pk=pk).exists()):
             return Response({"error": "A class with the same major, class number, and title already exists."},
                             status=400)
@@ -90,7 +110,6 @@ class RequirementViewSet(ModelViewSet):
         # Log the parsed search data for debugging purposes
         print(f"Search data received: {search_data}")
 
-        # Start with all majors
         queryset = Requirement.objects.all()
         print(f"Initial queryset count: {queryset.count()}")
 
@@ -98,6 +117,11 @@ class RequirementViewSet(ModelViewSet):
         if attribute:
             queryset = queryset.filter(attribute__iexact=attribute)
             print(f"Filtered by attribute, queryset count: {queryset.count()}")
+
+        major = search_data.get("major", None)
+        if major:
+            queryset = queryset.filter(major__iexact=major)
+            print(f"Filtered by major, queryset count: {queryset.count()}")
 
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
