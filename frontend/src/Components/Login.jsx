@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({ openLogin, closeLogin, login }) => {
+const Login = (props) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -22,7 +22,7 @@ const Login = ({ openLogin, closeLogin, login }) => {
       username: "",
       password: "",
     });
-    closeLogin(false);
+    props.closeLogin(false);
   };
 
   const handleChange = (e) => {
@@ -49,10 +49,10 @@ const Login = ({ openLogin, closeLogin, login }) => {
         // Optionally, store the access token expiration time (assuming it's a JWT token)
         const decodedToken = parseJwt(response.data.access);
         localStorage.setItem("accessTokenExpiration", decodedToken.exp * 1000);
-
+        await props.fetchUser();
         NotificationManager.success("Login Successful", "Success", 5000);
-        closeLogin(false);
-        login(true);
+        props.closeLogin(false);
+        props.login(true);
         navigate("/dashboard");
       } else {
         NotificationManager.warning(
@@ -77,7 +77,7 @@ const Login = ({ openLogin, closeLogin, login }) => {
   }
 
   return (
-    <Dialog fullWidth open={openLogin} onClose={handleClose}>
+    <Dialog fullWidth open={props.openLogin} onClose={handleClose}>
       <DialogTitle>
         <div style={{ fontSize: "35px" }}>Log In</div>
       </DialogTitle>

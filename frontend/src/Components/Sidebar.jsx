@@ -4,6 +4,7 @@ import {
   AiOutlineLogin,
   AiOutlineLogout,
   AiOutlineSolution,
+  AiFillTool,
 } from "react-icons/ai";
 import {
   BsHouseDoor,
@@ -12,32 +13,67 @@ import {
   BsQuestionCircle,
   BsSearch,
 } from "react-icons/bs";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import Tooltip from "@mui/material/Tooltip";
 // import default_profile_pic from "../Assets/profile_pic.jpg";
 // import { Button } from "@mui/material";
 
-const Sidebar = ({
-  children,
-  setOpenLogin,
-  setSignUp,
-  handleLogout,
-  loggedIn,
-}) => {
+const Sidebar = (props) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => setIsOpen(!isOpen);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Update isAdmin based on props
+    // console.log("hello");
+    // console.log(props.userDetails);
+    setIsAdmin(props.loggedIn && props.userDetails?.role === "admin");
+  }, [props.loggedIn, props.userDetails]);
+
   const barItem = [
-    { path: "/", name: "Home", icon: <BsHouseDoor />, needAuth: false },
-    { path: "/dashboard", name: "Dashboard", icon: <BsMap />, needAuth: true },
-    { path: "/courses", name: "Courses", icon: <BsBook />, needAuth: false },
-    { path: "/demos", name: "Demos", icon: <BsSearch />, needAuth: true },
     {
-      path: "/tests",
+      path: "/",
+      name: "Home",
+      icon: <BsHouseDoor />,
+      needAuth: false,
+      needAdmin: false,
+    },
+    {
+      path: "/dashboard",
+      name: "Dashboard",
+      icon: <BsMap />,
+      needAuth: true,
+      needAdmin: false,
+    },
+    {
+      path: "/courses",
+      name: "Courses",
+      icon: <BsBook />,
+      needAuth: false,
+      needAdmin: false,
+    },
+    {
+      path: "/demos",
+      name: "Demos",
+      icon: <BsSearch />,
+      needAuth: true,
+      needAdmin: false,
+    },
+    {
+      path: "/FAQ",
       name: "FAQ",
       icon: <BsQuestionCircle />,
       needAuth: false,
+      needAdmin: false,
+    },
+    {
+      path: "/admin",
+      name: "Admin",
+      icon: <AiFillTool />,
+      needAuth: true,
+      needAdmin: true,
     },
   ];
 
@@ -47,10 +83,13 @@ const Sidebar = ({
         className="sidebar_container"
         style={{ width: isOpen ? "300px" : "100px" }}
       >
-        {!loggedIn ? (
+        {!props.loggedIn ? (
           <>
             <Tooltip title={isOpen ? "" : "Log In"} placement="right">
-              <NavLink className="link" onClick={() => setOpenLogin(true)}>
+              <NavLink
+                className="link"
+                onClick={() => props.setOpenLogin(true)}
+              >
                 <div className="icon">
                   <AiOutlineLogin />
                 </div>
@@ -63,7 +102,7 @@ const Sidebar = ({
               </NavLink>
             </Tooltip>
             <Tooltip title={isOpen ? "" : "Register"} placement="right">
-              <NavLink className="link" onClick={() => setSignUp(true)}>
+              <NavLink className="link" onClick={() => props.setSignUp(true)}>
                 <div className="icon">
                   <AiOutlineSolution />
                 </div>
@@ -78,7 +117,7 @@ const Sidebar = ({
           </>
         ) : (
           <Tooltip title={isOpen ? "" : "Log Out"} placement="right">
-            <NavLink to={"/home"} className="link" onClick={handleLogout}>
+            <NavLink to={"/home"} className="link" onClick={props.handleLogout}>
               <div className="icon">
                 <AiOutlineLogout />
               </div>
@@ -94,7 +133,8 @@ const Sidebar = ({
         <div className="divider"></div>
         {barItem.map(
           (item, index) =>
-            (!item.needAuth || loggedIn) && (
+            (!item.needAuth || props.loggedIn) &&
+            (!item.needAdmin || isAdmin) && (
               <Tooltip
                 title={isOpen ? "" : item.name}
                 placement="right"
@@ -122,7 +162,7 @@ const Sidebar = ({
           </div>
         </div>
       </div>
-      <main className="body_container">{children}</main>
+      <main className="body_container">{props.children}</main>
     </div>
   );
 };

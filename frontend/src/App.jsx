@@ -11,13 +11,12 @@ import {
 } from "react-notifications";
 import React from "react";
 import Courses from "./Pages/Courses";
-import Tests from "./Pages/Tests";
-import ElectiveFieldTest from "./Pages/Tests/ElectiveField";
-import CourseTest from "./Pages/Tests/Courses";
-import SemesterTest from "./Pages/Tests/Semesters";
-import TemplateTest from "./Pages/Tests/Templates";
-import PlansTest from "./Pages/Tests/Plans";
-import UsersTest from "./Pages/Tests/Users";
+import Admin from "./Pages/Admin";
+import ElectiveFieldTest from "./Pages/Admin/ElectiveField";
+import SemesterTest from "./Pages/Admin/Semesters";
+import TemplateTest from "./Pages/Admin/Templates";
+import PlansTest from "./Pages/Admin/Plans";
+import UsersTest from "./Pages/Admin/Users";
 import Dashboard from "./Pages/Dashboard";
 import Major from "./Pages/Admin/major";
 import axios from "axios";
@@ -85,13 +84,14 @@ const App = () => {
   const fetchUser = async () => {
     setLoadingUser(true); // Start loading user details
     try {
-      const response = await axios.get("http://localhost:8000/api/user/", {
+      const response = await axios.get("http://localhost:8000/api/user/me/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       if (response.status === 200) {
         setUserDetails(response.data[0]); // Set user details in state
+        localStorage.setItem("userRole", response.data[0].role);
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -118,6 +118,8 @@ const App = () => {
           setSignUp={setSignUp}
           handleLogout={handleLogout}
           loggedIn={loggedIn}
+          userDetails={userDetails}
+          checkTokenAndRefresh={checkTokenAndRefresh}
         >
           <Routes>
             <Route
@@ -139,30 +141,35 @@ const App = () => {
               }
             />
             <Route
-              path="/tests"
-              element={<Tests token={localStorage.getItem("accessToken")} />}
+              path="/admin"
+              element={
+                <Admin
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                />
+              }
             />
             <Route
               path="/dashboard"
               element={
                 <Dashboard
                   token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
                   userDetails={userDetails} // Pass user details to Dashboard
                   loadingUser={loadingUser} // Pass loading state to Dashboard
                 />
               }
             />
             <Route
-              path="/tests/elective-fields"
+              path="/admin/elective-fields"
               element={<ElectiveFieldTest />}
             />
-            <Route path="/tests/courses" element={<CourseTest />} />
-            <Route path="/tests/semesters" element={<SemesterTest />} />
-            <Route path="/tests/templates" element={<TemplateTest />} />
-            <Route path="/tests/plans" element={<PlansTest />} />
-            <Route path="/tests/users" element={<UsersTest />} />
+            <Route path="/admin/semesters" element={<SemesterTest />} />
+            <Route path="/admin/templates" element={<TemplateTest />} />
+            <Route path="/admin/plans" element={<PlansTest />} />
+            <Route path="/admin/users" element={<UsersTest />} />
             <Route
-              path="major"
+              path="/admin/major"
               element={
                 <Major
                   token={localStorage.getItem("accessToken")}
@@ -178,6 +185,7 @@ const App = () => {
             openLogin={openLogin}
             closeLogin={setOpenLogin}
             login={setLoggedIn}
+            fetchUser={fetchUser}
           />
         )}
         <SignUp openSignUp={openSignUp} closeSignUp={setSignUp} />
