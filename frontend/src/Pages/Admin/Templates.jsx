@@ -22,8 +22,110 @@ import {
   AiOutlineDelete,
 } from "react-icons/ai";
 import React, { useState, useEffect } from "react";
+import IconButton from "@mui/material/IconButton";
+import { useTheme } from "@mui/material/styles";
+import LastPageIcon from "@mui/icons-material/LastPage";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import ConfirmationDialog from "../../Components/ConfirmationDialog";
+import TableFooter from "@mui/material/TableFooter";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import PropTypes from "prop-types";
+import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
+import Paper from "@mui/material/Paper";
+import TablePagination from "@mui/material/TablePagination";
 
 const drawerWidth = 400;
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: "#800000",
+    color: theme.palette.common.white,
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: theme.palette.action.hover,
+  },
+  // hide last border
+  "&:last-child td, &:last-child th": {
+    border: 0,
+  },
+}));
+
+const TablePaginationActions = (props) => {
+  const theme = useTheme();
+  const { count, page, rowsPerPage, onPageChange } = props;
+
+  const handleFirstPageButtonClick = (event) => {
+    onPageChange(event, 0);
+  };
+
+  const handleBackButtonClick = (event) => {
+    onPageChange(event, page - 1);
+  };
+
+  const handleNextButtonClick = (event) => {
+    onPageChange(event, page + 1);
+  };
+
+  const handleLastPageButtonClick = (event) => {
+    onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
+  };
+
+  return (
+    <Box sx={{ flexShrink: 0, ml: 2.5 }}>
+      <IconButton
+        onClick={handleFirstPageButtonClick}
+        disabled={page === 0}
+        aria-label="first page"
+      >
+        {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
+      </IconButton>
+      <IconButton
+        onClick={handleBackButtonClick}
+        disabled={page === 0}
+        aria-label="previous page"
+      >
+        {theme.direction === "rtl" ? (
+          <KeyboardArrowRight />
+        ) : (
+          <KeyboardArrowLeft />
+        )}
+      </IconButton>
+      <IconButton
+        onClick={handleNextButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="next page"
+      >
+        {theme.direction === "rtl" ? (
+          <KeyboardArrowLeft />
+        ) : (
+          <KeyboardArrowRight />
+        )}
+      </IconButton>
+      <IconButton
+        onClick={handleLastPageButtonClick}
+        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+        aria-label="last page"
+      >
+        {theme.direction === "rtl" ? <FirstPageIcon /> : <LastPageIcon />}
+      </IconButton>
+    </Box>
+  );
+};
+
+TablePaginationActions.propTypes = {
+  count: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+  page: PropTypes.number.isRequired,
+  rowsPerPage: PropTypes.number.isRequired,
+};
 
 const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
   ({ theme, open }) => ({
@@ -51,19 +153,10 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
   })
 );
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
-    color: theme.palette.common.white,
-  },
-  [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-  },
-}));
-
-const TemplateTest = () => {
+const Template = (props) => {
   const [templates, setTemplates] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [formTitle, setFormTitle] = useState("");
   const [formData, setFormData] = useState({
     min_credits: "",
     min_elective_fields: "",
@@ -83,6 +176,19 @@ const TemplateTest = () => {
     ...theme.mixins.toolbar,
     justifyContent: "flex-start",
   }));
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleClickOpen = () => {
+    setOpenDialog(true);
+    setFormTitle("Add New Template");
+  };
 
   const getListTemplates = () => {
     axios
@@ -189,6 +295,7 @@ const TemplateTest = () => {
     });
     setCurrentEditTemplate(template);
     setOpenDialog(true);
+    setFormTitle("Edit Template");
   };
 
   useEffect(() => {
@@ -196,16 +303,19 @@ const TemplateTest = () => {
   }, []);
 
   return (
-    <div style={{ padding: "25px" }}>
-      <Box sx={{ display: "flex" }}>
-        {/* main display table below */}
-        <Main open={openDrawer}>
-          {/* <DrawerHeader /> */}
-          {/* add button that opens a dialog */}
-          <Button variant="contained" color="primary" onClick={toggleDialog}>
-            +
-          </Button>
-          <TableContainer>
+    <div>
+      <div className="course-main">
+        <CourseSearchBar
+          token={props.token}
+          checkTokenAndRefresh={props.checkTokenAndRefresh}
+          userDetails={props.userDetails}
+          setTemplates={setTemplates}
+        />
+        <div className="course-table">
+          <TableContainer
+            sx={{ borderRadius: "10px", overflow: "hidden", boxShadow: "3" }}
+            component={Paper}
+          >
             <Table aria-label="customized table">
               <TableHead>
                 <TableRow>
@@ -226,119 +336,154 @@ const TemplateTest = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {templates.map((template, index) => (
-                  <TableRow key={index}>
-                    <StyledTableCell align="center">
-                      {template.min_credits}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {template.min_elective_fields}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {template.min_each_Elective}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {template.major}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {template.elective_fields.length}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      <Button>
-                        <AiOutlineEdit
-                          onClick={() => handleEditClick(template)}
-                        />
-                      </Button>
-                      <Button onClick={() => handleInfo(template)}>
-                        <AiOutlineInfoCircle />
-                      </Button>
-                      <Button onClick={() => handleDelete(template)}>
-                        <AiOutlineDelete />
-                      </Button>
-                    </StyledTableCell>
-                  </TableRow>
-                ))}
+                {templates
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((template, index) => (
+                    <TableRow key={index}>
+                      <StyledTableCell align="center">
+                        {template.min_credits}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {template.min_elective_fields}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {template.min_each_Elective}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {template.major}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {template.elective_fields.length}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Button>
+                          <AiOutlineEdit
+                            onClick={() => handleEditClick(template)}
+                          />
+                        </Button>
+                        <Button onClick={() => handleInfo(template)}>
+                          <AiOutlineInfoCircle />
+                        </Button>
+                        <Button onClick={() => handleDelete(template)}>
+                          <AiOutlineDelete />
+                        </Button>
+                      </StyledTableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
+              <TableFooter className="table-footer">
+                <TableRow sx={{ width: "100%" }}>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    colSpan={7}
+                    count={templates.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    ActionsComponent={TablePaginationActions}
+                  />
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
-        </Main>
-
-        <Dialog fullWidth open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle>
-            <div style={{ fontSize: "35px" }}>Add Elective Template</div>
-          </DialogTitle>
-          <DialogContent>
-            <form onSubmit={handleSubmit}>
-              <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-                <div>Minimum Credits</div>
-                <TextField
-                  required
-                  autoFocus
-                  margin="dense"
-                  id="min_credits"
-                  label="Minimum Credits"
-                  type="text"
-                  className="input_textfield"
-                  value={formData.min_credits}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </div>
-              <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-                <div>Major</div>
-                <TextField
-                  required
-                  autoFocus
-                  margin="dense"
-                  id="major"
-                  label="Major"
-                  type="text"
-                  className="input_textfield"
-                  value={formData.major}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </div>
-              <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-                <div>Minimum Number of Elective Fields to Take</div>
-                <TextField
-                  required
-                  autoFocus
-                  margin="dense"
-                  id="min_elective_fields"
-                  label="Minimum Number of Elective Fields to Take"
-                  type="text"
-                  className="input_textfield"
-                  value={formData.min_elective_fields}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </div>
-              <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-                <div>Minimum Number of Each Elective Fields to Take</div>
-                <TextField
-                  required
-                  autoFocus
-                  margin="dense"
-                  id="min_each_Elective"
-                  label="Minimum Number of Each Elective Fields to Take"
-                  type="text"
-                  className="input_textfield"
-                  value={formData.min_each_Elective}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </div>
-              <DialogActions>
-                <Button onClick={handleCloseDialog}>Cancel</Button>
-                <Button type="submit" color="primary">
-                  Save
-                </Button>
-              </DialogActions>
-            </form>
-          </DialogContent>
-        </Dialog>
-        <Drawer
+        </div>
+        {props.userDetails && props.userDetails.role === "admin" && (
+          <IconButton
+            className="add-course-button"
+            aria-label="add"
+            onClick={handleClickOpen}
+            sx={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              backgroundColor: "#800000",
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "#600000",
+              },
+            }}
+          >
+            <AddCircleOutlineIcon />
+          </IconButton>
+        )}
+      </div>
+      <Dialog fullWidth open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>
+          <div style={{ fontSize: "35px" }}>{formTitle}</div>
+        </DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleSubmit}>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <div>Minimum Credits</div>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="min_credits"
+                label="Minimum Credits"
+                type="text"
+                className="input_textfield"
+                value={formData.min_credits}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <div>Major</div>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="major"
+                label="Major"
+                type="text"
+                className="input_textfield"
+                value={formData.major}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <div>Minimum Number of Elective Fields to Take</div>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="min_elective_fields"
+                label="Minimum Number of Elective Fields to Take"
+                type="text"
+                className="input_textfield"
+                value={formData.min_elective_fields}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <div>Minimum Number of Each Elective Fields to Take</div>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="min_each_Elective"
+                label="Minimum Number of Each Elective Fields to Take"
+                type="text"
+                className="input_textfield"
+                value={formData.min_each_Elective}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <DialogActions>
+              <Button onClick={handleCloseDialog}>Cancel</Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {/* <Drawer
           sx={{
             width: drawerWidth,
             flexShrink: 0,
@@ -395,10 +540,9 @@ const TemplateTest = () => {
               </div>
             )}
           </div>
-        </Drawer>
-      </Box>
+        </Drawer> */}
     </div>
   );
 };
 
-export default TemplateTest;
+export default Template;

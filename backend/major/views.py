@@ -74,6 +74,7 @@ class MajorViewSet(ModelViewSet):
         major_obj.delete()
         return Response(status=204)
 
+    # http://localhost:8000/api/major/?search={"name": "Computer Science"}
     def list(self, request, *args, **kwargs):
         # Get the 'search' parameter from the query string
         search_param = request.query_params.get('search', None)
@@ -100,7 +101,7 @@ class MajorViewSet(ModelViewSet):
             print(f"Filtered by name, queryset count: {queryset.count()}")
 
         abbreviation = search_data.get("abbreviation", None)
-        if name:
+        if abbreviation:
             queryset = queryset.filter(abbreviation__iexact=abbreviation)
             print(f"Filtered by abbreviation, queryset count: {queryset.count()}")
 

@@ -14,7 +14,7 @@ import Courses from "./Pages/Courses";
 import Admin from "./Pages/Admin";
 import ElectiveFieldTest from "./Pages/Admin/ElectiveField";
 import SemesterTest from "./Pages/Admin/Semesters";
-import TemplateTest from "./Pages/Admin/Templates";
+import Template from "./Pages/Admin/Templates";
 import PlansTest from "./Pages/Admin/Plans";
 import UsersTest from "./Pages/Admin/Users";
 import Dashboard from "./Pages/Dashboard";
@@ -165,7 +165,16 @@ const App = () => {
               element={<ElectiveFieldTest />}
             />
             <Route path="/admin/semesters" element={<SemesterTest />} />
-            <Route path="/admin/templates" element={<TemplateTest />} />
+            <Route
+              path="/admin/templates"
+              element={
+                <Template
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
+                />
+              }
+            />
             <Route path="/admin/plans" element={<PlansTest />} />
             <Route path="/admin/users" element={<UsersTest />} />
             <Route
