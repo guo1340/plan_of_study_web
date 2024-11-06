@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Details
@@ -29,6 +30,13 @@ class UserViewSet(viewsets.ModelViewSet):
             else:
                 return Details.objects.filter(user=self.request.user)  # Regular users see their own details
         return Details.objects.none()
+
+    @action(detail=False, methods=['get'], url_path='me')
+    def get_current_user(self, request):
+        # Custom endpoint to get only the current user's details
+        queryset = Details.objects.filter(user=request.user)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         # Automatically associate the authenticated user
