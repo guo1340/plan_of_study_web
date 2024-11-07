@@ -35,6 +35,7 @@ import PropTypes from "prop-types";
 import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
 import Paper from "@mui/material/Paper";
 import TablePagination from "@mui/material/TablePagination";
+import BackToHome from "../../Components/BackToHomeDialog";
 
 const drawerWidth = 400;
 
@@ -167,6 +168,7 @@ const Template = (props) => {
   const [currentEditTemplate, setCurrentEditTemplate] = useState(null); // state variable to hold the field being edited
   const [openDrawer, setOpenDrawer] = useState(false);
   const [elective_fields, setElectiveFields] = useState([]);
+  const [openHome, setOpenHome] = useState(false);
 
   const DrawerHeader = styled("div")(({ theme }) => ({
     display: "flex",
@@ -299,8 +301,48 @@ const Template = (props) => {
   };
 
   useEffect(() => {
-    getListTemplates();
+    const fetchDataAfterTokenRefresh = async () => {
+      try {
+        // Wait for checkTokenAndRefresh to finish
+        await props.checkTokenAndRefresh();
+
+        if (!props.token || localStorage.getItem("UserRole") !== "admin") {
+          setOpenHome(true); // Open dialog if no token is available
+        }
+
+        // Only after token check is done, fetch the other data
+        getListTemplates();
+      } catch (error) {
+        console.error("Error in token refresh or data fetching:", error);
+      }
+    };
+
+    // Run the async function
+    fetchDataAfterTokenRefresh();
+
+    // Empty dependency array ensures this only runs once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!props.token) {
+    return (
+      <BackToHome
+        openDialog={openHome}
+        setOpenDialog={setOpenHome}
+        message="Please login first"
+      />
+    );
+  }
+
+  if (localStorage.getItem("userRole") !== "admin") {
+    return (
+      <BackToHome
+        openDialog={openHome}
+        setOpenDialog={setOpenHome}
+        message="You must be an Admin user to access this page ~"
+      />
+    );
+  }
 
   return (
     <div>
@@ -339,36 +381,38 @@ const Template = (props) => {
                 {templates
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((template, index) => (
-                    <TableRow key={index}>
-                      <StyledTableCell align="center">
-                        {template.min_credits}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {template.min_elective_fields}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {template.min_each_Elective}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {template.major}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        {template.elective_fields.length}
-                      </StyledTableCell>
-                      <StyledTableCell align="center">
-                        <Button>
-                          <AiOutlineEdit
-                            onClick={() => handleEditClick(template)}
-                          />
-                        </Button>
-                        <Button onClick={() => handleInfo(template)}>
-                          <AiOutlineInfoCircle />
-                        </Button>
-                        <Button onClick={() => handleDelete(template)}>
-                          <AiOutlineDelete />
-                        </Button>
-                      </StyledTableCell>
-                    </TableRow>
+                    <React.Fragment key={template.id}>
+                      <StyledTableRow key={index}>
+                        <StyledTableCell align="center">
+                          {template.min_credits}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {template.min_elective_fields}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {template.min_each_Elective}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {template.major}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {template.elective_fields.length}
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          <Button>
+                            <AiOutlineEdit
+                              onClick={() => handleEditClick(template)}
+                            />
+                          </Button>
+                          <Button onClick={() => handleInfo(template)}>
+                            <AiOutlineInfoCircle />
+                          </Button>
+                          <Button onClick={() => handleDelete(template)}>
+                            <AiOutlineDelete />
+                          </Button>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    </React.Fragment>
                   ))}
               </TableBody>
               <TableFooter className="table-footer">

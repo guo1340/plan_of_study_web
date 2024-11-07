@@ -32,6 +32,7 @@ import ConfirmationDialog from "../../Components/ConfirmationDialog";
 import TableFooter from "@mui/material/TableFooter";
 import TablePagination from "@mui/material/TablePagination";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import BackToHome from "../../Components/BackToHomeDialog";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -140,6 +141,7 @@ const Major = (props) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  const [openHome, setOpenHome] = useState(false);
 
   const getListMajors = async () => {
     try {
@@ -229,6 +231,10 @@ const Major = (props) => {
         // Wait for checkTokenAndRefresh to finish
         await props.checkTokenAndRefresh();
 
+        if (!props.token || localStorage.getItem("UserRole") !== "admin") {
+          setOpenHome(true); // Open dialog if no token is available
+        }
+
         // Only after token check is done, fetch the other data
         getListMajors();
       } catch (error) {
@@ -242,6 +248,26 @@ const Major = (props) => {
     // Empty dependency array ensures this only runs once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!props.token) {
+    return (
+      <BackToHome
+        openDialog={openHome}
+        setOpenDialog={setOpenHome}
+        message="Please login first"
+      />
+    );
+  }
+
+  if (localStorage.getItem("userRole") !== "admin") {
+    return (
+      <BackToHome
+        openDialog={openHome}
+        setOpenDialog={setOpenHome}
+        message="You must be an Admin user to access this page ~"
+      />
+    );
+  }
 
   return (
     <div>
