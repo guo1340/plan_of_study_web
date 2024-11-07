@@ -10,8 +10,8 @@ import {
   DialogContent,
   TextField,
   DialogActions,
-  Drawer,
   Box,
+  Tooltip,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -36,8 +36,8 @@ import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
 import Paper from "@mui/material/Paper";
 import TablePagination from "@mui/material/TablePagination";
 import BackToHome from "../../Components/BackToHomeDialog";
-
-const drawerWidth = 400;
+import Autocomplete from "@mui/material/Autocomplete";
+import Collapse from "@mui/material/Collapse";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -128,56 +128,24 @@ TablePaginationActions.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
 };
 
-const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })(
-  ({ theme, open }) => ({
-    flexGrow: 1,
-    padding: theme.spacing(3),
-    transition: theme.transitions.create("margin", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-    marginRight: -drawerWidth,
-    ...(open && {
-      transition: theme.transitions.create("margin", {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-      marginRight: 0,
-    }),
-    /**
-     * This is necessary to enable the selection of content. In the DOM, the stacking order is determined
-     * by the order of appearance. Following this rule, elements appearing later in the markup will overlay
-     * those that appear earlier. Since the Drawer comes after the Main content, this adjustment ensures
-     * proper interaction with the underlying content.
-     */
-    position: "relative",
-  })
-);
-
 const Template = (props) => {
   const [templates, setTemplates] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openMainDialog, setOpenMainDialog] = useState(false);
+  const [openRequirementDialog, setOpenRequirementDialog] = useState(false);
   const [formTitle, setFormTitle] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     min_credits: "",
+    major: null,
+    level: "",
+    elective_fields: [],
     min_elective_fields: "",
     min_each_Elective: "",
-    major: "",
-    elective_fields: [],
+    requirements: [],
   });
+  const [openInfo, setOpenInfo] = useState(null);
   const [currentEditTemplate, setCurrentEditTemplate] = useState(null); // state variable to hold the field being edited
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [elective_fields, setElectiveFields] = useState([]);
   const [openHome, setOpenHome] = useState(false);
-
-  const DrawerHeader = styled("div")(({ theme }) => ({
-    display: "flex",
-    alignItems: "center",
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: "flex-start",
-  }));
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -188,8 +156,34 @@ const Template = (props) => {
   };
 
   const handleClickOpen = () => {
-    setOpenDialog(true);
+    setOpenMainDialog(true);
     setFormTitle("Add New Template");
+  };
+
+  const handleClickOpenRequirement = () => {
+    setOpenRequirementDialog(true);
+  };
+
+  const [all_majors, setMajors] = useState([]);
+  const [majorError, setMajorError] = useState(false);
+
+  const handleChangeMajor = (event, newValue) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      major: newValue ? newValue.id : "", // Ensure coreqs is always an array
+    }));
+    setMajorError(false);
+  };
+
+  const getListMajors = () => {
+    axios
+      .get("http://localhost:8000/api/major/")
+      .then((res) => {
+        setMajors(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching major data:", error);
+      });
   };
 
   const getListTemplates = () => {
@@ -206,20 +200,20 @@ const Template = (props) => {
         console.error("Error fetching templates data:", error);
       });
   };
-  const toggleDialog = () => {
-    setOpenDialog(!openDialog);
-  };
-  const toggleDrawer = () => {
-    setOpenDrawer(!openDrawer);
-    setCurrentEditTemplate(null);
-    setElectiveFields([]);
-  };
+
   const handleCloseDialog = () => {
     setFormData({ type_name: "", major: "", field_name: "", field_number: "" });
-    setOpenDialog(false);
+    setOpenMainDialog(false);
+  };
+
+  const handleCloseRequirementDialog = () => {
+    setOpenRequirementDialog(false);
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.major === "") {
+      setMajorError(true);
+    }
     const method = currentEditTemplate ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
     const url = currentEditTemplate
       ? `http://localhost:8000/api/template/${currentEditTemplate.id}/` // If editing, use the field ID
@@ -228,6 +222,7 @@ const Template = (props) => {
     handleCloseDialog();
     // axios[method](url, formData).then(getListTemplates());
     try {
+      await props.checkTokenAndRefresh();
       await axios[method](url, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -251,6 +246,7 @@ const Template = (props) => {
   const handleDelete = async (template) => {
     // event handler for the delete button
     try {
+      await props.checkTokenAndRefresh();
       await axios.delete(`http://localhost:8000/api/template/${template.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -263,45 +259,32 @@ const Template = (props) => {
     }
   };
 
-  const handleInfo = async (template) => {
-    // event handler for the info button
-    if (!openDrawer || currentEditTemplate.id === template.id) {
-      toggleDrawer();
-
-      setCurrentEditTemplate(template);
-      try {
-        const ids = template.elective_fields; // array of elective field ids
-        const promises = ids.map((id) =>
-          fetch(`http://localhost:8000/api/elective-field/${id}/`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }).then((res) => res.json())
-        );
-        let electiveFields = await Promise.all(promises); // get all elective field objects
-
-        electiveFields = electiveFields.sort(
-          (a, b) => a.field_number - b.field_number
-        );
-        // Store the fetched elective fields in state for display
-        setElectiveFields(electiveFields);
-      } catch (error) {
-        console.error("Error fetching elective fields:", error);
-      }
-    }
+  const handleInfoClick = (template) => {
+    setOpenInfo((prevOpenInfo) =>
+      prevOpenInfo === template.id ? null : template.id
+    );
   };
 
   const handleEditClick = (template) => {
     setFormData({
-      // TODO
+      min_credits: template.min_credits || "",
+      major: template.major || "",
+      level: template.level || "",
+      elective_fields: template.elective_fields || [],
+      min_elective_fields: template.min_elective_fields || "",
+      min_each_Elective: template.min_each_Elective || "",
+      requirements: template.requirements || [],
     });
     setCurrentEditTemplate(template);
-    setOpenDialog(true);
+    setOpenMainDialog(true);
     setFormTitle("Edit Template");
   };
 
   useEffect(() => {
     const fetchDataAfterTokenRefresh = async () => {
+      if (openMainDialog) {
+        setOpenMainDialog(true);
+      }
       try {
         // Wait for checkTokenAndRefresh to finish
         await props.checkTokenAndRefresh();
@@ -312,6 +295,7 @@ const Template = (props) => {
 
         // Only after token check is done, fetch the other data
         getListTemplates();
+        getListMajors();
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
       }
@@ -322,13 +306,13 @@ const Template = (props) => {
 
     // Empty dependency array ensures this only runs once
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [openMainDialog]);
 
   if (!props.token) {
     return (
       <BackToHome
-        openDialog={openHome}
-        setOpenDialog={setOpenHome}
+        openMainDialog={openHome}
+        setOpenMainDialog={setOpenHome}
         message="Please login first"
       />
     );
@@ -337,8 +321,8 @@ const Template = (props) => {
   if (localStorage.getItem("userRole") !== "admin") {
     return (
       <BackToHome
-        openDialog={openHome}
-        setOpenDialog={setOpenHome}
+        openMainDialog={openHome}
+        setOpenMainDialog={setOpenHome}
         message="You must be an Admin user to access this page ~"
       />
     );
@@ -361,18 +345,13 @@ const Template = (props) => {
             <Table aria-label="customized table">
               <TableHead>
                 <TableRow>
+                  <StyledTableCell align="center">Major</StyledTableCell>
+                  <StyledTableCell align="center">Level</StyledTableCell>
                   <StyledTableCell align="center">
                     Minimum Credits
                   </StyledTableCell>
                   <StyledTableCell align="center">
-                    Minimum Number of Elective Fields to Take
-                  </StyledTableCell>
-                  <StyledTableCell align="center">
-                    Minimum Number of Each Elective Fields to Take
-                  </StyledTableCell>
-                  <StyledTableCell align="center">Major</StyledTableCell>
-                  <StyledTableCell align="center">
-                    Number of Elective Fields
+                    Number of Requirements
                   </StyledTableCell>
                   <StyledTableCell align="center">Action</StyledTableCell>
                 </TableRow>
@@ -382,35 +361,122 @@ const Template = (props) => {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((template, index) => (
                     <React.Fragment key={template.id}>
-                      <StyledTableRow key={index}>
+                      <StyledTableRow
+                        key={index}
+                        style={{
+                          backgroundColor:
+                            index % 2 === 0 ? "#f5f5f5" : "white", // Alternating colors: white and light grey
+                        }}
+                      >
+                        <StyledTableCell align="center">
+                          <Tooltip
+                            title={
+                              all_majors.find(
+                                (major) => major.id === template.major
+                              )?.name || "N/A"
+                            }
+                          >
+                            <span>
+                              {all_majors.find(
+                                (major) => major.id === template.major
+                              )?.abbreviation || "N/A"}
+                            </span>
+                          </Tooltip>
+                        </StyledTableCell>
+                        <StyledTableCell align="center">
+                          {template.level}
+                        </StyledTableCell>
                         <StyledTableCell align="center">
                           {template.min_credits}
                         </StyledTableCell>
                         <StyledTableCell align="center">
-                          {template.min_elective_fields}
+                          {template.requirements.length}
                         </StyledTableCell>
                         <StyledTableCell align="center">
-                          {template.min_each_Elective}
-                        </StyledTableCell>
-                        <StyledTableCell align="center">
-                          {template.major}
-                        </StyledTableCell>
-                        <StyledTableCell align="center">
-                          {template.elective_fields.length}
-                        </StyledTableCell>
-                        <StyledTableCell align="center">
-                          <Button>
-                            <AiOutlineEdit
-                              onClick={() => handleEditClick(template)}
-                            />
+                          <Button
+                            sx={{ color: "black" }}
+                            onClick={() => handleEditClick(template)}
+                          >
+                            <AiOutlineEdit />
                           </Button>
-                          <Button onClick={() => handleInfo(template)}>
+                          <Button onClick={() => handleInfoClick(template)}>
                             <AiOutlineInfoCircle />
                           </Button>
-                          <Button onClick={() => handleDelete(template)}>
+                          <Button
+                            sx={{ color: "red" }}
+                            onClick={() => setDeleteConfirmation(true)}
+                          >
                             <AiOutlineDelete />
                           </Button>
+                          <ConfirmationDialog
+                            open={deleteConfirmation}
+                            handleClose={() => {
+                              setDeleteConfirmation(false);
+                            }}
+                            message="Are you sure you wan to delete this template from the database?"
+                            handleSubmit={() => {
+                              handleDelete(template);
+                              setDeleteConfirmation(false);
+                            }}
+                          />
                         </StyledTableCell>
+                      </StyledTableRow>
+                      <StyledTableRow style={{ backgroundColor: "#fafafa" }}>
+                        <TableCell
+                          colSpan={6}
+                          style={{ padding: "0 0 0 20px" }}
+                        >
+                          <Collapse
+                            in={openInfo === template.id}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            <Box sx={{ margin: 1 }}>
+                              <p>
+                                <b>Major: </b>{" "}
+                                {all_majors.find(
+                                  (major) => major.id === template.major
+                                )?.name || "N/A"}
+                              </p>
+                              <p>
+                                <b>Level: </b> {template.level}
+                              </p>
+                              <p>
+                                <b>Minimum number of Elective Fields: </b>
+                                {template.min_elective_fields}
+                              </p>
+                              <p>
+                                <b>
+                                  Minimum credits of classes needed to take in
+                                  each Elective Fields:{" "}
+                                </b>
+                                {template.min_each_Elective} credits
+                              </p>
+                              <p>
+                                <b>
+                                  Requirements ({template.requirements.length}
+                                  ):{" "}
+                                </b>
+                                <Button
+                                  className="add-requirement-button"
+                                  aria-label="add"
+                                  onClick={handleClickOpenRequirement}
+                                  sx={{
+                                    backgroundColor: "#800000",
+                                    color: "#fff",
+                                    "&:hover": {
+                                      backgroundColor: "#600000",
+                                    },
+                                  }}
+                                >
+                                  <AddCircleOutlineIcon
+                                    sx={{ width: "12.5px", height: "12.5px" }}
+                                  />
+                                </Button>
+                              </p>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
                       </StyledTableRow>
                     </React.Fragment>
                   ))}
@@ -432,34 +498,60 @@ const Template = (props) => {
             </Table>
           </TableContainer>
         </div>
-        {props.userDetails && props.userDetails.role === "admin" && (
-          <IconButton
-            className="add-course-button"
-            aria-label="add"
-            onClick={handleClickOpen}
-            sx={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              backgroundColor: "#800000",
-              color: "#fff",
-              "&:hover": {
-                backgroundColor: "#600000",
-              },
-            }}
-          >
-            <AddCircleOutlineIcon />
-          </IconButton>
-        )}
+        <IconButton
+          className="add-course-button"
+          aria-label="add"
+          onClick={handleClickOpen}
+          sx={{
+            position: "absolute",
+            bottom: "20px",
+            right: "20px",
+            backgroundColor: "#800000",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#600000",
+            },
+          }}
+        >
+          <AddCircleOutlineIcon />
+        </IconButton>
       </div>
-      <Dialog fullWidth open={openDialog} onClose={handleCloseDialog}>
+      <Dialog
+        fullWidth
+        open={openRequirementDialog}
+        onClose={handleCloseRequirementDialog}
+      >
+        <DialogTitle>Course Requirement</DialogTitle>
+      </Dialog>
+      <Dialog fullWidth open={openMainDialog} onClose={handleCloseDialog}>
         <DialogTitle>
           <div style={{ fontSize: "35px" }}>{formTitle}</div>
         </DialogTitle>
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Minimum Credits</div>
+              <Autocomplete
+                options={all_majors} // Array of major options
+                getOptionLabel={(option) => option.name} // Display the major's name
+                value={
+                  all_majors.find((major) => major.id === formData.major) ||
+                  null
+                } // Show selected major
+                onChange={handleChangeMajor} // Handle change for single selection
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Major *"
+                    variant="outlined"
+                    fullWidth
+                    error={majorError}
+                    helperText={majorError ? "Please select a major" : ""}
+                  />
+                )}
+                sx={{ width: "100%" }} // Full width
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
                 required
                 autoFocus
@@ -468,28 +560,26 @@ const Template = (props) => {
                 label="Minimum Credits"
                 type="text"
                 className="input_textfield"
-                value={formData.min_credits}
+                value={formData.min_credits || ""}
                 onChange={handleChange}
                 fullWidth
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Major</div>
               <TextField
                 required
                 autoFocus
                 margin="dense"
-                id="major"
-                label="Major"
+                id="level"
+                label="Level"
                 type="text"
                 className="input_textfield"
-                value={formData.major}
+                value={formData.level || ""}
                 onChange={handleChange}
                 fullWidth
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Minimum Number of Elective Fields to Take</div>
               <TextField
                 required
                 autoFocus
@@ -498,22 +588,21 @@ const Template = (props) => {
                 label="Minimum Number of Elective Fields to Take"
                 type="text"
                 className="input_textfield"
-                value={formData.min_elective_fields}
+                value={formData.min_elective_fields || ""}
                 onChange={handleChange}
                 fullWidth
               />
             </div>
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <div>Minimum Number of Each Elective Fields to Take</div>
               <TextField
                 required
                 autoFocus
                 margin="dense"
                 id="min_each_Elective"
-                label="Minimum Number of Each Elective Fields to Take"
+                label="Minimum credits of Each Elective Fields to Take"
                 type="text"
                 className="input_textfield"
-                value={formData.min_each_Elective}
+                value={formData.min_each_Elective || ""}
                 onChange={handleChange}
                 fullWidth
               />
@@ -527,64 +616,6 @@ const Template = (props) => {
           </form>
         </DialogContent>
       </Dialog>
-      {/* <Drawer
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-            },
-          }}
-          variant="persistent"
-          anchor="right"
-          open={openDrawer}
-        >
-          <DrawerHeader>
-            <Button
-              style={{ right: "10px", bottom: "20px" }}
-              onClick={toggleDrawer}
-            >
-              <div style={{ color: "black" }}>X</div>
-            </Button>
-          </DrawerHeader>
-          <div style={{ marginTop: "-50" }}>
-            {currentEditTemplate && (
-              <div>
-                <h2>Template Info</h2>
-
-                <p>
-                  <b>Major:</b> {currentEditTemplate.major}
-                </p>
-                <p>
-                  <b>Minimum Credits:</b> {currentEditTemplate.min_credits}
-                </p>
-                <p>
-                  <b>Minimum Number of Elective Fields to Take:</b>{" "}
-                  {currentEditTemplate.min_elective_fields}
-                </p>
-                <p>
-                  <b>Minimum Number of Each Elective Fields to Take:</b>{" "}
-                  {currentEditTemplate.min_each_Elective}
-                </p>
-                <p>
-                  <b>Elective Fields:</b>{" "}
-                  {elective_fields.map((elective_field) => {
-                    return (
-                      <li>
-                        {elective_field.type_name +
-                          " " +
-                          elective_field.field_number +
-                          ": " +
-                          elective_field.field_name +
-                          "\n"}
-                      </li>
-                    );
-                  })}
-                </p>
-              </div>
-            )}
-          </div>
-        </Drawer> */}
     </div>
   );
 };
