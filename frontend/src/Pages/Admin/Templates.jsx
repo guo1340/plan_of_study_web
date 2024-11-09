@@ -12,6 +12,7 @@ import {
   DialogActions,
   Box,
   Tooltip,
+  MenuItem,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -38,6 +39,7 @@ import TablePagination from "@mui/material/TablePagination";
 import BackToHome from "../../Components/BackToHomeDialog";
 import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
+import DialogContentText from "@mui/material/DialogContentText";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -143,9 +145,27 @@ const Template = (props) => {
     min_each_Elective: "",
     requirements: [],
   });
+  const [requirementFormData, setRequirementFormData] = useState({
+    attribute: "",
+    attribute_value: -1,
+    attribute_choice: "",
+    major: -1,
+    requirement_size: -1,
+    requirement_type: ">=",
+    credit_type: -1,
+  });
+  const [templateRequirements, setTemplateRequirements] = useState([]);
   const [openInfo, setOpenInfo] = useState(null);
   const [currentEditTemplate, setCurrentEditTemplate] = useState(null); // state variable to hold the field being edited
+  const [currentEditRequirement, setCurrentEditRequirement] = useState(null); // state variable to hold the field being edited
   const [openHome, setOpenHome] = useState(false);
+  const COMPARISON_CHOICES = {
+    "==": "is",
+    ">=": "is at least",
+    "<=": "is at most",
+    ">": "is more than",
+    "<": "is less than",
+  };
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -165,6 +185,7 @@ const Template = (props) => {
   };
 
   const [all_majors, setMajors] = useState([]);
+  const [all_credit_types, setCreditTypes] = useState([]);
   const [majorError, setMajorError] = useState(false);
 
   const handleChangeMajor = (event, newValue) => {
@@ -184,6 +205,81 @@ const Template = (props) => {
       .catch((error) => {
         console.error("Error fetching major data:", error);
       });
+  };
+
+  const getListCreditTypes = () => {
+    axios
+      .get("http://localhost:8000/api/credit-type/")
+      .then((res) => {
+        setCreditTypes(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching credit-type data:", error);
+      });
+  };
+
+  const fetchRequirements = async (template) => {
+    try {
+      const requirementsData = await Promise.all(
+        template.requirements.map(async (requirementId) => {
+          try {
+            // Fetch the main requirement object
+            const requirementResponse = await axios.get(
+              `http://localhost:8000/api/requirement/${requirementId}/`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "accessToken"
+                  )}`,
+                },
+              }
+            );
+            const requirement = requirementResponse.data;
+
+            // Fetch the major object for the requirement
+            const majorResponse = await axios.get(
+              `http://localhost:8000/api/major/${requirement.major}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "accessToken"
+                  )}`,
+                },
+              }
+            );
+            requirement.major_name = majorResponse.data.name; // Attach major name to requirement
+
+            // Fetch the credit type object for the requirement
+            const creditTypeResponse = await axios.get(
+              `http://localhost:8000/api/credit-type/${requirement.credit_type}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "accessToken"
+                  )}`,
+                },
+              }
+            );
+            requirement.credit_type_name = creditTypeResponse.data.name; // Attach credit type name to requirement
+
+            return requirement;
+          } catch (error) {
+            console.error(
+              "Error fetching data for requirement:",
+              requirementId,
+              error
+            );
+            return null; // Return null or an empty object if there's an error for a specific requirement
+          }
+        })
+      );
+
+      // Filter out any null values from the list of requirements
+      setTemplateRequirements(requirementsData.filter((req) => req !== null));
+      console.log(requirementsData);
+    } catch (error) {
+      console.error("Error fetching requirements:", error);
+    }
   };
 
   const getListTemplates = () => {
@@ -235,6 +331,60 @@ const Template = (props) => {
     }
   };
 
+  const handleSubmitRequirement = async (e) => {
+    e.preventDefault();
+    // TODO: add set error when empty check
+    const method = currentEditRequirement ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
+    const url = currentEditRequirement
+      ? `http://localhost:8000/api/requirement/${currentEditRequirement.id}/` // If editing, use the field ID
+      : "http://localhost:8000/api/requirement/";
+    console.log(requirementFormData);
+    handleCloseRequirementDialog();
+
+    try {
+      await props.checkTokenAndRefresh();
+      const response = await axios[method](url, requirementFormData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      if (!currentEditRequirement && currentEditTemplate) {
+        // If this is a new requirement and a template is being edited, add the new requirement to the template
+        const newRequirementId = response.data.id; // Get the ID of the new requirement from the response
+
+        // Fetch the current template data to get the existing requirements
+        const templateResponse = await axios.get(
+          `http://localhost:8000/api/template/${currentEditTemplate.id}/`
+        );
+
+        // Add the new requirement ID to the existing requirements array
+        const updatedRequirements = [
+          ...templateResponse.data.requirements,
+          newRequirementId,
+        ];
+
+        // Update the template with the new requirements array
+        await axios.put(
+          `http://localhost:8000/api/template/${currentEditTemplate.id}/`,
+          {
+            ...templateResponse.data,
+            requirements: updatedRequirements,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+      }
+      handleCloseRequirementDialog();
+      getListTemplates();
+      fetchRequirements(currentEditTemplate);
+    } catch (error) {
+      console.error("Error submitting requirement data:", error);
+    }
+  };
+
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
     setFormData((prevFormData) => ({
@@ -263,6 +413,14 @@ const Template = (props) => {
     setOpenInfo((prevOpenInfo) =>
       prevOpenInfo === template.id ? null : template.id
     );
+    setCurrentEditTemplate(template);
+
+    fetchRequirements(template);
+  };
+
+  // Helper function to get the label for a given attribute choice
+  const getComparisonLabel = (choice) => {
+    return COMPARISON_CHOICES[choice] || choice; // Return the label or fallback to the original choice if not found
   };
 
   const handleEditClick = (template) => {
@@ -296,6 +454,7 @@ const Template = (props) => {
         // Only after token check is done, fetch the other data
         getListTemplates();
         getListMajors();
+        getListCreditTypes();
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
       }
@@ -474,6 +633,26 @@ const Template = (props) => {
                                   />
                                 </Button>
                               </p>
+                              <b>Requirement Details:</b>
+                              <ul>
+                                {templateRequirements.map((req) => (
+                                  <li key={req.id}>
+                                    {req.major_name} {req.credit_type_name}{" "}
+                                    {req.attribute && req.attribute !== "" ? (
+                                      <>
+                                        {req.attribute}{" "}
+                                        {getComparisonLabel(
+                                          req.attribute_choice
+                                        )}{" "}
+                                        {req.attribute_value} :{" "}
+                                      </>
+                                    ) : (
+                                      ": "
+                                    )}
+                                    <b>{req.requirement_size} credits</b>
+                                  </li>
+                                ))}
+                              </ul>
                             </Box>
                           </Collapse>
                         </TableCell>
@@ -522,7 +701,179 @@ const Template = (props) => {
         onClose={handleCloseRequirementDialog}
       >
         <DialogTitle>Course Requirement</DialogTitle>
+        <DialogContent>
+          <DialogContentText style={{ paddingBottom: "10px" }}>
+            Please fill out the details of this requirement.
+          </DialogContentText>
+          <form onSubmit={handleSubmitRequirement}>
+            {/* Attribute Field: Choice between "No Selection", "Course Number", "Elective Field" */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                select
+                label="Attribute"
+                variant="outlined"
+                value={requirementFormData.attribute || ""}
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    attribute: e.target.value,
+                  })
+                }
+                fullWidth
+              >
+                <MenuItem value="">No Selection</MenuItem>
+                <MenuItem value="course_number">Course Number</MenuItem>
+                <MenuItem value="elective_field">Elective Field</MenuItem>
+              </TextField>
+            </div>
+
+            {/* Attribute Value Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                label="Attribute Value"
+                variant="outlined"
+                type="number"
+                value={requirementFormData.attribute_value || -1}
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    attribute_value: e.target.value,
+                  })
+                }
+                fullWidth
+              />
+            </div>
+
+            {/* Attribute Choice Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                select
+                label="Attribute Choice"
+                variant="outlined"
+                value={requirementFormData.attribute_choice || "=="}
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    attribute_choice: e.target.value,
+                  })
+                }
+                fullWidth
+              >
+                {Object.entries(COMPARISON_CHOICES).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </div>
+
+            {/* Major Field: Autocomplete with Major Options */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <Autocomplete
+                options={all_majors} // Array of major options
+                getOptionLabel={(option) => option.name} // Display the major's name
+                value={
+                  all_majors.find(
+                    (major) => major.id === requirementFormData.major
+                  ) || null
+                }
+                onChange={(e, newValue) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    major: newValue ? newValue.id : -1,
+                  })
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Major"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
+
+            {/* Requirement Size Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                label="Requirement Size"
+                variant="outlined"
+                type="number"
+                value={requirementFormData.requirement_size || ""}
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    requirement_size: e.target.value,
+                  })
+                }
+                fullWidth
+              />
+            </div>
+
+            {/* Requirement Type Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                select
+                label="Requirement Type"
+                variant="outlined"
+                // Use `requirementFormData.requirement_type` directly to display the correct initial value
+                value={requirementFormData.requirement_type || ">="}
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    requirement_type: e.target.value,
+                  })
+                }
+                fullWidth
+              >
+                {Object.entries(COMPARISON_CHOICES).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </div>
+
+            {/* Credit Type Field: Dropdown for Credit Type Options */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <Autocomplete
+                options={all_credit_types} // Array of credit type options
+                getOptionLabel={(option) => option.name} // Display the credit type's name
+                value={
+                  all_credit_types.find(
+                    (creditType) =>
+                      creditType.id === requirementFormData.credit_type
+                  ) || null
+                }
+                onChange={(e, newValue) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    credit_type: newValue ? newValue.id : -1,
+                  })
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Credit Type"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
+
+            <DialogActions>
+              <Button onClick={handleCloseRequirementDialog}>Cancel</Button>
+              <Button type="submit" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </DialogContent>
       </Dialog>
+
       <Dialog fullWidth open={openMainDialog} onClose={handleCloseDialog}>
         <DialogTitle>
           <div style={{ fontSize: "35px" }}>{formTitle}</div>
