@@ -136,6 +136,9 @@ const Template = (props) => {
   const [openRequirementDialog, setOpenRequirementDialog] = useState(false);
   const [formTitle, setFormTitle] = useState("");
   const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+  const [deleteConfirmationMessage, setDeleteConfirmationMessage] =
+    useState("");
+  const [deleteFunc, setDeleteFunc] = useState(null);
   const [formData, setFormData] = useState({
     min_credits: "",
     major: null,
@@ -151,7 +154,7 @@ const Template = (props) => {
     attribute_choice: "",
     major: -1,
     requirement_size: -1,
-    requirement_type: ">=",
+    requirement_type: "",
     credit_type: -1,
   });
   const [templateRequirements, setTemplateRequirements] = useState([]);
@@ -187,6 +190,8 @@ const Template = (props) => {
   const [all_majors, setMajors] = useState([]);
   const [all_credit_types, setCreditTypes] = useState([]);
   const [majorError, setMajorError] = useState(false);
+  const [creditTypeError, setCreditTypeError] = useState(false);
+  const [majorRequirementError, setMajorRequirementError] = useState(false);
 
   const handleChangeMajor = (event, newValue) => {
     setFormData((prevFormData) => ({
@@ -276,7 +281,6 @@ const Template = (props) => {
 
       // Filter out any null values from the list of requirements
       setTemplateRequirements(requirementsData.filter((req) => req !== null));
-      console.log(requirementsData);
     } catch (error) {
       console.error("Error fetching requirements:", error);
     }
@@ -305,6 +309,7 @@ const Template = (props) => {
   const handleCloseRequirementDialog = () => {
     setOpenRequirementDialog(false);
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.major === "") {
@@ -314,7 +319,6 @@ const Template = (props) => {
     const url = currentEditTemplate
       ? `http://localhost:8000/api/template/${currentEditTemplate.id}/` // If editing, use the field ID
       : "http://localhost:8000/api/template/";
-    console.log(formData);
     handleCloseDialog();
     // axios[method](url, formData).then(getListTemplates());
     try {
@@ -333,13 +337,18 @@ const Template = (props) => {
 
   const handleSubmitRequirement = async (e) => {
     e.preventDefault();
-    // TODO: add set error when empty check
-    const method = currentEditRequirement ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
+    if (requirementFormData.major === -1) {
+      setMajorRequirementError(true);
+      return;
+    }
+    if (requirementFormData.credit_type === -1) {
+      setCreditTypeError(true);
+      return;
+    }
+    const method = currentEditRequirement ? "put" : "post";
     const url = currentEditRequirement
-      ? `http://localhost:8000/api/requirement/${currentEditRequirement.id}/` // If editing, use the field ID
+      ? `http://localhost:8000/api/requirement/${currentEditRequirement.id}/`
       : "http://localhost:8000/api/requirement/";
-    console.log(requirementFormData);
-    handleCloseRequirementDialog();
 
     try {
       await props.checkTokenAndRefresh();
@@ -348,22 +357,17 @@ const Template = (props) => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      if (!currentEditRequirement && currentEditTemplate) {
-        // If this is a new requirement and a template is being edited, add the new requirement to the template
-        const newRequirementId = response.data.id; // Get the ID of the new requirement from the response
 
-        // Fetch the current template data to get the existing requirements
+      if (!currentEditRequirement && currentEditTemplate) {
+        const newRequirementId = response.data.id;
         const templateResponse = await axios.get(
           `http://localhost:8000/api/template/${currentEditTemplate.id}/`
         );
-
-        // Add the new requirement ID to the existing requirements array
         const updatedRequirements = [
           ...templateResponse.data.requirements,
           newRequirementId,
         ];
 
-        // Update the template with the new requirements array
         await axios.put(
           `http://localhost:8000/api/template/${currentEditTemplate.id}/`,
           {
@@ -377,12 +381,27 @@ const Template = (props) => {
           }
         );
       }
-      handleCloseRequirementDialog();
+
+      // Fetch updated requirements list for the current template after creating/editing
+      if (currentEditTemplate) {
+        await fetchRequirements(currentEditTemplate);
+      }
+
       getListTemplates();
-      fetchRequirements(currentEditTemplate);
+      handleCloseRequirementDialog();
     } catch (error) {
       console.error("Error submitting requirement data:", error);
     }
+
+    setRequirementFormData({
+      attribute: "",
+      attribute_value: -1,
+      attribute_choice: "",
+      major: -1,
+      requirement_size: -1,
+      requirement_type: "",
+      credit_type: -1,
+    });
   };
 
   const handleChange = (e) => {
@@ -406,6 +425,28 @@ const Template = (props) => {
       getListTemplates();
     } catch (error) {
       console.error("Error deleting template: ", error);
+    }
+  };
+
+  const handleDeleteRequirement = async (requirement) => {
+    try {
+      await props.checkTokenAndRefresh();
+      await axios.delete(
+        `http://localhost:8000/api/requirement/${requirement.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      // Fetch updated requirements list for the current template
+      if (currentEditTemplate) {
+        await fetchRequirements(currentEditTemplate);
+      }
+      handleCloseDialog();
+      getListTemplates();
+    } catch (error) {
+      console.error("Error deleting requirement: ", error);
     }
   };
 
@@ -436,6 +477,20 @@ const Template = (props) => {
     setCurrentEditTemplate(template);
     setOpenMainDialog(true);
     setFormTitle("Edit Template");
+  };
+
+  const handleEditRequirementClick = (requirement) => {
+    setRequirementFormData({
+      attribute: requirement.attribute || "",
+      attribute_value: requirement.attribute_value || -1,
+      attribute_choice: requirement.attribute_choice || "",
+      major: requirement.major || -1,
+      requirement_size: requirement.requirement_size || -1,
+      requirement_type: requirement.requirement_type || "",
+      credit_type: requirement.credit_type || -1,
+    });
+    setCurrentEditRequirement(requirement);
+    setOpenRequirementDialog(true);
   };
 
   useEffect(() => {
@@ -563,7 +618,13 @@ const Template = (props) => {
                           </Button>
                           <Button
                             sx={{ color: "red" }}
-                            onClick={() => setDeleteConfirmation(true)}
+                            onClick={() => {
+                              setDeleteConfirmation(true);
+                              setDeleteConfirmationMessage(
+                                "Are you sure you wan to delete this template from the database?"
+                              );
+                              setDeleteFunc(() => () => handleDelete(template));
+                            }}
                           >
                             <AiOutlineDelete />
                           </Button>
@@ -571,11 +632,15 @@ const Template = (props) => {
                             open={deleteConfirmation}
                             handleClose={() => {
                               setDeleteConfirmation(false);
+                              setDeleteConfirmationMessage("");
+                              setDeleteFunc(null);
                             }}
-                            message="Are you sure you wan to delete this template from the database?"
+                            message={deleteConfirmationMessage}
                             handleSubmit={() => {
-                              handleDelete(template);
+                              if (deleteFunc) deleteFunc(); // Call deleteFunc if it’s set
                               setDeleteConfirmation(false);
+                              setDeleteConfirmationMessage("");
+                              setDeleteFunc(null);
                             }}
                           />
                         </StyledTableCell>
@@ -637,19 +702,49 @@ const Template = (props) => {
                               <ul>
                                 {templateRequirements.map((req) => (
                                   <li key={req.id}>
-                                    {req.major_name} {req.credit_type_name}{" "}
+                                    {req.major_name}
+                                    {" course"}
                                     {req.attribute && req.attribute !== "" ? (
                                       <>
+                                        {" where "}
                                         {req.attribute}{" "}
                                         {getComparisonLabel(
                                           req.attribute_choice
                                         )}{" "}
-                                        {req.attribute_value} :{" "}
+                                        {req.attribute_value}
+                                        {"'s requirement "}
                                       </>
                                     ) : (
-                                      ": "
+                                      "'s requirement "
                                     )}
-                                    <b>{req.requirement_size} credits</b>
+                                    <b>
+                                      {getComparisonLabel(req.requirement_type)}{" "}
+                                      {req.requirement_size}{" "}
+                                      {req.credit_type_name}
+                                    </b>
+                                    <Button
+                                      sx={{ color: "black" }}
+                                      onClick={() =>
+                                        handleEditRequirementClick(req)
+                                      }
+                                    >
+                                      <AiOutlineEdit />
+                                    </Button>
+                                    <Button
+                                      sx={{ color: "red" }}
+                                      onClick={() => {
+                                        setDeleteConfirmation(true);
+                                        setDeleteConfirmationMessage(
+                                          "Are you sure you wan to delete this requirement from the database?"
+                                        );
+                                        setDeleteFunc(
+                                          () => () =>
+                                            handleDeleteRequirement(req)
+                                        );
+                                      }}
+                                    >
+                                      <AiOutlineDelete />
+                                    </Button>
                                   </li>
                                 ))}
                               </ul>
@@ -727,30 +822,13 @@ const Template = (props) => {
               </TextField>
             </div>
 
-            {/* Attribute Value Field */}
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <TextField
-                label="Attribute Value"
-                variant="outlined"
-                type="number"
-                value={requirementFormData.attribute_value || -1}
-                onChange={(e) =>
-                  setRequirementFormData({
-                    ...requirementFormData,
-                    attribute_value: e.target.value,
-                  })
-                }
-                fullWidth
-              />
-            </div>
-
             {/* Attribute Choice Field */}
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
                 select
                 label="Attribute Choice"
                 variant="outlined"
-                value={requirementFormData.attribute_choice || "=="}
+                value={requirementFormData.attribute_choice}
                 onChange={(e) =>
                   setRequirementFormData({
                     ...requirementFormData,
@@ -767,6 +845,29 @@ const Template = (props) => {
               </TextField>
             </div>
 
+            {/* Attribute Value Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                label="Attribute Value"
+                variant="outlined"
+                // Show an empty string if attribute_value is -1, otherwise display the actual value
+                value={
+                  requirementFormData.attribute_value === -1
+                    ? ""
+                    : requirementFormData.attribute_value
+                }
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    // Set attribute_value to -1 if the field is empty, otherwise use the inputted number
+                    attribute_value:
+                      e.target.value === "" ? -1 : Number(e.target.value),
+                  })
+                }
+                fullWidth
+              />
+            </div>
+
             {/* Major Field: Autocomplete with Major Options */}
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <Autocomplete
@@ -777,49 +878,36 @@ const Template = (props) => {
                     (major) => major.id === requirementFormData.major
                   ) || null
                 }
-                onChange={(e, newValue) =>
+                onChange={(e, newValue) => {
                   setRequirementFormData({
                     ...requirementFormData,
                     major: newValue ? newValue.id : -1,
-                  })
-                }
+                  });
+                  setMajorRequirementError(false);
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Major"
+                    label="Major *"
                     variant="outlined"
                     fullWidth
+                    error={majorRequirementError}
+                    helperText={
+                      majorRequirementError ? "Please select a major" : ""
+                    }
                   />
                 )}
-              />
-            </div>
-
-            {/* Requirement Size Field */}
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <TextField
-                required
-                label="Requirement Size"
-                variant="outlined"
-                type="number"
-                value={requirementFormData.requirement_size || ""}
-                onChange={(e) =>
-                  setRequirementFormData({
-                    ...requirementFormData,
-                    requirement_size: e.target.value,
-                  })
-                }
-                fullWidth
               />
             </div>
 
             {/* Requirement Type Field */}
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
+                required
                 select
                 label="Requirement Type"
                 variant="outlined"
-                // Use `requirementFormData.requirement_type` directly to display the correct initial value
-                value={requirementFormData.requirement_type || ">="}
+                value={requirementFormData.requirement_type}
                 onChange={(e) =>
                   setRequirementFormData({
                     ...requirementFormData,
@@ -836,6 +924,28 @@ const Template = (props) => {
               </TextField>
             </div>
 
+            {/* Requirement Size Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                label="Requirement Size"
+                variant="outlined"
+                value={
+                  requirementFormData.requirement_size === -1
+                    ? ""
+                    : requirementFormData.requirement_size
+                }
+                onChange={(e) =>
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    requirement_size:
+                      e.target.value === "" ? -1 : Number(e.target.value),
+                  })
+                }
+                fullWidth
+              />
+            </div>
+
             {/* Credit Type Field: Dropdown for Credit Type Options */}
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <Autocomplete
@@ -847,18 +957,23 @@ const Template = (props) => {
                       creditType.id === requirementFormData.credit_type
                   ) || null
                 }
-                onChange={(e, newValue) =>
+                onChange={(e, newValue) => {
                   setRequirementFormData({
                     ...requirementFormData,
                     credit_type: newValue ? newValue.id : -1,
-                  })
-                }
+                  });
+                  setCreditTypeError(false);
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Credit Type"
+                    label="Credit Type *"
                     variant="outlined"
                     fullWidth
+                    error={creditTypeError}
+                    helperText={
+                      creditTypeError ? "Please choose a credit type" : ""
+                    }
                   />
                 )}
               />
