@@ -195,6 +195,8 @@ const Template = (props) => {
   const [majorError, setMajorError] = useState(false);
   const [creditTypeError, setCreditTypeError] = useState(false);
   const [majorRequirementError, setMajorRequirementError] = useState(false);
+  const [attributeChoiceError, setAttributeChoiceError] = useState(false);
+  const [attributeValueError, setAttributeValueError] = useState(false);
 
   const handleChangeMajor = (event, newValue) => {
     setFormData((prevFormData) => ({
@@ -351,6 +353,18 @@ const Template = (props) => {
 
   const handleSubmitRequirement = async (e) => {
     e.preventDefault();
+    if (requirementFormData.attribute !== "") {
+      console.log(requirementFormData.attribute_choice);
+      console.log(requirementFormData.attribute_value);
+      if (requirementFormData.attribute_choice === "") {
+        setAttributeChoiceError(true);
+        return;
+      }
+      if (requirementFormData.attribute_value === -1) {
+        setAttributeValueError(true);
+        return;
+      }
+    }
     if (requirementFormData.major === -1) {
       setMajorRequirementError(true);
       return;
@@ -359,6 +373,7 @@ const Template = (props) => {
       setCreditTypeError(true);
       return;
     }
+
     const method = currentEditRequirement ? "put" : "post";
     const url = currentEditRequirement
       ? `http://localhost:8000/api/requirement/${currentEditRequirement.id}/`
@@ -856,7 +871,11 @@ const Template = (props) => {
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
                 select
-                label="Attribute Choice"
+                label={
+                  requirementFormData.attribute !== ""
+                    ? "Attribute Choice *"
+                    : "Attribute Choice"
+                }
                 variant="outlined"
                 value={requirementFormData.attribute_choice}
                 onChange={(e) =>
@@ -866,6 +885,12 @@ const Template = (props) => {
                   })
                 }
                 fullWidth
+                error={attributeChoiceError}
+                helperText={
+                  attributeChoiceError
+                    ? "Please select an attribute choice"
+                    : ""
+                }
               >
                 {Object.entries(COMPARISON_CHOICES).map(([value, label]) => (
                   <MenuItem key={value} value={value}>
@@ -878,7 +903,11 @@ const Template = (props) => {
             {/* Attribute Value Field */}
             <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
               <TextField
-                label="Attribute Value"
+                label={
+                  requirementFormData.attribute !== ""
+                    ? "Attribute Value *"
+                    : "Attribute Value"
+                }
                 variant="outlined"
                 // Show an empty string if attribute_value is -1, otherwise display the actual value
                 value={
@@ -893,6 +922,12 @@ const Template = (props) => {
                     attribute_value:
                       e.target.value === "" ? -1 : Number(e.target.value),
                   })
+                }
+                error={attributeValueError}
+                helperText={
+                  attributeValueError
+                    ? "Please select an attribute choice value error"
+                    : ""
                 }
                 fullWidth
               />
