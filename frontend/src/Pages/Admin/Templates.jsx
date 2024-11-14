@@ -13,6 +13,8 @@ import {
   Box,
   Tooltip,
   MenuItem,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -152,6 +154,7 @@ const Template = (props) => {
     attribute: "",
     attribute_value: -1,
     attribute_choice: "",
+    include: true,
     major: -1,
     requirement_size: -1,
     requirement_type: "",
@@ -303,11 +306,22 @@ const Template = (props) => {
 
   const handleCloseDialog = () => {
     setFormData({ type_name: "", major: "", field_name: "", field_number: "" });
+    setCurrentEditTemplate(null);
     setOpenMainDialog(false);
   };
 
   const handleCloseRequirementDialog = () => {
     setOpenRequirementDialog(false);
+    setRequirementFormData({
+      attribute: "",
+      attribute_value: -1,
+      attribute_choice: "",
+      major: -1,
+      include: true,
+      requirement_size: -1,
+      requirement_type: "",
+      credit_type: -1,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -368,7 +382,7 @@ const Template = (props) => {
           newRequirementId,
         ];
 
-        await axios.put(
+        const newTemplate = await axios.put(
           `http://localhost:8000/api/template/${currentEditTemplate.id}/`,
           {
             ...templateResponse.data,
@@ -380,15 +394,23 @@ const Template = (props) => {
             },
           }
         );
+        if (newTemplate.data) {
+          await fetchRequirements(newTemplate.data);
+        }
+        await getListTemplates();
+        handleCloseRequirementDialog();
+      } else {
+        const templateResponse = await axios.get(
+          `http://localhost:8000/api/template/${currentEditTemplate.id}/`
+        );
+        if (templateResponse.data) {
+          await fetchRequirements(templateResponse.data);
+        }
+        await getListTemplates();
+        setCurrentEditRequirement(null);
+        handleCloseRequirementDialog();
       }
-
       // Fetch updated requirements list for the current template after creating/editing
-      if (currentEditTemplate) {
-        await fetchRequirements(currentEditTemplate);
-      }
-
-      getListTemplates();
-      handleCloseRequirementDialog();
     } catch (error) {
       console.error("Error submitting requirement data:", error);
     }
@@ -398,6 +420,7 @@ const Template = (props) => {
       attribute_value: -1,
       attribute_choice: "",
       major: -1,
+      include: true,
       requirement_size: -1,
       requirement_type: "",
       credit_type: -1,
@@ -432,19 +455,24 @@ const Template = (props) => {
     try {
       await props.checkTokenAndRefresh();
       await axios.delete(
-        `http://localhost:8000/api/requirement/${requirement.id}`,
+        `http://localhost:8000/api/requirement/${requirement.id}/`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         }
       );
+      const newTemplate = await axios.get(
+        `http://localhost:8000/api/template/${currentEditTemplate.id}`
+      );
+      console.log(newTemplate);
       // Fetch updated requirements list for the current template
-      if (currentEditTemplate) {
-        await fetchRequirements(currentEditTemplate);
+      if (newTemplate.data) {
+        await fetchRequirements(newTemplate.data);
+        await getListTemplates();
       }
-      handleCloseDialog();
-      getListTemplates();
+      handleCloseRequirementDialog();
+      // getListTemplates();
     } catch (error) {
       console.error("Error deleting requirement: ", error);
     }
@@ -485,6 +513,7 @@ const Template = (props) => {
       attribute_value: requirement.attribute_value || -1,
       attribute_choice: requirement.attribute_choice || "",
       major: requirement.major || -1,
+      include: requirement.include,
       requirement_size: requirement.requirement_size || -1,
       requirement_type: requirement.requirement_type || "",
       credit_type: requirement.credit_type || -1,
@@ -702,8 +731,9 @@ const Template = (props) => {
                               <ul>
                                 {templateRequirements.map((req) => (
                                   <li key={req.id}>
+                                    {"Courses "}
+                                    <b>{req.include ? "in " : "not in "}</b>
                                     {req.major_name}
-                                    {" course"}
                                     {req.attribute && req.attribute !== "" ? (
                                       <>
                                         {" where "}
@@ -897,6 +927,25 @@ const Template = (props) => {
                     }
                   />
                 )}
+              />
+            </div>
+
+            {/* Include Toggle Field */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={!requirementFormData.include}
+                    onChange={(e) =>
+                      setRequirementFormData({
+                        ...requirementFormData,
+                        include: !e.target.checked,
+                      })
+                    }
+                    color="primary"
+                  />
+                }
+                label="Exclude Major"
               />
             </div>
 
