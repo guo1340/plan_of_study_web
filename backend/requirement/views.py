@@ -5,7 +5,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
 from .models import Requirement
 from django.db.models import Q
-from .serializers import RequirememtSerializer
+from .serializers import RequirementSerializer
 from rest_framework.response import Response
 
 
@@ -22,7 +22,7 @@ def check_admin_permission(request):
 
 class RequirementViewSet(ModelViewSet):
     queryset = Requirement.objects.all()
-    serializer_class = RequirememtSerializer
+    serializer_class = RequirementSerializer
 
     def get_permissions(self):
         # Allow unauthenticated access to certain actions
