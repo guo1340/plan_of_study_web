@@ -20,7 +20,7 @@ import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import axios from "axios";
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import Paper from "@mui/material/Paper";
-import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
+// import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
 import PropTypes from "prop-types";
 import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
@@ -33,6 +33,7 @@ import TableFooter from "@mui/material/TableFooter";
 import TablePagination from "@mui/material/TablePagination";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import BackToHome from "../../Components/BackToHomeDialog";
+import MajorSearchBar from "../../Components/SearchBars/MajorSearchBar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -316,7 +317,7 @@ const Major = (props) => {
         </DialogContent>
       </Dialog>
       <div className="course-main">
-        <CourseSearchBar
+        <MajorSearchBar
           token={props.token}
           checkTokenAndRefresh={props.checkTokenAndRefresh}
           userDetails={props.userDetails}

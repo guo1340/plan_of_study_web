@@ -412,6 +412,22 @@
   border-radius: 15px;
 }
 
+.search-bar-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin: 20px;
+  gap: 20px;
+}
+
+.search-bar-contents {
+  width: 20em;
+}
+
+.search-buttons-container {
+  display: flex;
+}
+
 .table-footer {
   border-top: 1px solid #ddd; /* Adds a dividing line between the table and pagination */
 }
