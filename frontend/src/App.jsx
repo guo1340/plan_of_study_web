@@ -20,6 +20,7 @@ import UsersTest from "./Pages/Admin/Users";
 import Dashboard from "./Pages/Dashboard";
 import Major from "./Pages/Admin/major";
 import axios from "axios";
+import CreditType from "./Pages/Admin/CreditType";
 
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -181,6 +182,16 @@ const App = () => {
               path="/admin/major"
               element={
                 <Major
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
+                />
+              }
+            />
+            <Route
+              path="/admin/credit-type"
+              element={
+                <CreditType
                   token={localStorage.getItem("accessToken")}
                   checkTokenAndRefresh={checkTokenAndRefresh}
                   userDetails={userDetails}

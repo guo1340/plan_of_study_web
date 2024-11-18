@@ -10,6 +10,7 @@ const Admin = (props) => {
     { path: "/admin/plans", name: "Plans" },
     { path: "/admin/users", name: "Users" },
     { path: "/admin/major", name: "Major" },
+    { path: "/admin/credit-type", name: "Credit Type" },
   ];
 
   const [openDialog, setOpenDialog] = useState(false);
