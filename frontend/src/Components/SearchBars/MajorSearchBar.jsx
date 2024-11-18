@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import Button from "@mui/material/Button";
 import Autocomplete from "@mui/material/Autocomplete";
-import { TextField, DialogActions } from "@mui/material";
+import { TextField } from "@mui/material";
 
 const MajorSearchBar = (props) => {
   const [searchFormData, setSearchFormData] = useState({
