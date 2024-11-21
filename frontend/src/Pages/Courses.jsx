@@ -141,7 +141,7 @@ const Courses = (props) => {
   const [openInfo, setOpenInfo] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
-    major: "",
+    major: -1,
     abbreviation: "",
     title: "",
     prereqs: [],
@@ -151,10 +151,12 @@ const Courses = (props) => {
     credits: "",
     elective_field: -1,
     editable_credits: false,
+    credit_type: -1,
   });
 
   const [majors, setMajors] = useState([]);
   const [form_elective_fields, setFormElectiveFields] = useState([]);
+  const [creditTypes, setCreditTypes] = useState([]);
   const [all_seasons, setSeasons] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -169,6 +171,7 @@ const Courses = (props) => {
 
   const [seasonError, setSeasonError] = useState(false);
   const [electiveError, setElectiveError] = useState(false);
+  const [creditTypeError, setCreditTypeError] = useState(false);
 
   const handleEditClick = async (course) => {
     // Set the form data to the values from the course to be edited
@@ -183,6 +186,7 @@ const Courses = (props) => {
       credits: course.credits,
       elective_field: course.elective_field,
       editable_credits: course.editable_credits,
+      credit_type: course.credit_type,
     });
     try {
       const response = await axios.get(
@@ -207,12 +211,12 @@ const Courses = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/template/")
+      .get("http://localhost:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
       .catch((error) => {
-        console.error("Error fetching major template data:", error);
+        console.error("Error fetching major data:", error);
       });
   };
 
@@ -258,7 +262,6 @@ const Courses = (props) => {
             course.season_objects = courseSeasons;
             course.prereq_objects = coursePrereqs;
             course.coreq_objects = courseCoreqs;
-            console.log(course);
             return course;
           } catch (error) {
             console.error(
@@ -288,6 +291,17 @@ const Courses = (props) => {
       });
   };
 
+  const getListCreditTypes = () => {
+    axios
+      .get("http://localhost:8000/api/credit-type/")
+      .then((res) => {
+        setCreditTypes(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching credit types data:", error);
+      });
+  };
+
   const handleInfoClick = (courseId) => {
     setOpenInfo(openInfo === courseId ? null : courseId); // Toggle the collapse for the clicked course
   };
@@ -311,7 +325,7 @@ const Courses = (props) => {
 
   const handleClose = () => {
     setFormData({
-      major: "",
+      major: -1,
       abbreviation: "",
       title: "",
       prereqs: [],
@@ -321,6 +335,7 @@ const Courses = (props) => {
       credits: "",
       elective_field: -1,
       editable_credits: false,
+      credit_type: -1,
     });
     setFormElectiveFields([]);
     setOpenDialog(false);
@@ -361,7 +376,7 @@ const Courses = (props) => {
       });
       getListCourses();
       setFormData({
-        major: "",
+        major: -1,
         abbreviation: "",
         title: "",
         prereqs: [],
@@ -371,6 +386,7 @@ const Courses = (props) => {
         credits: "",
         elective_field: -1,
         editable_credits: false,
+        credit_type: -1,
       });
       setOpenDialog(false);
       handleClose();
@@ -384,9 +400,11 @@ const Courses = (props) => {
         await props.checkTokenAndRefresh();
 
         // Only after token check is done, fetch the other data
-        getListMajors();
-        getListCourses();
-        getListSeasons();
+        await getListMajors();
+        await getListCourses();
+        await getListSeasons();
+        await getListCreditTypes();
+        console.log(majors);
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
       }
@@ -424,16 +442,13 @@ const Courses = (props) => {
     const { value } = e.target; // Get the selected major value
     setFormData((prevFormData) => ({
       ...prevFormData,
-      major: newValue ? newValue.major : "", // Update formData with the selected major or set to empty string
+      major: newValue ? newValue.id : -1, // Update formData with the selected major or set to empty string
     }));
 
     // Fetch elective fields for the selected major
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/elective-field/`,
-        {
-          params: { major: value }, // Pass the selected major as a query parameter
-        }
+        `http://localhost:8000/api/elective-field/?search={"major":"${newValue.id}"}`
       );
       const electiveFields = response.data.sort(
         (a, b) => a.field_number - b.field_number
@@ -462,6 +477,14 @@ const Courses = (props) => {
     setSeasonError(false);
   };
 
+  const handleChangeCreditType = (event, newValue) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      credit_type: newValue ? newValue.id : -1, // Ensure coreqs is always an array
+    }));
+    setCreditTypeError(false);
+  };
+
   return (
     <div>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
@@ -477,9 +500,9 @@ const Courses = (props) => {
               <Autocomplete
                 disablePortal
                 options={majors} // Array of major options
-                getOptionLabel={(option) => option.major} // Extract major from the object
+                getOptionLabel={(option) => option.name} // Extract major from the object
                 value={
-                  majors.find((major) => major.major === formData.major) || null
+                  majors.find((major) => major.id === formData.major) || null
                 } // Handle controlled value
                 // onChange={handleChangeMajor} // Handle change
                 onChange={handleChangeMajor}
@@ -487,10 +510,9 @@ const Courses = (props) => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Major"
+                    label="Major *"
                     variant="outlined"
                     fullWidth
-                    required
                   />
                 )}
               />
@@ -733,6 +755,29 @@ const Courses = (props) => {
                   />
                 )}
                 sx={{ width: "100%" }} // Full width
+              />
+            </div>
+            <div className="form-input-title">
+              <Autocomplete
+                disablePortal
+                options={creditTypes} // Array of major options
+                getOptionLabel={(option) => option.name} // Extract major from the object
+                value={
+                  creditTypes.find(
+                    (creditTypes) => creditTypes.id === formData.credit_type
+                  ) || null
+                } // Handle controlled value
+                // onChange={handleChangeMajor} // Handle change
+                onChange={handleChangeCreditType}
+                sx={{ width: "100%" }} // Set width to full
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Credit Type *"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
               />
             </div>
             <DialogActions>
