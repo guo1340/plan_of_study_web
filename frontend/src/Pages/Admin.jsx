@@ -5,9 +5,7 @@ import BackToHome from "../Components/BackToHomeDialog";
 const Admin = (props) => {
   const links = [
     { path: "/admin/elective-fields", name: "Elective Fields" },
-    { path: "/admin/semesters", name: "Semesters" },
     { path: "/admin/templates", name: "Templates" },
-    { path: "/admin/plans", name: "Plans" },
     { path: "/admin/users", name: "Users" },
     { path: "/admin/major", name: "Major" },
     { path: "/admin/credit-type", name: "Credit Type" },

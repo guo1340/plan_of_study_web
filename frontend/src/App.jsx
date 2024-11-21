@@ -13,9 +13,7 @@ import React from "react";
 import Courses from "./Pages/Courses";
 import Admin from "./Pages/Admin";
 import ElectiveField from "./Pages/Admin/ElectiveField";
-import SemesterTest from "./Pages/Admin/Semesters";
 import Template from "./Pages/Admin/Templates";
-import PlansTest from "./Pages/Admin/Plans";
 import UsersTest from "./Pages/Admin/Users";
 import Dashboard from "./Pages/Dashboard";
 import Major from "./Pages/Admin/major";
@@ -171,7 +169,6 @@ const App = () => {
                 />
               }
             />
-            <Route path="/admin/semesters" element={<SemesterTest />} />
             <Route
               path="/admin/templates"
               element={
@@ -182,7 +179,6 @@ const App = () => {
                 />
               }
             />
-            <Route path="/admin/plans" element={<PlansTest />} />
             <Route path="/admin/users" element={<UsersTest />} />
             <Route
               path="/admin/major"
