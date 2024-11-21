@@ -328,12 +328,21 @@ const Major = (props) => {
             sx={{ borderRadius: "10px", overflow: "hidden", boxShadow: "3" }}
             component={Paper}
           >
-            <Table sx={{ minWidth: 700 }} aria-label="customized table">
+            <Table
+              sx={{ minWidth: 700, tableLayout: "fixed" }}
+              aria-label="customized table"
+            >
               <TableHead>
                 <TableRow>
-                  <StyledTableCell align="center">Major Name</StyledTableCell>
-                  <StyledTableCell align="center">Abbreviation</StyledTableCell>
-                  <StyledTableCell align="center">Action</StyledTableCell>
+                  <StyledTableCell sx={{ width: "40%" }} align="center">
+                    Major Name
+                  </StyledTableCell>
+                  <StyledTableCell sx={{ width: "30%" }} align="center">
+                    Abbreviation
+                  </StyledTableCell>
+                  <StyledTableCell sx={{ width: "30%" }} align="center">
+                    Action
+                  </StyledTableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

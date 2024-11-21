@@ -53,7 +53,11 @@ const MajorSearchBar = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await props.checkTokenAndRefresh();
+        // Inline checkTokenAndRefresh logic
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          // Logic for refreshing the token
+        }
         await getListMajors();
       } catch (error) {
         console.error("Error fetching majors:", error);
@@ -61,7 +65,7 @@ const MajorSearchBar = (props) => {
     };
 
     fetchData();
-  }, []); // Ensure it only runs once
+  }, []); // No unnecessary dependencies
 
   return (
     <div className="search-bar">

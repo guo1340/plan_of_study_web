@@ -12,7 +12,7 @@ import {
 import React from "react";
 import Courses from "./Pages/Courses";
 import Admin from "./Pages/Admin";
-import ElectiveFieldTest from "./Pages/Admin/ElectiveField";
+import ElectiveField from "./Pages/Admin/ElectiveField";
 import SemesterTest from "./Pages/Admin/Semesters";
 import Template from "./Pages/Admin/Templates";
 import PlansTest from "./Pages/Admin/Plans";
@@ -163,7 +163,13 @@ const App = () => {
             />
             <Route
               path="/admin/elective-fields"
-              element={<ElectiveFieldTest />}
+              element={
+                <ElectiveField
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
+                />
+              }
             />
             <Route path="/admin/semesters" element={<SemesterTest />} />
             <Route
