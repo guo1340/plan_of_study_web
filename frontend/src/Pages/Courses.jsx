@@ -439,7 +439,6 @@ const Courses = (props) => {
   };
 
   const handleChangeMajor = async (e, newValue) => {
-    const { value } = e.target; // Get the selected major value
     setFormData((prevFormData) => ({
       ...prevFormData,
       major: newValue ? newValue.id : -1, // Update formData with the selected major or set to empty string
@@ -750,7 +749,7 @@ const Courses = (props) => {
                     fullWidth
                     error={electiveError}
                     helperText={
-                      electiveError ? "Please select a elective field" : ""
+                      electiveError ? "Please select an elective field" : ""
                     }
                   />
                 )}
@@ -776,6 +775,10 @@ const Courses = (props) => {
                     label="Credit Type *"
                     variant="outlined"
                     fullWidth
+                    error={creditTypeError}
+                    helperText={
+                      creditTypeError ? "Please select a credit type" : ""
+                    }
                   />
                 )}
               />
@@ -840,14 +843,14 @@ const Courses = (props) => {
                             const matchedSeason = all_seasons.find(
                               (temp_season) => temp_season.id === season
                             );
-                            return (
+                            return matchedSeason ? (
                               <li
                                 style={{ listStyleType: "none" }}
                                 key={matchedSeason.name}
                               >
                                 {matchedSeason.name}
                               </li>
-                            );
+                            ) : null;
                           })}
                         </StyledTableCell>
                         <StyledTableCell align="center">

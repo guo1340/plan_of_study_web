@@ -14,7 +14,7 @@ import Courses from "./Pages/Courses";
 import Admin from "./Pages/Admin";
 import ElectiveField from "./Pages/Admin/ElectiveField";
 import Template from "./Pages/Admin/Templates";
-import UsersTest from "./Pages/Admin/Users";
+import Users from "./Pages/Admin/Users";
 import Dashboard from "./Pages/Dashboard";
 import Major from "./Pages/Admin/major";
 import axios from "axios";
@@ -179,7 +179,16 @@ const App = () => {
                 />
               }
             />
-            <Route path="/admin/users" element={<UsersTest />} />
+            <Route
+              path="/admin/users"
+              element={
+                <Users
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails}
+                />
+              }
+            />
             <Route
               path="/admin/major"
               element={
