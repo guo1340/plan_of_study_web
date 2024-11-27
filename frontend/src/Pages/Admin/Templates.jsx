@@ -42,6 +42,7 @@ import BackToHome from "../../Components/BackToHomeDialog";
 import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
 import DialogContentText from "@mui/material/DialogContentText";
+import TemplateSearchBar from "../../Components/SearchBars/TemplateSearchBar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -587,7 +588,7 @@ const Template = (props) => {
   return (
     <div>
       <div className="course-main">
-        <CourseSearchBar
+        <TemplateSearchBar
           token={props.token}
           checkTokenAndRefresh={props.checkTokenAndRefresh}
           userDetails={props.userDetails}
