@@ -32,8 +32,8 @@ import TablePagination from "@mui/material/TablePagination";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import BackToHome from "../../Components/BackToHomeDialog";
 import PropTypes from "prop-types";
-import MajorSearchBar from "../../Components/SearchBars/MajorSearchBar";
 import { NotificationManager } from "react-notifications";
+import ElectiveSearchBar from "../../Components/SearchBars/ElectiveSearchBar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -153,7 +153,6 @@ const ElectiveField = (props) => {
   };
 
   const getListMajors = async () => {
-    console.log("major is called");
     try {
       const majorRes = await axios.get("http://localhost:8000/api/major");
       setMajors(majorRes.data);
@@ -298,11 +297,11 @@ const ElectiveField = (props) => {
   return (
     <div style={{ padding: "25px" }}>
       <div className="course-main">
-        <MajorSearchBar
+        <ElectiveSearchBar
           token={props.token}
           checkTokenAndRefresh={props.checkTokenAndRefresh}
           userDetails={props.userDetails}
-          setMajors={setMajors}
+          setFields={setFields}
         />
         <div className="course-table">
           <TableContainer

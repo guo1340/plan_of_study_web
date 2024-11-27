@@ -4,43 +4,29 @@ import Button from "@mui/material/Button";
 import Autocomplete from "@mui/material/Autocomplete";
 import { TextField } from "@mui/material";
 
-const TemplateSearchBar = (props) => {
+const ElectiveSearchBar = (props) => {
   const [searchFormData, setSearchFormData] = useState({
     major: null,
-    level: "",
+    field_name: "",
   });
 
-  const [templates, setTemplates] = useState([]);
   const [majors, setMajors] = useState([]);
-  const [uniqueLevels, setUniqueLevels] = useState([]);
+  const [elective_fields, setFields] = useState([]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent page reload on submit
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://localhost:8000/api/template/?search=${encodeURIComponent(
+        `http://localhost:8000/api/elective-field/?search=${encodeURIComponent(
           searchQuery
         )}`
       );
-      props.setTemplates(response.data);
+      props.setFields(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-  };
-
-  // To ensure the warning of duplicate levels doesnt occur
-  const getUniqueLevels = (templates) => {
-    const seen = new Set();
-    return templates
-      .map((template) => template.level)
-      .filter((level) => {
-        if (seen.has(level)) {
-          return false;
-        }
-        seen.add(level);
-        return true;
-      });
   };
 
   const getListMajors = () => {
@@ -54,27 +40,21 @@ const TemplateSearchBar = (props) => {
       });
   };
 
-  const getListTemplates = () => {
-    axios
-      .get("http://localhost:8000/api/template/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      })
-      .then((res) => {
-        setTemplates(res.data);
-        setUniqueLevels(getUniqueLevels(res.data));
-      })
-      .catch((error) => {
-        console.error("Error fetching templates data:", error);
-      });
+  const getListFields = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/elective-field/");
+      setFields(res.data);
+    } catch (error) {
+      console.error("Error fetching elective fields data:", error);
+    }
   };
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         await props.checkTokenAndRefresh();
-        await getListTemplates();
+        await getListFields();
         await getListMajors();  // Getting the majors for the id and name matching
 
       } catch (error) {
@@ -89,7 +69,7 @@ const TemplateSearchBar = (props) => {
   const handleClear = () => {
     setSearchFormData({
       major: null,
-      level: "",
+      fieldName: "",
     });
   };
 
@@ -105,7 +85,7 @@ const TemplateSearchBar = (props) => {
       <form onSubmit={handleSubmit} className="search-bar-container">
         <Autocomplete
             className="search-bar-contents"
-            options={majors} // Passing the majors instead of templates
+            options={majors} // Passing the majors instead of elective fields
             getOptionLabel={(option) => option.name || ""} 
             value={
               majors.find((major) => major.id === searchFormData.major) || null
@@ -119,25 +99,27 @@ const TemplateSearchBar = (props) => {
                 label="Major"
                 name="major"
                 variant="outlined"
-                onChange={getListTemplates}
+                onChange={getListFields}
               />
             )}
           />
         <Autocomplete
             className="search-bar-contents"
-            options={uniqueLevels} // Passing the unique levels instead of the template object
-            getOptionLabel={(option) => option || ""}
-            value={searchFormData.level || ""} 
+            options={elective_fields} 
+            getOptionLabel={(option) => option.field_name || ""}
+            value={
+                elective_fields.find((field) => field.field_name === searchFormData.field_name) || null
+            }
             onChange={(event, newValue) => {
-              handleChange("level", newValue || "");
+                handleChange("field_name", newValue ? newValue.field_name : "");
             }}    
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Level"
-                name="level"
+                label="Field Name"
+                name="field_name"
                 variant="outlined"
-                onChange={getListTemplates}
+                onChange={getListFields}
               />
             )}
           />
@@ -159,4 +141,4 @@ const TemplateSearchBar = (props) => {
   );
 };
 
-export default TemplateSearchBar;
+export default ElectiveSearchBar;
