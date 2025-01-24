@@ -107,6 +107,51 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], url_path='change-password')
+    def change_password(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response(
+                {"detail": "Old password and new password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(old_password):
+            return Response(
+                {"detail": "Old password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='change-role')
+    def change_role(self, request, pk=None):
+        user_role = request.user.details.role  # Get the role of the authenticated user
+
+        if user_role != 'admin':
+            return Response({"detail": "Permission denied. Only admins can change roles."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        new_role = request.data.get('role')
+        if not new_role:
+            return Response({"detail": "New role is required."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            details = self.get_object()  # Retrieve the `Details` object by the `pk` in the URL
+            details.role = new_role
+            details.save()
+            return Response({"detail": f"Role updated to '{new_role}' successfully."},
+                            status=status.HTTP_200_OK)
+        except Details.DoesNotExist:
+            return Response({"detail": "User not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer

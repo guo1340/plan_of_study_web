@@ -26,9 +26,7 @@ class ClassViewSet(ModelViewSet):
     # Override get_permissions to set different permissions for different actions
     def get_permissions(self):
         # Allow unauthenticated access to certain actions
-        if self.action in ['list', 'retrieve', 'list_by_elective_field', 'list_by_editable_credits', 'list_by_credits',
-                           'list_by_description', 'list_by_major', 'list_by_term', 'list_by_prereq', 'list_by_coreq',
-                           'list_by_class_number']:
+        if self.action in ['list', 'retrieve']:
 
             # Allow unauthenticated access to both GET and POST requests for the 'search' action
             if self.action == 'search' and self.request.method == 'POST':
