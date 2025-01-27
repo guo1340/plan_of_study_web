@@ -141,21 +141,22 @@ const Courses = (props) => {
   const [openInfo, setOpenInfo] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
-    major: -1,
-    abbreviation: "",
+    major: null,
+    class_number: null,
     title: "",
     prereqs: [],
     seasons: [],
     coreqs: [],
     description: "",
-    credits: "",
-    elective_field: -1,
+    credits: null,
+    elective_field: null,
     editable_credits: false,
-    credit_type: -1,
+    credit_type: null,
   });
 
   const [majors, setMajors] = useState([]);
   const [form_elective_fields, setFormElectiveFields] = useState([]);
+  const [electiveFieldList, setElectiveFieldList] = useState([]);
   const [creditTypes, setCreditTypes] = useState([]);
   const [all_seasons, setSeasons] = useState([]);
   const [page, setPage] = useState(0);
@@ -302,6 +303,17 @@ const Courses = (props) => {
       });
   };
 
+  const getListElectiveFields = async () => {
+    axios
+      .get("http://localhost:8000/api/elective-field/")
+      .then((res) => {
+        setElectiveFieldList(res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching elective fields data:", error);
+      });
+  };
+
   const handleInfoClick = (courseId) => {
     setOpenInfo(openInfo === courseId ? null : courseId); // Toggle the collapse for the clicked course
   };
@@ -367,7 +379,7 @@ const Courses = (props) => {
       const url = currentEditCourse
         ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
         : "http://localhost:8000/api/classes/";
-      console.log(formData);
+      // console.log(formData);
       await props.checkTokenAndRefresh();
       await axios[method](url, formData, {
         headers: {
@@ -404,7 +416,8 @@ const Courses = (props) => {
         await getListCourses();
         await getListSeasons();
         await getListCreditTypes();
-        console.log(majors);
+        await getListElectiveFields();
+        // console.log(majors);
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
       }
@@ -521,11 +534,11 @@ const Courses = (props) => {
                 required
                 autoFocus
                 margin="dense"
-                id="abbreviation"
-                label="Class Abbreviation"
+                id="class_number"
+                label="Class Number"
                 type="text"
                 className="input_textfield"
-                value={formData.abbreviation}
+                value={formData.class_number}
                 onChange={handleChange}
                 fullWidth
               />
@@ -832,11 +845,23 @@ const Courses = (props) => {
                             component="th"
                             scope="row"
                           >
-                            {row.abbreviation}
+                            {majors.find((major) => major.id === row.major)
+                              ?.abbreviation || "N/A"}{" "}
+                            {row.class_number}
                           </StyledTableCell>
                         </Tooltip>
                         <StyledTableCell align="center">
-                          {row.major}
+                          <Tooltip
+                            title={
+                              majors.find((major) => major.id === row.major)
+                                ?.name || "N/A"
+                            }
+                          >
+                            <span>
+                              {majors.find((major) => major.id === row.major)
+                                ?.abbreviation || "N/A"}
+                            </span>
+                          </Tooltip>
                         </StyledTableCell>
                         <StyledTableCell align="center">
                           {row.seasons.map((season) => {
@@ -857,9 +882,15 @@ const Courses = (props) => {
                           {row.credits}
                         </StyledTableCell>
                         <StyledTableCell align="center">
-                          {row.elective_field_object
-                            ? `${row.elective_field_object.type_name} ${row.elective_field_object.field_number}: ${row.elective_field_object.field_name}`
-                            : "Elective Field Not Found"}
+                          {(() => {
+                            const field = electiveFieldList.find(
+                              ({ id }) => id === row.elective_field
+                            );
+                            console.log(field);
+                            return field
+                              ? `${field.type_name} ${field.field_number}: ${field.field_name}`
+                              : "Elective Field Not found";
+                          })()}
                         </StyledTableCell>
                         <StyledTableCell align="center">
                           {props.userDetails &&
@@ -917,7 +948,14 @@ const Courses = (props) => {
                                 <b>Prerequisites:</b>{" "}
                                 {row.prereqs[0]
                                   ? row.prereq_objects
-                                      .map((course) => course.abbreviation)
+                                      .map((course) => {
+                                        return (
+                                          majors.find(
+                                            (major) => major.id === row.major
+                                          )?.abbreviation ||
+                                          "N/A" + " " + course.class_number
+                                        );
+                                      })
                                       .join(", ")
                                   : "No Prerequisites for this course"}
                               </p>
@@ -925,7 +963,14 @@ const Courses = (props) => {
                                 <b>Corequisites:</b>{" "}
                                 {row.coreqs[0]
                                   ? row.coreq_objects
-                                      .map((course) => course.abbreviation)
+                                      .map((course) => {
+                                        return (
+                                          majors.find(
+                                            (major) => major.id === row.major
+                                          )?.abbreviation ||
+                                          "N/A" + " " + course.class_number
+                                        );
+                                      })
                                       .join(", ")
                                   : "No Corequisites for this course"}
                               </p>
