@@ -2,13 +2,13 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import Button from "@mui/material/Button";
 import Autocomplete from "@mui/material/Autocomplete";
-import { major, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 
 const CreditTypeSearchBar = (props) => {
   const [searchFormData, setSearchFormData] = useState({
     name: "",
-    major: -1,
-    number: -1,
+    major: null,
+    number: null,
   });
 
   const [majors, setMajors] = useState([]);
@@ -68,9 +68,8 @@ const CreditTypeSearchBar = (props) => {
     const fetchData = async () => {
       try {
         await props.checkTokenAndRefresh();
-        await getListMajors();  // Getting the majors for the id and name matching
+        await getListMajors(); // Getting the majors for the id and name matching
         await getListCreditTypes();
-
       } catch (error) {
         console.error("Error fetching majors:", error);
       }
@@ -82,66 +81,68 @@ const CreditTypeSearchBar = (props) => {
   return (
     <div className="search-bar">
       <form onSubmit={handleSubmit} className="search-bar-container">
-      <Autocomplete
-            className="search-bar-contents"
-            options={creditTypes} 
-            getOptionLabel={(option) => option.name || ""}
-            value={
-                creditTypes.find((type) => type.name === searchFormData.name) || null
-            }
-            onChange={(event, newValue) => {
-                handleChange("name", newValue ? newValue.name : "");
-            }}    
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Credit Type Name"
-                name="name"
-                variant="outlined"
-                onChange={getListCreditTypes}
-              />
-            )}
-          />
         <Autocomplete
-            className="search-bar-contents"
-            options={majors} // Passing the majors instead of templates
-            getOptionLabel={(option) => option.name || ""} 
-            value={
-              majors.find((major) => major.id === searchFormData.major) || null
-            }
-            onChange={(event, newValue) => {
-              handleChange("major", newValue ? newValue.id : null); // Store the major ID
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Major Name"
-                name="major"
-                variant="outlined"
-                onChange={getListCreditTypes}
-              />
-            )}
-          />
+          className="search-bar-contents"
+          options={creditTypes}
+          getOptionLabel={(option) => option.name || ""}
+          value={
+            creditTypes.find((type) => type.name === searchFormData.name) ||
+            null
+          }
+          onChange={(event, newValue) => {
+            handleChange("name", newValue ? newValue.name : "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Credit Type Name"
+              name="name"
+              variant="outlined"
+              onChange={getListCreditTypes}
+            />
+          )}
+        />
         <Autocomplete
-            className="search-bar-contents"
-            options={creditTypes} 
-            getOptionLabel={(option) => option.number.toString() || ""}
-            value={
-                creditTypes.find((type) => type.number === searchFormData.number) || null
-            }
-            onChange={(event, newValue) => {
-                handleChange("number", newValue ? newValue.number : "");
-            }}    
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Number"
-                name="number"
-                variant="outlined"
-                onChange={getListCreditTypes}
-              />
-            )}
-          />
+          className="search-bar-contents"
+          options={majors} // Passing the majors instead of templates
+          getOptionLabel={(option) => option.name || ""}
+          value={
+            majors.find((major) => major.id === searchFormData.major) || null
+          }
+          onChange={(event, newValue) => {
+            handleChange("major", newValue ? newValue.id : null); // Store the major ID
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Major Name"
+              name="major"
+              variant="outlined"
+              onChange={getListCreditTypes}
+            />
+          )}
+        />
+        <Autocomplete
+          className="search-bar-contents"
+          options={creditTypes}
+          getOptionLabel={(option) => option.number.toString() || ""}
+          value={
+            creditTypes.find((type) => type.number === searchFormData.number) ||
+            null
+          }
+          onChange={(event, newValue) => {
+            handleChange("number", newValue ? newValue.number : "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Number"
+              name="number"
+              variant="outlined"
+              onChange={getListCreditTypes}
+            />
+          )}
+        />
         <div className="search-bar-contents search-buttons-container">
           <Button type="submit" color="primary" className="search-bar-contents">
             Search

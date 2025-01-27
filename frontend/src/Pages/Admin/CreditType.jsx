@@ -21,7 +21,6 @@ import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import axios from "axios";
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import Paper from "@mui/material/Paper";
-import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
 import PropTypes from "prop-types";
 import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
@@ -35,6 +34,7 @@ import TablePagination from "@mui/material/TablePagination";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import BackToHome from "../../Components/BackToHomeDialog";
 import Autocomplete from "@mui/material/Autocomplete";
+import CreditTypeSearchBar from "../../Components/SearchBars/CreditTypeSearchBar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -367,8 +367,13 @@ const CreditType = (props) => {
         </DialogContent>
       </Dialog>
 
-      <div className="course-name">
-        <CourseSearchBar />
+      <div className="course-main">
+        <CreditTypeSearchBar
+          token={props.token}
+          checkTokenAndRefresh={props.checkTokenAndRefresh}
+          userDetails={props.userDetails}
+          setCreditTypes={setCreditTypes}
+        />
         <div className="course-table">
           <TableContainer
             sx={{ borderRadius: "10px", overflow: "hidden", boxShadow: "3" }}
