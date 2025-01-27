@@ -7,7 +7,6 @@ from major.models import Major
 
 class Course(models.Model):
     major = models.ForeignKey(Major, on_delete=models.PROTECT, related_name="courses", default=1)
-    abbreviation = models.CharField(max_length=10)
     class_number = models.IntegerField(default="4000")
     title = models.CharField(max_length=150, default="")
     prereqs = models.ManyToManyField('self', symmetrical=False, related_name='prerequisite_for', blank=True)

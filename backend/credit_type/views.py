@@ -99,12 +99,12 @@ class CreditTypeViewSet(ModelViewSet):
         # 1. Filter by major (exact match, case-insensitive)
         major = search_data.get('major', None)
         if major:
-            queryset = queryset.filter(major__iexact=major)
+            queryset = queryset.filter(major__exact=major)
             print(f"Filtered by major, queryset count: {queryset.count()}")
         # 2. Filter by number (exact match, case-insensitive)
         number = search_data.get('number', None)
         if number:
-            queryset = queryset.filter(number__iexact=number)
+            queryset = queryset.filter(number__exact=number)
             print(f"Filtered by number, queryset count: {queryset.count()}")
         # 3. Filter by name (exact match, case-insensitive)
         name = search_data.get('name', None)

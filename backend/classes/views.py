@@ -43,11 +43,10 @@ class ClassViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
         major = request.data.get("major")
-        abbreviation = request.data.get("abbreviation")
         class_number = request.data.get('class_number')
         title = request.data.get("title")
         if Course.objects.filter(Q(class_number=class_number) & Q(major=major)
-                                 & Q(abbreviation=abbreviation) & Q(title=title)).exists():
+                                 & Q(title=title)).exists():
             return Response({"error": "A class with the same major, class number, and title already exists."},
                             status=400)
         serializer = self.serializer_class(data=request.data)
@@ -60,11 +59,10 @@ class ClassViewSet(ModelViewSet):
     def update(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
         major = request.data.get("major")
-        abbreviation = request.data.get("abbreviation")
         class_number = request.data.get('class_number')
         title = request.data.get("title")
         if Course.objects.filter(Q(class_number=class_number) & Q(major=major)
-                                 & Q(abbreviation=abbreviation) & Q(title=title)).exclude(pk=pk).exists():
+                                 & Q(title=title)).exclude(pk=pk).exists():
             return Response({"error": "A class with the same major, class number, and title already exists."},
                             status=400)
         class_obj = Course.objects.all().get(pk=pk)
@@ -104,13 +102,13 @@ class ClassViewSet(ModelViewSet):
         # 1. Filter by major (exact match, case-insensitive)
         major = search_data.get('major', None)
         if major:
-            queryset = queryset.filter(major__iexact=major)
+            queryset = queryset.filter(major__exact=major)
             print(f"Filtered by major, queryset count: {queryset.count()}")
-        # 2. Filter by abbreviation (exact match, case-insensitive)
-        abbreviation = search_data.get('abbreviation', None)
-        if abbreviation:
-            queryset = queryset.filter(abbreviation__iexact=abbreviation)
-            print(f"Filtered by abbreviation, queryset count: {queryset.count()}")
+        # 2. Filter by credit_type (exact match, case-insensitive)
+        credit_type = search_data.get('credit_type', None)
+        if credit_type:
+            queryset = queryset.filter(credit_type__exact=credit_type)
+            print(f"Filtered by credit_type, queryset count: {queryset.count()}")
 
         # 3. Filter by class number (contains search, case-insensitive)
         class_number_search = search_data.get('class_number', None)
