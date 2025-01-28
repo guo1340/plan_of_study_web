@@ -81,7 +81,7 @@ const Sidebar = (props) => {
     <div className="main_container">
       <div
         className="sidebar_container"
-        style={{ width: isOpen ? "300px" : "100px" }}
+        style={{ width: isOpen ? "200px" : "100px" }}
       >
         {!props.loggedIn ? (
           <>
@@ -162,7 +162,15 @@ const Sidebar = (props) => {
           </div>
         </div>
       </div>
-      <main className="body_container">{props.children}</main>
+      <main
+        className="body_container"
+        style={{
+          width: isOpen ? "calc(100% - 200px)" : "calc(100% - 100px)",
+          transition: "0.5s",
+        }}
+      >
+        {props.children}
+      </main>
     </div>
   );
 };
