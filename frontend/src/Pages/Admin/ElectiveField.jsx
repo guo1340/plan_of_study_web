@@ -295,7 +295,7 @@ const ElectiveField = (props) => {
   }
 
   return (
-    <div style={{ padding: "25px" }}>
+    <div>
       <div className="course-main">
         <ElectiveSearchBar
           token={props.token}
@@ -319,67 +319,69 @@ const ElectiveField = (props) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {elective_fields.map((field, index) => (
-                  <StyledTableRow key={index}>
-                    <StyledTableCell align="center">
-                      {field.type_name}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      <Tooltip
-                        title={
-                          majors.find((major) => major.id === field.major)
-                            ?.name || "N/A"
-                        }
-                      >
-                        <span>
-                          {majors.find((major) => major.id === field.major)
-                            ?.abbreviation || "N/A"}
-                        </span>
-                      </Tooltip>
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {field.field_name}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      {field.field_number}
-                    </StyledTableCell>
-                    <StyledTableCell align="center">
-                      <Button
-                        sx={{ color: "black" }}
-                        onClick={() => handleEditClick(field)}
-                      >
-                        <AiOutlineEdit />
-                      </Button>
-                      <Button
-                        sx={{ color: "red" }}
-                        onClick={() => {
-                          setDeleteConfirmation(true);
-                          setDeleteConfirmationMessage(
-                            "Are you sure you wan to delete this elective field from the database?"
-                          );
-                          setDeleteFunc(() => () => handleDelete(field));
-                        }}
-                      >
-                        <AiOutlineDelete />
-                      </Button>
-                      <ConfirmationDialog
-                        open={deleteConfirmation}
-                        handleClose={() => {
-                          setDeleteConfirmation(false);
-                          setDeleteConfirmationMessage("");
-                          setDeleteFunc(null);
-                        }}
-                        message={deleteConfirmationMessage}
-                        handleSubmit={() => {
-                          if (deleteFunc) deleteFunc(); // Call deleteFunc if it’s set
-                          setDeleteConfirmation(false);
-                          setDeleteConfirmationMessage("");
-                          setDeleteFunc(null);
-                        }}
-                      />
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))}
+                {elective_fields
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((field, index) => (
+                    <StyledTableRow key={index}>
+                      <StyledTableCell align="center">
+                        {field.type_name}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Tooltip
+                          title={
+                            majors.find((major) => major.id === field.major)
+                              ?.name || "N/A"
+                          }
+                        >
+                          <span>
+                            {majors.find((major) => major.id === field.major)
+                              ?.abbreviation || "N/A"}
+                          </span>
+                        </Tooltip>
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {field.field_name}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        {field.field_number}
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Button
+                          sx={{ color: "black" }}
+                          onClick={() => handleEditClick(field)}
+                        >
+                          <AiOutlineEdit />
+                        </Button>
+                        <Button
+                          sx={{ color: "red" }}
+                          onClick={() => {
+                            setDeleteConfirmation(true);
+                            setDeleteConfirmationMessage(
+                              "Are you sure you wan to delete this elective field from the database?"
+                            );
+                            setDeleteFunc(() => () => handleDelete(field));
+                          }}
+                        >
+                          <AiOutlineDelete />
+                        </Button>
+                        <ConfirmationDialog
+                          open={deleteConfirmation}
+                          handleClose={() => {
+                            setDeleteConfirmation(false);
+                            setDeleteConfirmationMessage("");
+                            setDeleteFunc(null);
+                          }}
+                          message={deleteConfirmationMessage}
+                          handleSubmit={() => {
+                            if (deleteFunc) deleteFunc(); // Call deleteFunc if it’s set
+                            setDeleteConfirmation(false);
+                            setDeleteConfirmationMessage("");
+                            setDeleteFunc(null);
+                          }}
+                        />
+                      </StyledTableCell>
+                    </StyledTableRow>
+                  ))}
               </TableBody>
               <TableFooter className="table-footer">
                 <TableRow sx={{ width: "100%" }}>
