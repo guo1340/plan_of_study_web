@@ -43,6 +43,7 @@
 .main_container {
   display: flex;
   height: 100vh;
+  overflow-y: hidden;
 }
 
 .sidebar_container {
@@ -421,11 +422,19 @@
 }
 
 .search-bar-contents {
-  width: 20em;
+  min-width: 150px;
+  width: 15em;
 }
 
 .search-buttons-container {
   display: flex;
+}
+
+.search-content-container {
+  display: flex;
+  width: 100%;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .table-footer {
