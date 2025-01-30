@@ -17,6 +17,7 @@ class Course(models.Model):
     editable_credits = models.BooleanField(default=False)
     elective_field = models.ForeignKey(ElectiveField, on_delete=models.PROTECT, related_name='courses')
     credit_type = models.ForeignKey(CreditType, on_delete=models.PROTECT, related_name="courses", default=1)
+    link = models.TextField(default="https://cs.vt.edu/Graduate/Courses.html")
 
     def __str__(self):
         return f"Class: {self.abbreviation} {self.class_number}"

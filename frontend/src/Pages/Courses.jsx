@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ConfirmationDialog from "../Components/ConfirmationDialog";
 import Autocomplete from "@mui/material/Autocomplete";
-import { styled } from "@mui/material/styles";
+import { darken, styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
@@ -57,10 +57,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:nth-of-type(odd)": {
+  "&:nth-of-type(4n+1)": {
     backgroundColor: theme.palette.action.hover,
   },
-  // hide last border
+  // Hide last border
   "&:last-child td, &:last-child th": {
     border: 0,
   },
@@ -152,6 +152,7 @@ const Courses = (props) => {
     elective_field: null,
     editable_credits: false,
     credit_type: null,
+    link: "",
   });
 
   const [majors, setMajors] = useState([]);
@@ -179,6 +180,7 @@ const Courses = (props) => {
     setFormData({
       major: course.major,
       abbreviation: course.abbreviation,
+      class_number: course.class_number,
       title: course.title,
       prereqs: course.prereqs,
       seasons: course.seasons,
@@ -188,6 +190,7 @@ const Courses = (props) => {
       elective_field: course.elective_field,
       editable_credits: course.editable_credits,
       credit_type: course.credit_type,
+      link: course.link,
     });
     try {
       const response = await axios.get(
@@ -726,6 +729,20 @@ const Courses = (props) => {
                 required
                 autoFocus
                 margin="dense"
+                id="link"
+                label="Course Details Link"
+                type="text"
+                className="input_textfield"
+                value={formData.link}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
                 id="credits"
                 label="Credits"
                 type="text"
@@ -864,19 +881,21 @@ const Courses = (props) => {
                           </Tooltip>
                         </StyledTableCell>
                         <StyledTableCell align="center">
-                          {row.seasons.map((season) => {
-                            const matchedSeason = all_seasons.find(
-                              (temp_season) => temp_season.id === season
-                            );
-                            return matchedSeason ? (
-                              <li
-                                style={{ listStyleType: "none" }}
-                                key={matchedSeason.name}
-                              >
-                                {matchedSeason.name}
-                              </li>
-                            ) : null;
-                          })}
+                          {row.seasons.length === 4
+                            ? "ALL"
+                            : row.seasons.map((season) => {
+                                const matchedSeason = all_seasons.find(
+                                  (temp_season) => temp_season.id === season
+                                );
+                                return matchedSeason ? (
+                                  <li
+                                    style={{ listStyleType: "none" }}
+                                    key={matchedSeason.name}
+                                  >
+                                    {matchedSeason.name}
+                                  </li>
+                                ) : null;
+                              })}
                         </StyledTableCell>
                         <StyledTableCell align="center">
                           {row.credits}
@@ -938,8 +957,25 @@ const Courses = (props) => {
                             unmountOnExit
                           >
                             <Box sx={{ margin: 1 }}>
-                              <p>
-                                <b>Title:</b> {row.title}
+                              <p
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <div>
+                                  <b>Title:</b> {row.title}
+                                </div>
+                                <Button
+                                  sx={{
+                                    color: "white",
+                                    backgroundColor: "maroon",
+                                    marginRight: "20px",
+                                  }}
+                                >
+                                  Add To Plan
+                                </Button>
                               </p>
                               <p>
                                 <b>Description:</b> {row.description}
@@ -953,6 +989,7 @@ const Courses = (props) => {
                                           majors.find(
                                             (major) => major.id === row.major
                                           )?.abbreviation ||
+                                          // eslint-disable-next-line no-useless-concat
                                           "N/A" + " " + course.class_number
                                         );
                                       })
@@ -968,11 +1005,22 @@ const Courses = (props) => {
                                           majors.find(
                                             (major) => major.id === row.major
                                           )?.abbreviation ||
+                                          // eslint-disable-next-line no-useless-concat
                                           "N/A" + " " + course.class_number
                                         );
                                       })
                                       .join(", ")
                                   : "No Corequisites for this course"}
+                              </p>
+                              <p>
+                                <b>Link: </b>
+                                <a
+                                  href={row.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {row.link}
+                                </a>
                               </p>
                             </Box>
                           </Collapse>

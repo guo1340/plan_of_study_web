@@ -1,10 +1,5 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import ListItemText from "@mui/material/ListItemText";
-import MenuItem from "@mui/material/MenuItem";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import Select from "@mui/material/Select";
-import Users from "../../Pages/Admin/Users";
 import Autocomplete from "@mui/material/Autocomplete";
 import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -148,6 +143,7 @@ const CourseSearchBar = (props) => {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
