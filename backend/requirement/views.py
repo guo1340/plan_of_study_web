@@ -1,5 +1,6 @@
 import json
 
+from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
@@ -42,19 +43,19 @@ class RequirementViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         check_admin_permission(request)
-        attribute = request.data.get("attribute")
-        attribute_value = request.data.get("attribute_value")
-        attribute_choice = request.data.get("attribute_choice")
-        major = request.data.get("major")
-        requirement_size = request.data.get("requirement_size")
-        requirement_type = request.data.get("requirement_type")
-        credit_type = request.data.get("credit_type")
-        if Requirement.objects.filter(
-                Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
-                    attribute_choice=attribute_choice) & Q(
-                    major=major) & Q(requirement_size=requirement_size) & Q(
-                    requirement_type=requirement_type) & Q(credit_type=credit_type)).exists():
-            return Response({"error": "A requirement with the same everything already exists"}, status=400)
+        # attribute = request.data.get("attribute")
+        # attribute_value = request.data.get("attribute_value")
+        # attribute_choice = request.data.get("attribute_choice")
+        # major = request.data.get("major")
+        # requirement_size = request.data.get("requirement_size")
+        # requirement_type = request.data.get("requirement_type")
+        # credit_type = request.data.get("credit_type")
+        # if Requirement.objects.filter(
+        #         Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
+        #             attribute_choice=attribute_choice) & Q(
+        #             major=major) & Q(requirement_size=requirement_size) & Q(
+        #             requirement_type=requirement_type) & Q(credit_type=credit_type)).exists():
+        #     return Response({"error": "A requirement with the same everything already exists"}, status=400)
 
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -65,21 +66,21 @@ class RequirementViewSet(ModelViewSet):
 
     def update(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
-        attribute = request.data.get("attribute")
-        attribute_value = request.data.get("attribute_value")
-        attribute_choice = request.data.get("attribute_choice")
-        major = request.data.get("major")
-        requirement_size = request.data.get("requirement_size")
-        requirement_type = request.data.get("requirement_type")
-        credit_type = request.data.get("credit_type")
-        if (Requirement.objects.filter(
-                Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
-                    attribute_choice=attribute_choice) & Q(
-                    major=major) & Q(requirement_size=requirement_size) & Q(
-                    requirement_type=requirement_type) & Q(credit_type=credit_type))
-                .exclude(pk=pk).exists()):
-            return Response({"error": "An exact same requirement already exists."},
-                            status=400)
+        # attribute = request.data.get("attribute")
+        # attribute_value = request.data.get("attribute_value")
+        # attribute_choice = request.data.get("attribute_choice")
+        # major = request.data.get("major")
+        # requirement_size = request.data.get("requirement_size")
+        # requirement_type = request.data.get("requirement_type")
+        # credit_type = request.data.get("credit_type")
+        # if (Requirement.objects.filter(
+        #         Q(attribute=attribute) & Q(attribute_value=attribute_value) & Q(attribute_value=attribute_value) & Q(
+        #             attribute_choice=attribute_choice) & Q(
+        #             major=major) & Q(requirement_size=requirement_size) & Q(
+        #             requirement_type=requirement_type) & Q(credit_type=credit_type))
+        #         .exclude(pk=pk).exists()):
+        #     return Response({"error": "An exact same requirement already exists."},
+        #                     status=400)
         req_obj = Requirement.objects.all().get(pk=pk)
         serializer = self.serializer_class(req_obj, data=request.data)
         if serializer.is_valid():

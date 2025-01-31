@@ -35,7 +35,6 @@ import ConfirmationDialog from "../../Components/ConfirmationDialog";
 import TableFooter from "@mui/material/TableFooter";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import PropTypes from "prop-types";
-import CourseSearchBar from "../../Components/Courses/CourseSearchbar";
 import Paper from "@mui/material/Paper";
 import TablePagination from "@mui/material/TablePagination";
 import BackToHome from "../../Components/BackToHomeDialog";
@@ -43,6 +42,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
 import DialogContentText from "@mui/material/DialogContentText";
 import TemplateSearchBar from "../../Components/SearchBars/TemplateSearchBar";
+import { NotificationManager } from "react-notifications";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -151,14 +151,15 @@ const Template = (props) => {
     requirements: [],
   });
   const [requirementFormData, setRequirementFormData] = useState({
+    id: null,
     attribute: "",
-    attribute_value: -1,
+    attribute_value: null,
     attribute_choice: "",
     include: true,
-    major: -1,
-    requirement_size: -1,
+    major: null,
+    requirement_size: null,
     requirement_type: "",
-    credit_type: -1,
+    credit_type: null,
   });
   const [templateRequirements, setTemplateRequirements] = useState([]);
   const [openInfo, setOpenInfo] = useState(null);
@@ -315,14 +316,15 @@ const Template = (props) => {
   const handleCloseRequirementDialog = () => {
     setOpenRequirementDialog(false);
     setRequirementFormData({
+      id: null,
       attribute: "",
-      attribute_value: -1,
+      attribute_value: null,
       attribute_choice: "",
-      major: -1,
+      major: null,
       include: true,
-      requirement_size: -1,
+      requirement_size: null,
       requirement_type: "",
-      credit_type: -1,
+      credit_type: null,
     });
   };
 
@@ -353,25 +355,60 @@ const Template = (props) => {
 
   const handleSubmitRequirement = async (e) => {
     e.preventDefault();
+
+    // Validate required fields
     if (requirementFormData.attribute !== "") {
-      console.log(requirementFormData.attribute_choice);
-      console.log(requirementFormData.attribute_value);
       if (requirementFormData.attribute_choice === "") {
         setAttributeChoiceError(true);
         return;
       }
-      if (requirementFormData.attribute_value === -1) {
+      if (requirementFormData.attribute_value === null) {
         setAttributeValueError(true);
         return;
       }
     }
-    if (requirementFormData.major === -1) {
+    if (requirementFormData.major === null) {
       setMajorRequirementError(true);
       return;
     }
-    if (requirementFormData.credit_type === -1) {
+    if (requirementFormData.credit_type === null) {
       setCreditTypeError(true);
       return;
+    }
+
+    // console.log("currentEditRequirement");
+    // console.log(currentEditRequirement);
+
+    // Fetch the existing requirements in the template
+    if (currentEditTemplate) {
+      // still missing call to backend for actual requirement details
+
+      // Check if the new requirement matches an existing one within the template
+      const isDuplicate =
+        templateRequirements.filter(
+          (req) =>
+            req.attribute === requirementFormData.attribute &&
+            req.attribute_value === requirementFormData.attribute_value &&
+            req.attribute_choice === requirementFormData.attribute_choice &&
+            req.major === requirementFormData.major &&
+            req.requirement_size === requirementFormData.requirement_size &&
+            req.requirement_type === requirementFormData.requirement_type &&
+            req.credit_type === requirementFormData.credit_type &&
+            req.id !== requirementFormData.id
+        ).length === 0
+          ? false
+          : true;
+
+      if (isDuplicate) {
+        console.warn("This requirement already exists in the template!");
+        NotificationManager.warning(
+          "This requirement already exists in the template!",
+          "Warning",
+          5000
+        );
+        handleCloseRequirementDialog();
+        return;
+      }
     }
 
     const method = currentEditRequirement ? "put" : "post";
@@ -386,18 +423,23 @@ const Template = (props) => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+      console.log("Response");
+      console.log(response);
 
-      if (!currentEditRequirement && currentEditTemplate) {
-        const newRequirementId = response.data.id;
+      let newRequirementId = response.data.id;
+
+      if (currentEditTemplate) {
         const templateResponse = await axios.get(
           `http://localhost:8000/api/template/${currentEditTemplate.id}/`
         );
+
         const updatedRequirements = [
           ...templateResponse.data.requirements,
           newRequirementId,
         ];
 
-        const newTemplate = await axios.put(
+        // Update the template with the new requirement
+        const newTemplateResponse = await axios.put(
           `http://localhost:8000/api/template/${currentEditTemplate.id}/`,
           {
             ...templateResponse.data,
@@ -409,36 +451,27 @@ const Template = (props) => {
             },
           }
         );
-        if (newTemplate.data) {
-          await fetchRequirements(newTemplate.data);
-        }
         await getListTemplates();
-        handleCloseRequirementDialog();
-      } else {
-        const templateResponse = await axios.get(
-          `http://localhost:8000/api/template/${currentEditTemplate.id}/`
-        );
-        if (templateResponse.data) {
-          await fetchRequirements(templateResponse.data);
-        }
-        await getListTemplates();
+        await fetchRequirements(newTemplateResponse.data);
+        setCurrentEditTemplate(newTemplateResponse.data);
         setCurrentEditRequirement(null);
-        handleCloseRequirementDialog();
       }
-      // Fetch updated requirements list for the current template after creating/editing
+      handleCloseRequirementDialog();
     } catch (error) {
       console.error("Error submitting requirement data:", error);
     }
 
+    // Reset form data
     setRequirementFormData({
+      id: null,
       attribute: "",
-      attribute_value: -1,
+      attribute_value: null,
       attribute_choice: "",
-      major: -1,
+      major: null,
       include: true,
-      requirement_size: -1,
+      requirement_size: null,
       requirement_type: "",
-      credit_type: -1,
+      credit_type: null,
     });
   };
 
@@ -480,7 +513,6 @@ const Template = (props) => {
       const newTemplate = await axios.get(
         `http://localhost:8000/api/template/${currentEditTemplate.id}`
       );
-      console.log(newTemplate);
       // Fetch updated requirements list for the current template
       if (newTemplate.data) {
         await fetchRequirements(newTemplate.data);
@@ -523,14 +555,15 @@ const Template = (props) => {
 
   const handleEditRequirementClick = (requirement) => {
     setRequirementFormData({
+      id: requirement.id || null,
       attribute: requirement.attribute || "",
-      attribute_value: requirement.attribute_value || -1,
+      attribute_value: requirement.attribute_value || null,
       attribute_choice: requirement.attribute_choice || "",
-      major: requirement.major || -1,
+      major: requirement.major || null,
       include: requirement.include,
-      requirement_size: requirement.requirement_size || -1,
+      requirement_size: requirement.requirement_size || null,
       requirement_type: requirement.requirement_type || "",
-      credit_type: requirement.credit_type || -1,
+      credit_type: requirement.credit_type || null,
     });
     setCurrentEditRequirement(requirement);
     setOpenRequirementDialog(true);
@@ -908,18 +941,18 @@ const Template = (props) => {
                     : "Attribute Value"
                 }
                 variant="outlined"
-                // Show an empty string if attribute_value is -1, otherwise display the actual value
+                // Show an empty string if attribute_value is null, otherwise display the actual value
                 value={
-                  requirementFormData.attribute_value === -1
+                  requirementFormData.attribute_value === null
                     ? ""
                     : requirementFormData.attribute_value
                 }
                 onChange={(e) =>
                   setRequirementFormData({
                     ...requirementFormData,
-                    // Set attribute_value to -1 if the field is empty, otherwise use the inputted number
+                    // Set attribute_value to null if the field is empty, otherwise use the inputted number
                     attribute_value:
-                      e.target.value === "" ? -1 : Number(e.target.value),
+                      e.target.value === "" ? null : Number(e.target.value),
                   })
                 }
                 error={attributeValueError}
@@ -929,38 +962,6 @@ const Template = (props) => {
                     : ""
                 }
                 fullWidth
-              />
-            </div>
-
-            {/* Major Field: Autocomplete with Major Options */}
-            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
-              <Autocomplete
-                options={all_majors} // Array of major options
-                getOptionLabel={(option) => option.name} // Display the major's name
-                value={
-                  all_majors.find(
-                    (major) => major.id === requirementFormData.major
-                  ) || null
-                }
-                onChange={(e, newValue) => {
-                  setRequirementFormData({
-                    ...requirementFormData,
-                    major: newValue ? newValue.id : -1,
-                  });
-                  setMajorRequirementError(false);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Major *"
-                    variant="outlined"
-                    fullWidth
-                    error={majorRequirementError}
-                    helperText={
-                      majorRequirementError ? "Please select a major" : ""
-                    }
-                  />
-                )}
               />
             </div>
 
@@ -980,6 +981,38 @@ const Template = (props) => {
                   />
                 }
                 label="Exclude Major"
+              />
+            </div>
+
+            {/* Major Field: Autocomplete with Major Options */}
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <Autocomplete
+                options={all_majors} // Array of major options
+                getOptionLabel={(option) => option.name} // Display the major's name
+                value={
+                  all_majors.find(
+                    (major) => major.id === requirementFormData.major
+                  ) || null
+                }
+                onChange={(e, newValue) => {
+                  setRequirementFormData({
+                    ...requirementFormData,
+                    major: newValue ? newValue.id : null,
+                  });
+                  setMajorRequirementError(false);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Major *"
+                    variant="outlined"
+                    fullWidth
+                    error={majorRequirementError}
+                    helperText={
+                      majorRequirementError ? "Please select a major" : ""
+                    }
+                  />
+                )}
               />
             </div>
 
@@ -1014,7 +1047,7 @@ const Template = (props) => {
                 label="Requirement Size"
                 variant="outlined"
                 value={
-                  requirementFormData.requirement_size === -1
+                  requirementFormData.requirement_size === null
                     ? ""
                     : requirementFormData.requirement_size
                 }
@@ -1022,7 +1055,7 @@ const Template = (props) => {
                   setRequirementFormData({
                     ...requirementFormData,
                     requirement_size:
-                      e.target.value === "" ? -1 : Number(e.target.value),
+                      e.target.value === "" ? null : Number(e.target.value),
                   })
                 }
                 fullWidth
@@ -1043,7 +1076,7 @@ const Template = (props) => {
                 onChange={(e, newValue) => {
                   setRequirementFormData({
                     ...requirementFormData,
-                    credit_type: newValue ? newValue.id : -1,
+                    credit_type: newValue ? newValue.id : null,
                   });
                   setCreditTypeError(false);
                 }}
