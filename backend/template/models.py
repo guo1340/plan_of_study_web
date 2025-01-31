@@ -11,6 +11,8 @@ class Template(models.Model):
     min_elective_fields = models.IntegerField(default=1)
     min_each_Elective = models.IntegerField(default=1)
     requirements = models.ManyToManyField(Requirement)
+    min_semester_credits = models.IntegerField(default=0)
+    max_semester_credits = models.IntegerField(default=18)
 
     def __str__(self):
         return f"{self.major} requirements template"
