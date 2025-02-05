@@ -440,3 +440,250 @@
 .table-footer {
   border-top: 1px solid #ddd; /* Adds a dividing line between the table and pagination */
 }
+
+/* Dashboard CSS */
+
+.dashboard-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 20px;
+  min-width: 100%; /* Match the width of the container */
+  /* max-width: 1200px;  */
+  /* Keep consistent with the cards section */
+  box-sizing: border-box; /* Include padding in the width calculation */
+  padding: 15px 20px; /* Add consistent padding */
+  background-color: #CD7F32; /* Match the dashboard-card background */
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+  overflow: hidden; /* Prevent overflow on the container */
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 1200px;
+  padding: 15px 20px;
+  background-color: #CD7F32;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.dashboard-title {
+  padding: 12px;
+  font-size: 3.0rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  padding: 5px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.dashboard-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%; /* Stretch the cards to fit the container */
+  overflow-y: scroll;
+}
+
+.plan-card {
+  background-color: #EABD8C;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.plan-hover {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.plan-header {
+  display: flex;
+  padding: 0px 20px;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid white; /* Add white border as a divider */
+}
+
+.plan-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.plan-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between title and status icon */
+}
+
+.plan-details {
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.plan-details p {
+  margin: 15px;
+}
+
+.plan-status {
+  font-size: 1.5rem;
+}
+
+.status-icon {
+  font-size: 1.8rem;
+}
+
+.status-icon.success {
+  color: #329700;
+}
+
+.status-icon.error {
+  color: #C40000;
+}
+
+.status-icon-container {
+  position: relative;
+  padding: 5px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.status-hover {
+  position: absolute;
+  bottom: -50px; /* Position below the status icon */
+  right: -100px; /* Align to the right of the status icon */
+  background: rgba(255, 255, 255, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #333;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.plan-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.delete-icon {
+  font-size: 2rem;
+  color: #FF0000;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.delete-icon:hover {
+  transform: scale(1.1);
+}
+
+.plan-hover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 10px;
+  width: 150px;
+  z-index: 1;
+}
+
+.plan-requirements {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-requirements li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.requirement-icon {
+  color: green;
+  margin-left: 5px;
+}
+
+.add-new-plan {
+  padding: 35px 0px;
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.add-new-plan:hover {
+  background-color: #e8e8e8;
+  transform: translateY(-3px);
+}
+
+.add-plan-frame {
+  font-size: 6rem;
+  color: #888;
+}
+
