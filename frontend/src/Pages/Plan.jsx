@@ -13,11 +13,12 @@ const Plan = (props) => {
     semesters: [],
     course_cart: [],
   });
-
+  const [count, setCount] = useState(0);
   const [editSemesters, setEditSemesters] = useState([]);
   const [openSemesterDialog, setOpenSemesterDialog] = useState(false);
-
-  const [currentEditSemester, setCurrentEditSemester] = useState({
+  const [currentEditSemester, setCurrentEditSemester] = useState(false);
+  const [currentEditPlan, setCurrentEditPlan] = useState(false);
+  const [semesterFormData, setSemesterFormData] = useState({
     id: null,
     year: null,
     season: null,
@@ -28,6 +29,9 @@ const Plan = (props) => {
   });
   const [courseList, setCourseList] = useState([]);
 
+  const [yearError, setYearError] = useState(false);
+  const [seasonError, setSeasonError] = useState(false);
+
   //   populate page
   const getPlan = async () => {
     axios
@@ -37,6 +41,7 @@ const Plan = (props) => {
         },
       })
       .then((res) => {
+        setCurrentEditPlan(res);
         setEditPlanData(res.data);
       })
       .catch((error) => {
@@ -142,7 +147,7 @@ const Plan = (props) => {
   };
   //   toggle edit semester dialog
   const handleEditSemesterClick = (semester) => {
-    setCurrentEditSemester({
+    setSemesterFormData({
       id: semester.id || null,
       year: semester.year || null,
       season: semester.season || null,
@@ -157,7 +162,7 @@ const Plan = (props) => {
 
   const handleCloseSemesterdialog = () => {
     setOpenSemesterDialog(false);
-    setCurrentEditSemester({
+    setSemesterFormData({
       id: null,
       year: null,
       season: null,
@@ -170,6 +175,52 @@ const Plan = (props) => {
 
   const handleClickOpenSemester = () => {
     setOpenSemesterDialog(true);
+  };
+
+  const handleSubmitSemester = async (e) => {
+    e.preventDefault();
+    if (semesterFormData.year === null) {
+      setYearError(true);
+      return;
+    }
+    if (semesterFormData.season === null) {
+      setSeasonError(true);
+      return;
+    }
+
+    const method = currentEditSemester ? "put" : "post";
+    const url = currentEditSemester
+      ? `http://localhost:8000/api/semester/${currentEditSemester.id}/`
+      : "http://localhost:8000/api/semester/";
+
+    try {
+      await props.checkTokenAndRefresh();
+      const response = await axios[method](url, semesterFormData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      let newSemesterId = response.data.id;
+      const updatedSemesters = [...editPlanData.data.semester, newSemesterId];
+      // from Templates line 440
+      await axios.put(
+        `http://localhost:8000/api/plan/${currentEditPlan.id}/`,
+        {
+          ...currentEditPlan.data,
+          requirements: updatedSemesters,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      await getListSemesters();
+      await getListCourses();
+    } catch (error) {
+      console.error("Error submitting semester data:", error);
+    }
   };
 
   //   edit course location (semester or cart)
