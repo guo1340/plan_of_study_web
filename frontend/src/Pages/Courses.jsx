@@ -938,7 +938,7 @@ const Courses = (props) => {
                             handleClose={() => {
                               setDeleteConfirmation(false);
                             }}
-                            message="Are you sure you wan to delete this course from the database?"
+                            message="Are you sure you want to delete this course from the database?"
                             handleSubmit={() => {
                               handleDelete(row);
                               setDeleteConfirmation(false);
