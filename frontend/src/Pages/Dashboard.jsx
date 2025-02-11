@@ -14,16 +14,21 @@ import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import ConfirmationDialog from "../Components/ConfirmationDialog";
 import axios from "axios";
-import { AiOutlineAccountBook } from "react-icons/ai";
+import { NotificationManager } from "react-notifications";
+import { Link } from "react-router-dom";
 
 const Dashboard = (props) => {
   const [openHome, setOpenHome] = useState(false);
   const [hoveredStatus, setHoveredStatus] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
+    credits: 0,
+    name: "",
     major: null,
     level: "",
     template: null,
+    semesters: [],
+    course_cart: [],
   });
 
   const [planList, setPlanList] = useState([]);
@@ -33,96 +38,6 @@ const Dashboard = (props) => {
   const [majorList, setMajorList] = useState([]);
   const [levelList, setLevelList] = useState([]);
 
-  // const plans = [
-  //   {
-  //     id: 1,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 2,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: false,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 3,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 4,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: false,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 5,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 6,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: false,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 7,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 8,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: false,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 9,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 10,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 11,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  //   {
-  //     id: 12,
-  //     major: "CS",
-  //     level: "MS",
-  //     fulfilled: true,
-  //     requirements: ["Requirement 1", "Requirement 2"],
-  //   },
-  // ];
-
-  // const majors = ["CS", "Math", "Physics", "Biology"]; // Example majors
-  // const levels = ["BS", "MS", "PhD"]; // Example levels
-
   const getListPlans = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/plan/", {
@@ -131,6 +46,7 @@ const Dashboard = (props) => {
         },
       });
       setPlanList(response.data);
+      // console.log(planList);
     } catch (error) {
       console.error("Error fetching plans data", error);
     }
@@ -143,6 +59,7 @@ const Dashboard = (props) => {
         },
       });
       setTemplateList(response.data);
+      // console.log(templateList);
 
       const majorResponses = await Promise.all(
         response.data.map(async (template) => {
@@ -165,19 +82,17 @@ const Dashboard = (props) => {
         })
       );
 
-      console.log("majorResponses (before flattening):", majorResponses);
-
       // **Flatten majorResponses to ensure it's a single array**
       const validMajors = majorResponses
         .flat()
         .filter((major) => major !== null);
-      console.log("validMajors (flattened):", validMajors);
 
       if (validMajors.length > 0) {
         const uniqueMajors = Array.from(
           new Map(validMajors.map((major) => [major.id, major])).values()
         );
         setMajorList(uniqueMajors);
+        // console.log(majorList);
       }
     } catch (error) {
       console.error("Error fetching templates data", error);
@@ -185,21 +100,51 @@ const Dashboard = (props) => {
   };
 
   // ✅ Track state updates with useEffect
-  useEffect(() => {
-    console.log("Updated majorList:", majorList);
-  }, [majorList]); // Runs when majorList updates
+  // useEffect(() => {
+  //   console.log("Updated majorList:", majorList);
+  // }, [majorList]); // Runs when majorList updates
 
   const handleDelete = async (plan) => {
     await props.checkTokenAndRefresh();
-
-    console.log(`Plan ${plan.id} deleted`);
+    try {
+      await axios.delete(`http://localhost:8000/api/plan/${plan.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      NotificationManager.success("Plan deleted successfully", "Success", 5000);
+    } catch (error) {
+      NotificationManager.error("Error deleting plan", "Error", 5000);
+      console.error("Error adding plan", error);
+    }
+    getListPlans();
   };
 
-  const handleAddPlan = (e) => {
+  const handleAddPlan = async (e) => {
     e.preventDefault();
-    console.log("Added Plan:", formData);
+    await props.checkTokenAndRefresh();
+    try {
+      await axios.post("http://localhost:8000/api/plan/", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      NotificationManager.success("Plan added successfully", "Success", 5000);
+    } catch (error) {
+      NotificationManager.error("Error adding plan", "Error", 5000);
+      console.error("Error adding plan", error);
+    }
+    await getListPlans();
     setOpenDialog(false);
-    setFormData({ major: "", level: "" });
+    setFormData({
+      credits: 0,
+      name: "",
+      major: null,
+      level: "",
+      template: null,
+      semesters: [],
+      course_cart: [],
+    });
   };
 
   useEffect(() => {
@@ -260,59 +205,102 @@ const Dashboard = (props) => {
       </header>
       <div className="dashboard-plans">
         {planList.map((plan) => (
-          <div key={plan.id} className="plan-card">
-            <div className="plan-header">
-              <div className="plan-header-left">
-                <h2 className="plan-title">Plan No.{plan.id}</h2>
-                <div
-                  className="status-icon-container"
-                  onMouseEnter={() => setHoveredStatus(plan.id)}
-                  onMouseLeave={() => setHoveredStatus(null)}
-                >
-                  {plan.fulfilled ? (
-                    <CheckBoxIcon className="status-icon success" />
-                  ) : (
-                    <CancelIcon className="status-icon error" />
-                  )}
-                  {hoveredStatus === plan.id && (
-                    <div className="status-hover">
-                      {plan.fulfilled
-                        ? "All Requirements fulfilled"
-                        : "Not fulfilled yet"}
-                    </div>
-                  )}
+          <Link
+            to={`/plan/${plan.id}`}
+            key={plan.id}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <div className="plan-card">
+              <div className="plan-header">
+                <div className="plan-header-left">
+                  <h2 className="plan-title">{plan.name}</h2>
+                  <div
+                    className="status-icon-container"
+                    onMouseEnter={() => setHoveredStatus(plan.id)}
+                    onMouseLeave={() => setHoveredStatus(null)}
+                  >
+                    {plan.fulfilled ? (
+                      <CheckBoxIcon className="status-icon success" />
+                    ) : (
+                      <CancelIcon className="status-icon error" />
+                    )}
+                    {hoveredStatus === plan.id && (
+                      <div className="status-hover">
+                        {plan.fulfilled
+                          ? "All Requirements fulfilled"
+                          : "Not fulfilled yet"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="plan-header-right">
+                  <DeleteIcon
+                    className="delete-icon"
+                    onClick={() => {
+                      setDeleteId(plan.id);
+                      setDeleteConfirmation(true);
+                    }}
+                  />
                 </div>
               </div>
-              <div className="plan-header-right">
-                <DeleteIcon
-                  className="delete-icon"
-                  onClick={() => {
-                    setDeleteId(plan.id);
-                    setDeleteConfirmation(true);
+              <div className="plan-details">
+                {/* <p>
+                Major:{" "}
+                {
+                  planList.filter((p) => {
+                    return p.id === plan.id;
+                  }).id
+                }
+              </p>
+              <p>
+                Level:{" "}
+                {
+                  templateList.filter((template) => {
+                    return template.id === plan.template;
+                  }).level
+                }
+              </p> */}
+                <p>
+                  <strong>Major:</strong>{" "}
+                  {(() => {
+                    const template = templateList.find(
+                      (t) => t.id === plan.template
+                    );
+                    const major = majorList.find(
+                      (m) => m.id === (template ? template.major : null)
+                    );
+                    return major ? major.name : "N/A";
+                  })()}
+                </p>
+                <p>
+                  <strong>Level:</strong>{" "}
+                  {(() => {
+                    const template = templateList.find(
+                      (t) => t.id === plan.template
+                    );
+                    return template ? template.level : "N/A";
+                  })()}
+                </p>
+
+                {/* fix this  */}
+              </div>
+              {deleteId === plan.id && (
+                <ConfirmationDialog
+                  open={deleteConfirmation}
+                  handleClose={() => {
+                    setDeleteConfirmation(false);
+                    setDeleteId(null);
+                  }}
+                  message="Are you sure you want to delete this plan from the database?"
+                  handleSubmit={() => {
+                    handleDelete(plan);
+                    setDeleteId(null);
+                    setDeleteConfirmation(false);
                   }}
                 />
-              </div>
+              )}
             </div>
-            <div className="plan-details">
-              <p>Major: {plan.major}</p>
-              <p>Level: {plan.level}</p>
-            </div>
-            {deleteId === plan.id && (
-              <ConfirmationDialog
-                open={deleteConfirmation}
-                handleClose={() => {
-                  setDeleteConfirmation(false);
-                  setDeleteId(null);
-                }}
-                message="Are you sure you want to delete this plan from the database?"
-                handleSubmit={() => {
-                  handleDelete(plan);
-                  setDeleteId(null);
-                  setDeleteConfirmation(false);
-                }}
-              />
-            )}
-          </div>
+          </Link>
         ))}
         <div
           className="plan-card add-new-plan"
@@ -328,6 +316,25 @@ const Dashboard = (props) => {
         </DialogTitle>
         <DialogContent>
           <form onSubmit={handleAddPlan}>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="name"
+                label="Name"
+                type="text"
+                className="input_textfield"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    name: e.target.value,
+                  }));
+                }}
+                fullWidth
+              />
+            </div>
             <div style={{ paddingTop: "5px", paddingBottom: "15px" }}>
               <Autocomplete
                 disablePortal
@@ -386,9 +393,6 @@ const Dashboard = (props) => {
                     } else {
                       updatedFormData.template = null; // Reset if no matching template
                     }
-
-                    console.log("Selected Level:", newValue);
-                    console.log("Updated FormData:", updatedFormData);
 
                     return updatedFormData;
                   });

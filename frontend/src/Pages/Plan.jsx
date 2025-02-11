@@ -3,8 +3,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import BackToHome from "../Components/BackToHomeDialog";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const Plan = (props) => {
+  const { id } = useParams();
   const [openHome, setOpenHome] = useState(false);
 
   const [editPlanData, setEditPlanData] = useState({
@@ -34,23 +36,26 @@ const Plan = (props) => {
 
   //   populate page
   const getPlan = async () => {
-    axios
-      .get("http://localhost:8000/api/plan", {
+    try {
+      const res = await axios.get(`http://localhost:8000/api/plan/${id}/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-      })
-      .then((res) => {
-        setCurrentEditPlan(res);
-        setEditPlanData(res.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching plan data", error);
       });
+      console.log("Fetched Plan:", res.data); // ✅ Debugging step
+      setCurrentEditPlan(res.data);
+      setEditPlanData(res.data);
+    } catch (error) {
+      console.error("Error fetching plan data", error);
+    }
   };
 
   const getListSemesters = async (plan) => {
     try {
+      if (!plan || !plan.semesters) {
+        console.error("Plan data is missing or semesters are undefined.");
+        return;
+      }
       const semestersData = await Promise.all(
         plan.semesters.map(async (semesterId) => {
           try {
@@ -116,6 +121,10 @@ const Plan = (props) => {
 
   const getListCourses = async (plan) => {
     try {
+      if (!plan || !plan.course_cart) {
+        console.error("Plan data is missing or course_cart is undefined.");
+        return;
+      }
       const coursesData = await Promise.all(
         plan.course_cart.map(async (courseId) => {
           try {
@@ -245,15 +254,11 @@ const Plan = (props) => {
       }
     });
     try {
-      await axios.put(
-        `http://localhost:8000/api/plan/${props.planId}`,
-        editPlanData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
+      await axios.put(`http://localhost:8000/api/plan/${id}`, editPlanData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
     } catch (error) {
       console.error("Error saving plan data", error);
       return;
@@ -268,29 +273,24 @@ const Plan = (props) => {
   //   plan id to compare with the plan list in userDetails, then to be used to fetch plan object
   useEffect(() => {
     const fetchDataAfterTokenRefresh = async () => {
-      if (openSemesterDialog) {
-        setOpenSemesterDialog(true);
-      }
       try {
-        // Wait for checkTokenAndRefresh to finish
         await props.checkTokenAndRefresh();
         if (!props.token) {
-          setOpenHome(true); // Open dialog if no token is available
+          setOpenHome(true);
         }
-        await getPlan();
-        getListSemesters();
-        getListCourses();
+
+        const planData = await getPlan();
+        if (planData) {
+          await getListSemesters(planData);
+          await getListCourses(planData);
+        }
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
       }
     };
 
-    // Run the async function
     fetchDataAfterTokenRefresh();
-
-    // Empty dependency array ensures this only runs once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openSemesterDialog]);
+  }, [id, props.token]); // ✅ Runs when plan ID or token changes
 
   if (!props.token) {
     return (
@@ -311,9 +311,9 @@ const Plan = (props) => {
   }
 
   if (
-    props.userDetails.plans.filter((plan) => {
-      return plan.id === props.planId;
-    }).length === 0
+    !props.userDetails ||
+    !props.userDetails.plans ||
+    !props.userDetails.plans.includes(parseInt(id))
   ) {
     return (
       <BackToHome
@@ -330,6 +330,7 @@ const Plan = (props) => {
         <h1 className="dashboard_title">
           {props.userDetails.user.username}'s Dashboard
         </h1>
+        <span>plan id: {id}</span>
         <p className="home_description">
           total number of plans: {props.userDetails.plans.length}
         </p>

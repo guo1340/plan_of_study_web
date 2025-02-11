@@ -19,6 +19,7 @@ import Dashboard from "./Pages/Dashboard";
 import Major from "./Pages/Admin/major";
 import axios from "axios";
 import CreditType from "./Pages/Admin/CreditType";
+import Plan from "./Pages/Plan";
 
 const App = () => {
   const [openLogin, setOpenLogin] = useState(false);
@@ -152,6 +153,17 @@ const App = () => {
               path="/dashboard"
               element={
                 <Dashboard
+                  token={localStorage.getItem("accessToken")}
+                  checkTokenAndRefresh={checkTokenAndRefresh}
+                  userDetails={userDetails} // Pass user details to Dashboard
+                  loadingUser={loadingUser} // Pass loading state to Dashboard
+                />
+              }
+            />
+            <Route
+              path="/plan/:id"
+              element={
+                <Plan
                   token={localStorage.getItem("accessToken")}
                   checkTokenAndRefresh={checkTokenAndRefresh}
                   userDetails={userDetails} // Pass user details to Dashboard
