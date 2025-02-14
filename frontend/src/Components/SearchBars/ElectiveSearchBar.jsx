@@ -18,7 +18,9 @@ const ElectiveSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `/api/elective-field/?search=${encodeURIComponent(searchQuery)}`
+        `http://localhost:8000/api/elective-field/?search=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       props.setFields(response.data);
     } catch (error) {
@@ -28,7 +30,7 @@ const ElectiveSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("/api/major/")
+      .get("http://localhost:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -39,7 +41,7 @@ const ElectiveSearchBar = (props) => {
 
   const getListFields = async () => {
     try {
-      const res = await axios.get("/api/elective-field/");
+      const res = await axios.get("http://localhost:8000/api/elective-field/");
       setFields(res.data);
     } catch (error) {
       console.error("Error fetching elective fields data:", error);

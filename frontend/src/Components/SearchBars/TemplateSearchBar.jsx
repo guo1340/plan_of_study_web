@@ -19,7 +19,9 @@ const TemplateSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `/api/template/?search=${encodeURIComponent(searchQuery)}`
+        `http://localhost:8000/api/template/?search=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       props.setTemplates(response.data);
     } catch (error) {
@@ -43,7 +45,7 @@ const TemplateSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("/api/major/")
+      .get("http://localhost:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -54,7 +56,7 @@ const TemplateSearchBar = (props) => {
 
   const getListTemplates = () => {
     axios
-      .get("/api/template/", {
+      .get("http://localhost:8000/api/template/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

@@ -37,7 +37,7 @@ const Plan = (props) => {
   //   populate page
   const getPlan = async () => {
     try {
-      const res = await axios.get(`/api/plan/${id}/`, {
+      const res = await axios.get(`http://localhost:8000/api/plan/${id}/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -60,7 +60,7 @@ const Plan = (props) => {
         plan.semesters.map(async (semesterId) => {
           try {
             const semesterResponse = await axios.get(
-              `/api/semester/${semesterId}/`,
+              `http://localhost:8000/api/semester/${semesterId}/`,
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -77,7 +77,7 @@ const Plan = (props) => {
               semester.classes.map(async (courseId) => {
                 try {
                   const courseResponse = await axios.get(
-                    `/api/classes/${courseId}/`,
+                    `http://localhost:8000/api/classes/${courseId}/`,
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -129,7 +129,7 @@ const Plan = (props) => {
         plan.course_cart.map(async (courseId) => {
           try {
             const courseResponse = await axios.get(
-              `/api/classes/${courseId}/`,
+              `http://localhost:8000/api/classes/${courseId}/`,
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -199,8 +199,8 @@ const Plan = (props) => {
 
     const method = currentEditSemester ? "put" : "post";
     const url = currentEditSemester
-      ? `/api/semester/${currentEditSemester.id}/`
-      : "/api/semester/";
+      ? `http://localhost:8000/api/semester/${currentEditSemester.id}/`
+      : "http://localhost:8000/api/semester/";
 
     try {
       await props.checkTokenAndRefresh();
@@ -214,7 +214,7 @@ const Plan = (props) => {
       const updatedSemesters = [...editPlanData.data.semester, newSemesterId];
       // from Templates line 440
       await axios.put(
-        `/api/plan/${currentEditPlan.id}/`,
+        `http://localhost:8000/api/plan/${currentEditPlan.id}/`,
         {
           ...currentEditPlan.data,
           requirements: updatedSemesters,
@@ -239,18 +239,22 @@ const Plan = (props) => {
     // go through every semester object in editSemesters and save the changes to backend
     editSemesters.forEach(async (semester) => {
       try {
-        await axios.put(`/api/semester/${semester.id}`, semester, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+        await axios.put(
+          `http://localhost:8000/api/semester/${semester.id}`,
+          semester,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
       } catch (error) {
         console.error("Error saving semester data", error);
         return;
       }
     });
     try {
-      await axios.put(`/api/plan/${id}`, editPlanData, {
+      await axios.put(`http://localhost:8000/api/plan/${id}`, editPlanData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

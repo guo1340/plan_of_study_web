@@ -41,7 +41,9 @@ const CourseSearchBar = (props) => {
       };
       const searchQuery = JSON.stringify(formattedSearchFormData);
       const response = await axios.get(
-        `/api/classes/?search=${encodeURIComponent(searchQuery)}`
+        `http://localhost:8000/api/classes/?search=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       props.setClasses(response.data);
     } catch (error) {
@@ -51,7 +53,7 @@ const CourseSearchBar = (props) => {
 
   const getListMajors = async () => {
     axios
-      .get("/api/major/")
+      .get("http://localhost:8000/api/major/")
       .then((res) => {
         setMajorList(res.data);
       })
@@ -62,7 +64,7 @@ const CourseSearchBar = (props) => {
 
   const getListCreditTypes = async () => {
     try {
-      const response = await axios.get("/api/credit-type");
+      const response = await axios.get("http://localhost:8000/api/credit-type");
       setCreditTypeList(response.data);
     } catch (error) {
       console.error("Error fetching Credit Types:", error);
@@ -71,7 +73,7 @@ const CourseSearchBar = (props) => {
 
   const getListSeasons = async () => {
     try {
-      const response = await axios.get("/api/season");
+      const response = await axios.get("http://localhost:8000/api/season");
       setSeasonList(response.data);
     } catch (error) {
       console.error("Error fetching Seasons:", error);
@@ -80,7 +82,9 @@ const CourseSearchBar = (props) => {
 
   const getListElectiveFields = async () => {
     try {
-      const response = await axios.get("/api/elective-field");
+      const response = await axios.get(
+        "http://localhost:8000/api/elective-field"
+      );
       setElectiveFieldList(response.data);
     } catch (error) {
       console.error("Error fetching Elective Fields:", error);
@@ -89,7 +93,7 @@ const CourseSearchBar = (props) => {
 
   const getListCourses = async () => {
     try {
-      const response = await axios.get("/api/classes");
+      const response = await axios.get("http://localhost:8000/api/classes");
       setCourseList(response.data);
     } catch (error) {
       console.error("Error fetching Classes:", error);

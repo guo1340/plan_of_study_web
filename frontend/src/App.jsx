@@ -58,9 +58,10 @@ const App = () => {
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) return;
 
-      const response = await axios.post("/api/token/refresh/", {
-        refresh: refreshToken,
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/token/refresh/",
+        { refresh: refreshToken }
+      );
 
       if (response.status === 200) {
         const { access } = response.data;
@@ -83,7 +84,7 @@ const App = () => {
   const fetchUser = async () => {
     setLoadingUser(true); // Start loading user details
     try {
-      const response = await axios.get("/api/user/me/", {
+      const response = await axios.get("http://localhost:8000/api/user/me/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

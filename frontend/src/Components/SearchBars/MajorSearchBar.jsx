@@ -17,7 +17,9 @@ const MajorSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `/api/major/?search=${encodeURIComponent(searchQuery)}`
+        `http://localhost:8000/api/major/?search=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       props.setMajors(response.data);
     } catch (error) {
@@ -27,7 +29,7 @@ const MajorSearchBar = (props) => {
 
   const getListMajors = async () => {
     try {
-      const majorRes = await axios.get("/api/major");
+      const majorRes = await axios.get("http://localhost:8000/api/major");
       setMajors(majorRes.data);
     } catch (error) {
       console.error("Error fetching majors:", error);

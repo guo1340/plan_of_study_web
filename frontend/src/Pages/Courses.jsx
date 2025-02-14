@@ -193,9 +193,12 @@ const Courses = (props) => {
       link: course.link,
     });
     try {
-      const response = await axios.get(`/api/elective-field/`, {
-        params: { major: course.major }, // Pass the selected major as a query parameter
-      });
+      const response = await axios.get(
+        `http://localhost:8000/api/elective-field/`,
+        {
+          params: { major: course.major }, // Pass the selected major as a query parameter
+        }
+      );
       const electiveFields = response.data.sort(
         (a, b) => a.field_number - b.field_number
       );
@@ -212,7 +215,7 @@ const Courses = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("/api/major/")
+      .get("http://localhost:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -223,28 +226,36 @@ const Courses = (props) => {
 
   const getListCourses = async () => {
     try {
-      const courseResponse = await axios.get("/api/classes/");
+      const courseResponse = await axios.get(
+        "http://localhost:8000/api/classes/"
+      );
       const coursesData = courseResponse.data;
 
       const coursesWithElectiveFields = await Promise.all(
         coursesData.map(async (course) => {
           try {
             const electiveFieldResponse = await axios.get(
-              `/api/elective-field/${course.elective_field}`
+              `http://localhost:8000/api/elective-field/${course.elective_field}`
             );
             let courseSeasons = [];
             course.seasons.map(async (season) => {
-              const seasonResponse = await axios.get(`/api/season/${season}`);
+              const seasonResponse = await axios.get(
+                `http://localhost:8000/api/season/${season}`
+              );
               courseSeasons.push(seasonResponse.data);
             });
             let coursePrereqs = [];
             course.prereqs.map(async (prereq) => {
-              const prereqResponse = await axios.get(`/api/classes/${prereq}`);
+              const prereqResponse = await axios.get(
+                `http://localhost:8000/api/classes/${prereq}`
+              );
               coursePrereqs.push(prereqResponse.data);
             });
             let courseCoreqs = [];
             course.coreqs.map(async (coreq) => {
-              const coreqResponse = await axios.get(`/api/classes/${coreq}`);
+              const coreqResponse = await axios.get(
+                `http://localhost:8000/api/classes/${coreq}`
+              );
               courseCoreqs.push(coreqResponse.data);
             });
 
@@ -275,7 +286,7 @@ const Courses = (props) => {
 
   const getListSeasons = () => {
     axios
-      .get("/api/season/")
+      .get("http://localhost:8000/api/season/")
       .then((res) => {
         setSeasons(res.data);
       })
@@ -286,7 +297,7 @@ const Courses = (props) => {
 
   const getListCreditTypes = () => {
     axios
-      .get("/api/credit-type/")
+      .get("http://localhost:8000/api/credit-type/")
       .then((res) => {
         setCreditTypes(res.data);
       })
@@ -297,7 +308,7 @@ const Courses = (props) => {
 
   const getListElectiveFields = async () => {
     axios
-      .get("/api/elective-field/")
+      .get("http://localhost:8000/api/elective-field/")
       .then((res) => {
         setElectiveFieldList(res.data);
       })
@@ -314,7 +325,7 @@ const Courses = (props) => {
     // event handler for the delete button
     await props.checkTokenAndRefresh();
     axios
-      .delete(`/api/classes/${course.id}`, {
+      .delete(`http://localhost:8000/api/classes/${course.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -369,8 +380,8 @@ const Courses = (props) => {
     } else {
       const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
       const url = currentEditCourse
-        ? `/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
-        : "/api/classes/";
+        ? `http://localhost:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
+        : "http://localhost:8000/api/classes/";
       // console.log(formData);
       await props.checkTokenAndRefresh();
       await axios[method](url, formData, {
@@ -452,7 +463,7 @@ const Courses = (props) => {
     // Fetch elective fields for the selected major
     try {
       const response = await axios.get(
-        `/api/elective-field/?search={"major":"${newValue.id}"}`
+        `http://localhost:8000/api/elective-field/?search={"major":"${newValue.id}"}`
       );
       const electiveFields = response.data.sort(
         (a, b) => a.field_number - b.field_number

@@ -40,7 +40,7 @@ const Dashboard = (props) => {
 
   const getListPlans = async () => {
     try {
-      const response = await axios.get("/api/plan/", {
+      const response = await axios.get("http://localhost:8000/api/plan/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -53,7 +53,7 @@ const Dashboard = (props) => {
   };
   const getListTemplates = async () => {
     try {
-      const response = await axios.get("/api/template/", {
+      const response = await axios.get("http://localhost:8000/api/template/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -64,11 +64,16 @@ const Dashboard = (props) => {
       const majorResponses = await Promise.all(
         response.data.map(async (template) => {
           try {
-            const majorRes = await axios.get("/api/major/", {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-              },
-            });
+            const majorRes = await axios.get(
+              "http://localhost:8000/api/major/",
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem(
+                    "accessToken"
+                  )}`,
+                },
+              }
+            );
             return majorRes.data; // This is an array
           } catch (err) {
             console.error("Error fetching major data", err);
@@ -102,7 +107,7 @@ const Dashboard = (props) => {
   const handleDelete = async (plan) => {
     await props.checkTokenAndRefresh();
     try {
-      await axios.delete(`/api/plan/${plan.id}`, {
+      await axios.delete(`http://localhost:8000/api/plan/${plan.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -119,7 +124,7 @@ const Dashboard = (props) => {
     e.preventDefault();
     await props.checkTokenAndRefresh();
     try {
-      await axios.post("/api/plan/", formData, {
+      await axios.post("http://localhost:8000/api/plan/", formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
