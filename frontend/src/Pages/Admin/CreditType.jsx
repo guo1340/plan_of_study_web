@@ -149,7 +149,7 @@ const CreditType = (props) => {
 
   const getListCreditTypes = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/credit-type");
+      const response = await axios.get("/api/credit-type");
       setCreditTypes(response.data);
     } catch (error) {
       console.error("Error fetching Credit Types:", error);
@@ -159,7 +159,7 @@ const CreditType = (props) => {
   const handleDelete = async (CreditType) => {
     await props.checkTokenAndRefresh();
     axios
-      .delete(`http://localhost:8000/api/credit-type/${CreditType.id}`, {
+      .delete(`/api/credit-type/${CreditType.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -212,7 +212,7 @@ const CreditType = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/major/")
+      .get("/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -225,8 +225,8 @@ const CreditType = (props) => {
     e.preventDefault();
     const method = currentEditCreditType ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditCreditType
-      ? `http://localhost:8000/api/credit-type/${currentEditCreditType.id}/` // If editing, use the course ID
-      : "http://localhost:8000/api/credit-type/";
+      ? `/api/credit-type/${currentEditCreditType.id}/` // If editing, use the course ID
+      : "/api/credit-type/";
     await props.checkTokenAndRefresh();
     await axios[method](url, formData, {
       headers: {

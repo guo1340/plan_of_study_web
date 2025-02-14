@@ -146,7 +146,7 @@ const Major = (props) => {
 
   const getListMajors = async () => {
     try {
-      const majorRes = await axios.get("http://localhost:8000/api/major");
+      const majorRes = await axios.get("/api/major");
       setMajors(majorRes.data);
     } catch (error) {
       console.error("Error fetching majors:", error);
@@ -157,7 +157,7 @@ const Major = (props) => {
     // event handler for the delete button
     await props.checkTokenAndRefresh();
     axios
-      .delete(`http://localhost:8000/api/major/${major.id}`, {
+      .delete(`/api/major/${major.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -208,8 +208,8 @@ const Major = (props) => {
 
     const method = currentEditMajor ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditMajor
-      ? `http://localhost:8000/api/major/${currentEditMajor.id}/` // If editing, use the course ID
-      : "http://localhost:8000/api/major/";
+      ? `/api/major/${currentEditMajor.id}/` // If editing, use the course ID
+      : "/api/major/";
     console.log(formData);
     await props.checkTokenAndRefresh();
     await axios[method](url, formData, {

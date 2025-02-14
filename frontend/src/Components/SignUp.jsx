@@ -44,7 +44,7 @@ const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
       NotificationManager.warning("Passwords do not match", "Warning", 5000);
     } else {
       axios
-        .post("http://localhost:8000/api/register/", {
+        .post("/api/register/", {
           username: formData.username,
           email: formData.email,
           password: formData.password,

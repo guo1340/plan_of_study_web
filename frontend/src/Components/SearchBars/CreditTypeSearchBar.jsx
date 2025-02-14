@@ -19,9 +19,7 @@ const CreditTypeSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://localhost:8000/api/credit-type/?search=${encodeURIComponent(
-          searchQuery
-        )}`
+        `/api/credit-type/?search=${encodeURIComponent(searchQuery)}`
       );
       props.setCreditTypes(response.data);
     } catch (error) {
@@ -31,7 +29,7 @@ const CreditTypeSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/major/")
+      .get("/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -42,7 +40,7 @@ const CreditTypeSearchBar = (props) => {
 
   const getListCreditTypes = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/credit-type");
+      const response = await axios.get("/api/credit-type");
       setCreditTypes(response.data);
     } catch (error) {
       console.error("Error fetching Credit Types:", error);

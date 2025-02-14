@@ -19,9 +19,7 @@ const TemplateSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://localhost:8000/api/template/?search=${encodeURIComponent(
-          searchQuery
-        )}`
+        `/api/template/?search=${encodeURIComponent(searchQuery)}`
       );
       props.setTemplates(response.data);
     } catch (error) {
@@ -45,7 +43,7 @@ const TemplateSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/major/")
+      .get("/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -56,7 +54,7 @@ const TemplateSearchBar = (props) => {
 
   const getListTemplates = () => {
     axios
-      .get("http://localhost:8000/api/template/", {
+      .get("/api/template/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -75,8 +73,7 @@ const TemplateSearchBar = (props) => {
       try {
         await props.checkTokenAndRefresh();
         await getListTemplates();
-        await getListMajors();  // Getting the majors for the id and name matching
-
+        await getListMajors(); // Getting the majors for the id and name matching
       } catch (error) {
         console.error("Error fetching majors:", error);
       }
@@ -84,7 +81,6 @@ const TemplateSearchBar = (props) => {
 
     fetchData();
   }, []); // Ensure it only runs once
-
 
   const handleClear = () => {
     setSearchFormData({
@@ -104,43 +100,43 @@ const TemplateSearchBar = (props) => {
     <div className="search-bar">
       <form onSubmit={handleSubmit} className="search-bar-container">
         <Autocomplete
-            className="search-bar-contents"
-            options={majors} // Passing the majors instead of templates
-            getOptionLabel={(option) => option.name || ""} 
-            value={
-              majors.find((major) => major.id === searchFormData.major) || null
-            }
-            onChange={(event, newValue) => {
-              handleChange("major", newValue ? newValue.id : null); // Store the major ID
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Major"
-                name="major"
-                variant="outlined"
-                onChange={getListTemplates}
-              />
-            )}
-          />
+          className="search-bar-contents"
+          options={majors} // Passing the majors instead of templates
+          getOptionLabel={(option) => option.name || ""}
+          value={
+            majors.find((major) => major.id === searchFormData.major) || null
+          }
+          onChange={(event, newValue) => {
+            handleChange("major", newValue ? newValue.id : null); // Store the major ID
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Major"
+              name="major"
+              variant="outlined"
+              onChange={getListTemplates}
+            />
+          )}
+        />
         <Autocomplete
-            className="search-bar-contents"
-            options={uniqueLevels} // Passing the unique levels instead of the template object
-            getOptionLabel={(option) => option || ""}
-            value={searchFormData.level || ""} 
-            onChange={(event, newValue) => {
-              handleChange("level", newValue || "");
-            }}    
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Level"
-                name="level"
-                variant="outlined"
-                onChange={getListTemplates}
-              />
-            )}
-          />
+          className="search-bar-contents"
+          options={uniqueLevels} // Passing the unique levels instead of the template object
+          getOptionLabel={(option) => option || ""}
+          value={searchFormData.level || ""}
+          onChange={(event, newValue) => {
+            handleChange("level", newValue || "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Level"
+              name="level"
+              variant="outlined"
+              onChange={getListTemplates}
+            />
+          )}
+        />
         <div className="search-bar-contents search-buttons-container">
           <Button type="submit" color="primary" className="search-bar-contents">
             Search
