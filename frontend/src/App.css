@@ -687,3 +687,164 @@
   color: #888;
 }
 
+/* Plans Page CSS */
+
+.plan-container {
+  font-family: Arial, sans-serif;
+  background-color: white;
+  text-align: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  overflow-y: auto;
+}
+
+.plan-page-title {
+  padding: 12px;
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.plan-subtitle {
+  padding: 5px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.plan-page-header {
+  text-align: center;
+  margin-bottom: 20px;
+  width: 100vw; /* Ensures full viewport width */
+  max-width: 100%; /* Prevents restriction */
+  padding: 15px 20px;
+  background-color: #cd7f32;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box; /* Prevents overflow issues */
+}
+
+.main-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  position: relative;
+  align-items: flex-start;
+  width: 100vw; /* Match header width */
+  max-width: 100%; /* Ensures it spans dynamically */
+  height: 70vh;
+  padding-bottom: 60px;
+}
+
+.grid-layout {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.semester {
+  min-width: 250px;
+  max-width: 250px;
+  min-height: 250px;
+  background-color: #EABD8C;
+  border-radius: 8px;
+  padding: 0px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  position: relative;
+  overflow: hidden; /* Prevents unwanted spacing issues */
+  display: flex;
+  flex-direction: column; /* Ensures children stack vertically */
+}
+
+.semester-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #EABD8C;
+  color: black;
+  padding: 10px;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  border-bottom: 2px solid white; /* Full-width white border */
+}
+
+.semester h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: black;
+}
+
+.credits {
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: black;
+}
+
+.course-item {
+  padding: 10px;
+  margin: 10px;
+  background-color: white;
+  border-radius: 4px;
+  cursor: grab;
+  white-space: pre-line;
+}
+
+.course-cart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 60vh;
+  position: relative;
+  min-height: 70vh;
+}
+
+.course-cart {
+  width: 250px;
+  background-color: #B6B4B4;
+  border-radius: 8px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  overflow-y: auto;
+}
+
+.course-cart .course-cart-color {
+  background-color: transparent !important;
+  box-shadow: none;
+  border-radius: 0px;
+}
+
+.course-cart-scroll {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.save-button {
+  background-color: #7a1c27;
+  color: white;
+  font-size: 1rem;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  top: 30px;
+  position: relative;
+}
+
+.save-button:hover {
+  background-color: #600000;
+}
