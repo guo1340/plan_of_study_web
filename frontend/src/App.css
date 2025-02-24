@@ -586,21 +586,32 @@
 
 .status-icon {
   font-size: 1.8rem;
+  background-color: white;
+  margin-left: 10px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-icon.success {
   color: #329700;
+  border-radius: 2px;
 }
 
 .status-icon.error {
   color: #C40000;
+  border-radius: 15px;
 }
 
 .status-icon-container {
   position: relative;
-  padding: 5px;
-  display: inline-block;
+  /* padding: 5px; */
+  display: flex;
   cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .status-hover {
@@ -715,6 +726,7 @@
   font-weight: bold;
   color: white;
   margin: 0;
+  display: flex;
 }
 
 .plan-page-header {
@@ -753,8 +765,8 @@
 }
 
 .semester {
-  min-width: 250px;
-  max-width: 250px;
+  min-width: 300px;
+  max-width: 300px;
   min-height: 250px;
   background-color: #EABD8C;
   border-radius: 8px;
@@ -812,7 +824,7 @@
 }
 
 .course-cart {
-  width: 250px;
+  width: 300px;
   background-color: #B6B4B4;
   border-radius: 8px;
   flex-grow: 1;
