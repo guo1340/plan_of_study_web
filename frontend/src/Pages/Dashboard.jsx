@@ -200,108 +200,97 @@ const Dashboard = (props) => {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1 className="dashboard-title">User’s Dashboard</h1>
+        <h1 className="dashboard-title">
+          {props.userDetails.user.username}’s Dashboard
+        </h1>
         <p className="dashboard-subtitle">Number of Plans: {planList.length}</p>
       </header>
       <div className="dashboard-plans">
         {planList.map((plan) => (
-          <Link
-            to={`/plan/${plan.id}`}
-            key={plan.id}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <div className="plan-card">
-              <div className="plan-header">
-                <div className="plan-header-left">
+          <div className="plan-card" key={plan.id}>
+            <div className="plan-header">
+              <div className="plan-header-left">
+                <Link
+                  to={`/plan/${plan.id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <h2 className="plan-title">{plan.name}</h2>
-                  <div
-                    className="status-icon-container"
-                    onMouseEnter={() => setHoveredStatus(plan.id)}
-                    onMouseLeave={() => setHoveredStatus(null)}
-                  >
-                    {plan.fulfilled ? (
-                      <CheckBoxIcon className="status-icon success" />
-                    ) : (
-                      <CancelIcon className="status-icon error" />
-                    )}
-                    {hoveredStatus === plan.id && (
-                      <div className="status-hover">
-                        {plan.fulfilled
-                          ? "All Requirements fulfilled"
-                          : "Not fulfilled yet"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="plan-header-right">
-                  <DeleteIcon
-                    className="delete-icon"
-                    onClick={() => {
-                      setDeleteId(plan.id);
-                      setDeleteConfirmation(true);
-                    }}
-                  />
+                </Link>
+                <div
+                  className="status-icon-container"
+                  onMouseEnter={() => setHoveredStatus(plan.id)}
+                  onMouseLeave={() => setHoveredStatus(null)}
+                >
+                  {plan.requirement_filled ? (
+                    <CheckBoxIcon className="status-icon success" />
+                  ) : (
+                    <CancelIcon className="status-icon error" />
+                  )}
+                  {hoveredStatus === plan.id && (
+                    <div className="status-hover">
+                      {plan.requirement_filled
+                        ? "All Requirements fulfilled"
+                        : "Not fulfilled yet"}
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="plan-details">
-                {/* <p>
-                Major:{" "}
-                {
-                  planList.filter((p) => {
-                    return p.id === plan.id;
-                  }).id
-                }
-              </p>
-              <p>
-                Level:{" "}
-                {
-                  templateList.filter((template) => {
-                    return template.id === plan.template;
-                  }).level
-                }
-              </p> */}
-                <p>
-                  <strong>Major:</strong>{" "}
-                  {(() => {
-                    const template = templateList.find(
-                      (t) => t.id === plan.template
-                    );
-                    const major = majorList.find(
-                      (m) => m.id === (template ? template.major : null)
-                    );
-                    return major ? major.name : "N/A";
-                  })()}
-                </p>
-                <p>
-                  <strong>Level:</strong>{" "}
-                  {(() => {
-                    const template = templateList.find(
-                      (t) => t.id === plan.template
-                    );
-                    return template ? template.level : "N/A";
-                  })()}
-                </p>
-
-                {/* fix this  */}
-              </div>
-              {deleteId === plan.id && (
-                <ConfirmationDialog
-                  open={deleteConfirmation}
-                  handleClose={() => {
-                    setDeleteConfirmation(false);
-                    setDeleteId(null);
-                  }}
-                  message="Are you sure you want to delete this plan from the database?"
-                  handleSubmit={() => {
-                    handleDelete(plan);
-                    setDeleteId(null);
-                    setDeleteConfirmation(false);
+              <div className="plan-header-right">
+                <DeleteIcon
+                  className="delete-icon"
+                  onClick={(event) => {
+                    event.stopPropagation(); // Prevents navigation when clicking delete
+                    setDeleteId(plan.id);
+                    setDeleteConfirmation(true);
                   }}
                 />
-              )}
+              </div>
             </div>
-          </Link>
+            <Link
+              to={`/plan/${plan.id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
+              className="plan-details"
+            >
+              <p>
+                <strong>Major:</strong>{" "}
+                {(() => {
+                  const template = templateList.find(
+                    (t) => t.id === plan.template
+                  );
+                  const major = majorList.find(
+                    (m) => m.id === (template ? template.major : null)
+                  );
+                  return major ? major.name : "N/A";
+                })()}
+              </p>
+              <p>
+                <strong>Level:</strong>{" "}
+                {(() => {
+                  const template = templateList.find(
+                    (t) => t.id === plan.template
+                  );
+                  return template ? template.level : "N/A";
+                })()}
+              </p>
+            </Link>
+            {deleteId === plan.id && (
+              <ConfirmationDialog
+                open={deleteConfirmation}
+                handleClose={() => {
+                  setDeleteConfirmation(false);
+                  setDeleteId(null);
+                }}
+                message="Are you sure you want to delete this plan from the database?"
+                handleSubmit={() => {
+                  handleDelete(plan);
+                  setDeleteId(null);
+                  setDeleteConfirmation(false);
+                }}
+              />
+            )}
+          </div>
         ))}
+
         <div
           className="plan-card add-new-plan"
           onClick={() => setOpenDialog(true)}
