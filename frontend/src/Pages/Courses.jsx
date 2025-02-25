@@ -42,6 +42,7 @@ import Tooltip from "@mui/material/Tooltip";
 import CourseSearchBar from "../Components/Courses/CourseSearchbar";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import { NotificationManager } from "react-notifications";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -155,6 +156,11 @@ const Courses = (props) => {
     link: "",
   });
 
+  const [planSelectForm, setPlanSelectForm] = useState({
+    plan: null,
+    course_id: null,
+  });
+
   const [majors, setMajors] = useState([]);
   const [form_elective_fields, setFormElectiveFields] = useState([]);
   const [electiveFieldList, setElectiveFieldList] = useState([]);
@@ -174,6 +180,8 @@ const Courses = (props) => {
   const [seasonError, setSeasonError] = useState(false);
   const [electiveError, setElectiveError] = useState(false);
   const [creditTypeError, setCreditTypeError] = useState(false);
+  const [planList, setPlanList] = useState([]);
+  const [openAddToPlanDialog, setOpenAddToPlanDialog] = useState(false);
 
   const handleEditClick = async (course) => {
     // Set the form data to the values from the course to be edited
@@ -317,6 +325,20 @@ const Courses = (props) => {
       });
   };
 
+  const getListPlans = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/plan/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      setPlanList(response.data);
+      // console.log(planList);
+    } catch (error) {
+      console.error("Error fetching plans data", error);
+    }
+  };
+
   const handleInfoClick = (courseId) => {
     setOpenInfo(openInfo === courseId ? null : courseId); // Toggle the collapse for the clicked course
   };
@@ -355,6 +377,14 @@ const Courses = (props) => {
     setFormElectiveFields([]);
     setOpenDialog(false);
     // Reset form data and close the dialog
+    setCurrentEditCourse(null);
+  };
+
+  const handleCloseAddToPlan = () => {
+    setPlanSelectForm({
+      plan: null,
+    });
+    setOpenAddToPlanDialog(false);
     setCurrentEditCourse(null);
   };
 
@@ -420,6 +450,7 @@ const Courses = (props) => {
         await getListSeasons();
         await getListCreditTypes();
         await getListElectiveFields();
+        await getListPlans();
         // console.log(majors);
       } catch (error) {
         console.error("Error in token refresh or data fetching:", error);
@@ -502,6 +533,93 @@ const Courses = (props) => {
 
   return (
     <div>
+      <Dialog
+        fullWidth
+        open={openAddToPlanDialog}
+        onClose={handleCloseAddToPlan}
+      >
+        <DialogTitle>
+          <div style={{ fontSize: "35px" }}>
+            Choose Plan to Add Current Course
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText style={{ paddingBottom: "10px" }}>
+            Please select the plan you would like to dd the course to.
+          </DialogContentText>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault(); // Prevent default form submission behavior
+
+              // ✅ Send updated plan with modified `course_cart` to backend
+              try {
+                // TODO: need to fix actual call and json objct
+                console.log(planSelectForm);
+                await axios.put(
+                  `http://localhost:8000/api/plan/${planSelectForm.plan.id}/`,
+                  {
+                    course_cart: [
+                      ...planSelectForm.plan.course_cart,
+                      planSelectForm.course_id,
+                    ],
+                    template: planSelectForm.plan.template,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem(
+                        "accessToken"
+                      )}`,
+                    },
+                  }
+                );
+                NotificationManager.success(
+                  "Course added to plan successfully",
+                  "Success",
+                  5000
+                );
+                handleCloseAddToPlan();
+              } catch (error) {
+                console.log("Failed to add course to plan:", error);
+              }
+            }}
+          >
+            <div className="form-input-title">
+              <Autocomplete
+                disablePortal
+                options={planList} // ✅ Array of plan options
+                getOptionLabel={(option) => option.name} // ✅ Display plan name in dropdown
+                value={
+                  planList.find(
+                    (plan) => plan.id === planSelectForm.plan?.id
+                  ) || null
+                } // ✅ Handle controlled value
+                onChange={(event, newValue) => {
+                  setPlanSelectForm((prev) => ({
+                    ...prev,
+                    plan: newValue ? newValue : null,
+                  }));
+                  // console.log(planSelectForm);
+                }}
+                sx={{ width: "100%" }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Plan *"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
+            <DialogActions>
+              <Button onClick={handleCloseAddToPlan}>Cancel</Button>
+              <Button type="submit" variant="contained" color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog fullWidth open={openDialog} onClose={handleClose}>
         <DialogTitle>
           <div style={{ fontSize: "35px" }}>{formTitle}</div>
@@ -905,7 +1023,7 @@ const Courses = (props) => {
                             const field = electiveFieldList.find(
                               ({ id }) => id === row.elective_field
                             );
-                            console.log(field);
+                            // console.log(field);
                             return field
                               ? `${field.type_name} ${field.field_number}: ${field.field_name}`
                               : "Elective Field Not found";
@@ -957,7 +1075,7 @@ const Courses = (props) => {
                             unmountOnExit
                           >
                             <Box sx={{ margin: 1 }}>
-                              <p
+                              <div
                                 style={{
                                   display: "flex",
                                   justifyContent: "space-between",
@@ -967,20 +1085,29 @@ const Courses = (props) => {
                                 <div>
                                   <b>Title:</b> {row.title}
                                 </div>
-                                <Button
-                                  sx={{
-                                    color: "white",
-                                    backgroundColor: "maroon",
-                                    marginRight: "20px",
-                                  }}
-                                >
-                                  Add To Plan
-                                </Button>
-                              </p>
-                              <p>
+                                {props.token && (
+                                  <Button
+                                    sx={{
+                                      color: "white",
+                                      backgroundColor: "maroon",
+                                      marginRight: "20px",
+                                    }}
+                                    onClick={() => {
+                                      setOpenAddToPlanDialog(true);
+                                      setPlanSelectForm({
+                                        plan: null,
+                                        course_id: row.id,
+                                      });
+                                    }}
+                                  >
+                                    Add To Plan
+                                  </Button>
+                                )}
+                              </div>
+                              <div>
                                 <b>Description:</b> {row.description}
-                              </p>
-                              <p>
+                              </div>
+                              <div>
                                 <b>Prerequisites:</b>{" "}
                                 {row.prereqs[0]
                                   ? row.prereq_objects
@@ -995,8 +1122,8 @@ const Courses = (props) => {
                                       })
                                       .join(", ")
                                   : "No Prerequisites for this course"}
-                              </p>
-                              <p>
+                              </div>
+                              <div>
                                 <b>Corequisites:</b>{" "}
                                 {row.coreqs[0]
                                   ? row.coreq_objects
@@ -1011,8 +1138,8 @@ const Courses = (props) => {
                                       })
                                       .join(", ")
                                   : "No Corequisites for this course"}
-                              </p>
-                              <p>
+                              </div>
+                              <div>
                                 <b>Link: </b>
                                 <a
                                   href={row.link}
@@ -1021,7 +1148,7 @@ const Courses = (props) => {
                                 >
                                   {row.link}
                                 </a>
-                              </p>
+                              </div>
                             </Box>
                           </Collapse>
                         </TableCell>
