@@ -152,6 +152,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"detail": "User not found."},
                             status=status.HTTP_404_NOT_FOUND)
 
+
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -159,10 +160,26 @@ class UserRegistrationView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+
         if serializer.is_valid():
+            errors = {}
+
+            username = serializer.validated_data.get("username")
+            email = serializer.validated_data.get("email")
+
+            if User.objects.filter(username=username).exists():
+                errors["username"] = ["A user with that username already exists."]
+
+            if User.objects.filter(email=email).exists():
+                errors["email"] = ["Email is already registered."]
+
+            if errors:
+                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
             user = serializer.save()
             Details.objects.create(user=user, role="regular")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

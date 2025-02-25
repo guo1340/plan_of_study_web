@@ -38,30 +38,42 @@ const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirm_pass) {
       NotificationManager.warning("Passwords do not match", "Warning", 5000);
     } else {
-      axios
-        .post("http://localhost:8000/api/register/", {
+      try {
+        await axios.post("http://localhost:8000/api/register/", {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-        })
-        .then((response) => {
-          if (response.status === 201) {
-            console.log(response);
-            NotificationManager.success(
-              "Signed Up Successfully",
-              "Success",
-              5000
-            );
-          }
-        })
-        .catch((err) => {
-          console.log(err);
         });
+
+        NotificationManager.success("Signed Up Successfully", "Success", 5000);
+      } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the response
+        if (error.response && error.response.data) {
+          const errorMessages = error.response.data;
+
+          // If multiple error messages exist, concatenate them
+          let message = "";
+          if (typeof errorMessages === "object") {
+            message = Object.values(errorMessages).flat().join(" ");
+          } else {
+            message = errorMessages;
+          }
+
+          NotificationManager.error(message, "Error", 5000);
+        } else {
+          NotificationManager.error(
+            "An unexpected error occurred.",
+            "Error",
+            5000
+          );
+        }
+      }
 
       handleClose();
     }
