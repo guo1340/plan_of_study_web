@@ -17,6 +17,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import { NotificationManager } from "react-notifications";
+import { green, red } from "@mui/material/colors";
 
 const ItemType = "CARD";
 
@@ -40,7 +41,7 @@ const Course = ({ id, course, moveCourse }) => {
   );
 };
 
-const Semester = ({ title, courses, moveCourse, semesterId }) => {
+const Semester = ({ title, courses, moveCourse, semesterId, semester }) => {
   const [, drop] = useDrop(() => ({
     accept: ItemType,
     drop: (item) => moveCourse(item.id, semesterId), // Ensure a valid drop happens
@@ -50,12 +51,33 @@ const Semester = ({ title, courses, moveCourse, semesterId }) => {
   }));
 
   // console.log("courses", courses);
+  // console.log("semester", semester);
+
+  const creditCount = (courses) => {
+    return courses.reduce((totalCredits, course) => {
+      return totalCredits + course.credits;
+    }, 0); // Initialize totalCredits with 0
+  };
+  // console.log("creditCount", creditCount);
 
   return (
     <div ref={drop} className="semester course-cart-color course-cart-scroll">
       <div className="semester-header course-cart-color">
         <h3>{title}</h3>
-        <span className="credits">Credits: 0</span>
+        {semester === undefined ? (
+          <span className="credits">Credits: {creditCount(courses)}</span>
+        ) : (
+          <span
+            className="credits"
+            style={
+              creditCount(courses) > semester.max_credits
+                ? { color: "red" }
+                : { color: "green" }
+            }
+          >
+            Credits: {creditCount(courses)}/{semester.max_credits}
+          </span>
+        )}
       </div>
       {courses.map((course) => (
         <Course
@@ -91,6 +113,7 @@ const Plan = (props) => {
     semesters: [],
     template: null,
   });
+  const [requirementList, setRequirementList] = useState([]);
   const [semesterCourseList, setSemesterCourseList] = useState([]);
   const [courseCart, setCourseCart] = useState([]);
   const [semesterList, setSemesterList] = useState([]);
@@ -102,9 +125,12 @@ const Plan = (props) => {
     plan: id,
     season: null,
     year: null,
+    max_credits: null,
+    min_credits: null,
   });
   const [currentEditSemester, setCurrentEditSemester] = useState(null);
   const skipSemesterRefresh = useRef(false);
+  const [template, setTemplate] = useState(null);
 
   const getPlan = async () => {
     console.log("get plan");
@@ -124,7 +150,53 @@ const Plan = (props) => {
 
       setEditPlanData(res.data);
     } catch (error) {
-      console.error("Error fetching plan data", error);
+      if (error.response && error.response.status === 500) {
+        console.error("Server error (500) encountered. Redirecting home...");
+        setOpenHome(true); // ✅ Trigger the home dialog
+      } else {
+        console.error("Error fetching plan data", error);
+      }
+    }
+  };
+
+  const getListRequirements = async () => {
+    console.log("get requirement list");
+
+    const requirementsData = await Promise.all(
+      template.requirements.map(async (requirement_id) => {
+        try {
+          const res = await axios.get(
+            `http://localhost:8000/api/requirement/${requirement_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
+          return res.data;
+        } catch (error) {
+          console.error("Error fetching requirement:", requirement_id, error);
+          return;
+        }
+      })
+    );
+    setRequirementList(requirementsData);
+  };
+
+  const getTemplate = async () => {
+    console.log("get template");
+    try {
+      const res = await axios.get(
+        `http://localhost:8000/api/template/${editPlanData.template}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      setTemplate(res.data);
+    } catch (error) {
+      console.error("Error fetching template data", error);
     }
   };
 
@@ -369,6 +441,52 @@ const Plan = (props) => {
         }
       }
 
+      // Update `semesterList` to reflect the changes
+      setSemesterList((prevSemesterList) => {
+        // Deep copy of semesterList
+        const updatedSemesterList = prevSemesterList.map((semester) => ({
+          ...semester,
+          courses: [...semester.courses], // Preserve existing structure
+          classes: [...semester.classes], // Preserve course IDs
+        }));
+
+        // Find the previous semester and remove the course
+        if (previousSemesterId !== "coursecart") {
+          const prevSemester = updatedSemesterList.find(
+            (sem) => sem.id === previousSemesterId
+          );
+          if (prevSemester) {
+            prevSemester.courses = prevSemester.courses.filter(
+              (course) => course.id !== courseId
+            );
+            prevSemester.classes = prevSemester.classes.filter(
+              (id) => id !== courseId
+            ); // Remove from classes array as well
+          }
+        }
+
+        // Find the new semester and add the course
+        if (targetSemesterId !== "coursecart") {
+          const newSemester = updatedSemesterList.find(
+            (sem) => sem.id === targetSemesterId
+          );
+          if (newSemester) {
+            newSemester.courses.push(movedCourse); // Store course object
+            newSemester.classes.push(movedCourse.id); // Store only course ID
+          } else {
+            updatedSemesterList.push({
+              id: targetSemesterId,
+              courses: [movedCourse], // Store full course object
+              classes: [movedCourse.id], // Store only course ID
+            });
+          }
+        }
+
+        console.log("updatedSemesterList", updatedSemesterList);
+
+        return updatedSemesterList;
+      });
+
       console.log(
         "After moving (updated semester list):",
         updatedSemesterCourseList
@@ -389,14 +507,21 @@ const Plan = (props) => {
       })
     ) {
       NotificationManager.warning("Semester Already Exists", "Warning", 5000);
+      return;
     } else {
+      const updatedSemesterData = {
+        ...semesterFormData,
+        max_credits: template.max_semester_credits,
+        min_credits: template.min_semester_credits,
+      };
+
       const method = currentEditSemester ? "put" : "post";
       const url = currentEditSemester
         ? `http://localhost:8000/api/semester/${currentEditSemester.id}/` // If editing, use the course ID
         : "http://localhost:8000/api/semester/";
       await props.checkTokenAndRefresh();
       try {
-        await axios[method](url, semesterFormData, {
+        await axios[method](url, updatedSemesterData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
@@ -417,9 +542,55 @@ const Plan = (props) => {
       plan: id,
       season: null,
       year: null,
+      max_credits: null,
+      min_credits: null,
     });
     setOpenDialog(false);
     setCurrentEditSemester(null);
+  };
+  const saveChanges = async (e) => {
+    console.log("currentEditPlan", currentEditPlan);
+    e.preventDefault();
+    await props.checkTokenAndRefresh();
+    // Now, update each semester in the semester list
+    await Promise.all(
+      semesterList.map(async (semester) => {
+        try {
+          await axios.put(
+            `http://localhost:8000/api/semester/${semester.id}/`,
+            {
+              id: semester.id,
+              classes: semester.classes, // Send only course IDs to backend
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
+          console.log(`Semester ${semester.id} updated successfully`);
+        } catch (semesterError) {
+          console.error(
+            `Error updating semester ${semester.id}:`,
+            semesterError
+          );
+        }
+      })
+    );
+    try {
+      await axios.put(
+        `http://localhost:8000/api/plan/${id}/`,
+        currentEditPlan,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      NotificationManager.success("All Changes Saved!", "Success", 5000);
+    } catch (error) {
+      NotificationManager.error("Error saving changes", "Error", 5000);
+    }
   };
 
   useEffect(() => {
@@ -446,6 +617,7 @@ const Plan = (props) => {
     // console.log("Updated currentEditPlan:", currentEditPlan);
     const getDataInPlan = async () => {
       if (currentEditPlan.id) {
+        await getTemplate();
         await getListSemesters();
         await getListSeasons();
       }
@@ -463,12 +635,30 @@ const Plan = (props) => {
     }
   }, [currentEditPlan.course_cart]); // ✅ Runs only when `course_cart` updates
 
+  useEffect(() => {
+    if (template && template.requirements) {
+      getListRequirements();
+    } else {
+      console.warn("Template is not available yet.");
+    }
+  }, [template]); // Only runs when `template` changes
+
   if (!props.token) {
     return (
       <BackToHome
         openDialog={openHome}
         setOpenDialog={setOpenHome}
         message="Please login first"
+      />
+    );
+  }
+
+  if (openHome) {
+    return (
+      <BackToHome
+        openDialog={openHome}
+        setOpenDialog={setOpenHome}
+        message="Please login to the owner of this plan first"
       />
     );
   }
@@ -511,6 +701,7 @@ const Plan = (props) => {
                     }
                     moveCourse={moveCourse}
                     semesterId={semester.id}
+                    semester={semester}
                   />
                 );
               })}
@@ -560,9 +751,12 @@ const Plan = (props) => {
                   courses={courseCart}
                   moveCourse={moveCourse}
                   semesterId="coursecart"
+                  semester={undefined}
                 />
               </div>
-              <button className="save-button">Save</button>
+              <button className="save-button" onClick={saveChanges}>
+                Save
+              </button>
             </div>
           </div>
         </div>
