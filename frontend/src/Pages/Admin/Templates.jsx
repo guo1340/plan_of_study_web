@@ -149,6 +149,8 @@ const Template = (props) => {
     min_elective_fields: "",
     min_each_Elective: "",
     requirements: [],
+    min_semester_credits: null,
+    max_semester_credits: null,
   });
   const [requirementFormData, setRequirementFormData] = useState({
     id: null,
@@ -308,7 +310,16 @@ const Template = (props) => {
   };
 
   const handleCloseDialog = () => {
-    setFormData({ type_name: "", major: "", field_name: "", field_number: "" });
+    setFormData({
+      min_credits: "",
+      major: null,
+      level: "",
+      min_elective_fields: "",
+      min_each_Elective: "",
+      requirements: [],
+      min_semester_credits: null,
+      max_semester_credits: null,
+    });
     setCurrentEditTemplate(null);
     setOpenMainDialog(false);
   };
@@ -346,10 +357,24 @@ const Template = (props) => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+      NotificationManager.success(
+        currentEditTemplate
+          ? "Successfully Updates Template!"
+          : "Successfully Added New Template!",
+        "Success",
+        5000
+      );
       handleCloseDialog();
       getListTemplates();
     } catch (error) {
       console.error("Error submitting template data:", error);
+      NotificationManager.error(
+        currentEditTemplate
+          ? "Error Editing Template"
+          : "Error Adding New Template",
+        "Error",
+        5000
+      );
     }
   };
 
@@ -455,10 +480,24 @@ const Template = (props) => {
         await fetchRequirements(newTemplateResponse.data);
         setCurrentEditTemplate(newTemplateResponse.data);
         setCurrentEditRequirement(null);
+        NotificationManager.success(
+          currentEditRequirement
+            ? "Successfully Updates Requirement!"
+            : "Successfully Added Requirement!",
+          "Success",
+          5000
+        );
       }
       handleCloseRequirementDialog();
     } catch (error) {
       console.error("Error submitting requirement data:", error);
+      NotificationManager.error(
+        currentEditRequirement
+          ? "Error Updates Requirement!"
+          : "Error Added Requirement!",
+        "Error",
+        5000
+      );
     }
 
     // Reset form data
@@ -541,12 +580,18 @@ const Template = (props) => {
 
   const handleEditClick = (template) => {
     setFormData({
-      min_credits: template.min_credits || "",
-      major: template.major || "",
-      level: template.level || "",
-      min_elective_fields: template.min_elective_fields || "",
-      min_each_Elective: template.min_each_Elective || "",
-      requirements: template.requirements || [],
+      min_credits: template.min_credits ?? "",
+      major: template.major ?? "",
+      level: template.level ?? "",
+      min_elective_fields: template.min_elective_fields ?? "",
+      min_each_Elective: template.min_each_Elective ?? "",
+      requirements: template.requirements ?? [],
+      min_semester_credits: template.min_semester_credits
+        ? template.min_semester_credits
+        : 0,
+      max_semester_credits: template.max_semester_credits
+        ? template.max_semester_credits
+        : 0,
     });
     setCurrentEditTemplate(template);
     setOpenMainDialog(true);
@@ -784,7 +829,7 @@ const Template = (props) => {
                                     {req.attribute && req.attribute !== "" ? (
                                       <>
                                         {" where "}
-                                        {req.attribute}{" "}
+                                        {req.attribute.replace("_", " ")}{" "}
                                         {getComparisonLabel(
                                           req.attribute_choice
                                         )}{" "}
@@ -1185,6 +1230,34 @@ const Template = (props) => {
                 type="text"
                 className="input_textfield"
                 value={formData.min_each_Elective || ""}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="min_semester_credits"
+                label="Minimum Semester Credits"
+                type="number"
+                className="input_textfield"
+                value={formData.min_semester_credits || 0}
+                onChange={handleChange}
+                fullWidth
+              />
+            </div>
+            <div style={{ paddingTop: "5px", paddingBottom: "10px" }}>
+              <TextField
+                required
+                autoFocus
+                margin="dense"
+                id="max_semester_credits"
+                label="Maximum Semester Credits"
+                type="number"
+                className="input_textfield"
+                value={formData.max_semester_credits || 0}
                 onChange={handleChange}
                 fullWidth
               />
