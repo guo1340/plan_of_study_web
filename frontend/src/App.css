@@ -629,6 +629,58 @@
   pointer-events: none;
 }
 
+.status-icon-container-plan {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.status-hover-plan {
+  margin-top: 5px;
+  max-width: 500px; /* Limit the maximum width */
+  min-width: 400px; /* Limit the minimum width */
+  width: 100%; /* Ensure it respects max-width */
+  position: absolute; 
+  top: 100%; /* Place it right below the container */
+  right: 0; /* Align the right edge with the parent */
+  background: rgba(255, 255, 255);
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 1rem;
+  /* font-weight: bold; */
+  z-index: 10;
+  pointer-events: none;
+  white-space: normal; /* Allow text wrapping */
+  word-wrap: break-word; /* Ensure words break properly */
+  overflow-wrap: break-word; /* Additional text wrapping support */
+  text-align: left; /* Ensure left-aligned text */
+  display: block; /* Ensure proper block behavior */
+}
+
+.status-hover-plan b {
+  text-decoration: underline;
+
+}
+
+.status-hover-plan ul {
+  list-style-type: none; 
+  /* Remove default bullet points */
+  padding: 5px 0 5px 20px;
+  margin: 0;
+}
+
+.status-hover-plan li {
+  margin-bottom: 10px; /* Adds 5px spacing between items */
+}
+
+.status-hover-plan li:last-child {
+  margin-bottom: 0; /* Prevents extra spacing after the last item */
+}
+
 .plan-header-right {
   display: flex;
   align-items: center;
