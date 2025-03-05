@@ -45,6 +45,7 @@ const Dashboard = (props) => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+      console.log("plans", response.data);
       setPlanList(response.data);
       // console.log(planList);
     } catch (error) {
