@@ -18,13 +18,13 @@ import Button from "@mui/material/Button";
 import {NotificationManager} from "react-notifications";
 import {green, red} from "@mui/material/colors";
 import {AiOutlineEdit} from "react-icons/ai";
-
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 const ItemType = "CARD";
 
-const Course = ({ id, course, moveCourse, majorList }) => {
-    const [{ isDragging }, drag] = useDrag(() => ({
+const Course = ({id, course, moveCourse, majorList}) => {
+    const [{isDragging}, drag] = useDrag(() => ({
         type: ItemType,
-        item: { id },
+        item: {id},
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
@@ -36,9 +36,13 @@ const Course = ({ id, course, moveCourse, majorList }) => {
         <div
             ref={drag}
             className="course-item"
-            style={{ opacity: isDragging ? 0.5 : 1, whiteSpace: "pre-line" }}
+            style={{opacity: isDragging ? 0.5 : 1, whiteSpace: "pre-line"}}
         >
-            {majorAbbr} {course.class_number} {/* Display abbreviation before class number */}
+            <div>
+                {majorAbbr} {course.class_number} {course.title}
+            </div>
+            Credit: {course.credits}
+            <MoreVertIcon/>
         </div>
     );
 };
@@ -165,7 +169,7 @@ const Plan = (props) => {
     const initialRequirementCheck = useRef(false); // Track if the first check was made
 
     const getPlan = async () => {
-        console.log("get plan");
+        // console.log("get plan");
         try {
             const res = await axios.get(`http://localhost:8000/api/plan/${id}/`, {
                 headers: {
@@ -208,7 +212,7 @@ const Plan = (props) => {
 
 
     const getListRequirements = async () => {
-        console.log("get requirement list");
+        // console.log("get requirement list");
 
         const requirementsData = await Promise.all(
             template.requirements.map(async (requirement_id) => {
@@ -257,7 +261,7 @@ const Plan = (props) => {
     };
 
     const getTemplate = async () => {
-        console.log("get template");
+        // console.log("get template");
         try {
             const res = await axios.get(
                 `http://localhost:8000/api/template/${editPlanData.template}`,
@@ -274,7 +278,7 @@ const Plan = (props) => {
     };
 
     const getListSemesters = async () => {
-        console.log("get semester list");
+        // console.log("get semester list");
         try {
             if (!id) {
                 console.error("Plan ID is missing.");
@@ -319,7 +323,7 @@ const Plan = (props) => {
                 }))
             );
 
-            console.log("Updated semesterList:", validSemesters);
+            // console.log("Updated semesterList:", validSemesters);
         } catch (error) {
             console.error("Error fetching semesters data", error);
         }
@@ -454,8 +458,8 @@ const Plan = (props) => {
                 : {...prevPlan, requirement_filled: allRequirementsMet}
         );
 
-        console.log("Updated requirements:", updatedRequirements);
-        console.log("Requirement fulfillment status:", allRequirementsMet);
+        // console.log("Updated requirements:", updatedRequirements);
+        // console.log("Requirement fulfillment status:", allRequirementsMet);
 
         // ✅ Only update backend if:
         // - The user explicitly saves (`shouldUpdateBackend` is true)
@@ -904,26 +908,41 @@ const Plan = (props) => {
                     </header>
                     <div className="main-section">
                         <div className="grid-layout">
-                            {semesterList.map((semester) => {
-                                const season = seasonList.find(
-                                    (season) => season.id === semester.season
-                                );
-                                return (
-                                    <Semester
-                                        key={semester.id}
-                                        title={`${season ? season.name : "Unknown Season"} ${semester.year}`}
-                                        courses={
-                                            semesterCourseList.find((sem) => sem.semester_id === semester.id)
-                                                ?.course_list || []
-                                        }
-                                        moveCourse={moveCourse}
-                                        semesterId={semester.id}
-                                        semester={semester}
-                                        handleEditSemesterClick={handleEditSemesterClick}
-                                        majorList={majorList} // Pass majorList
-                                    />
-                                );
-                            })}
+                            {semesterList
+                                .slice()
+                                .sort((a, b) => {
+                                    const seasonOrderById = {
+                                        1: 1, // Spring
+                                        2: 2, // Summer
+                                        3: 3, // Fall
+                                        4: 4  // Winter
+                                    };
+                                    // First, sort by year
+                                    if (a.year !== b.year) return a.year - b.year;
+
+                                    // Then, sort by season using seasonOrderById
+                                    return (seasonOrderById[a.season] || 5) - (seasonOrderById[b.season] || 5);
+                                }).map((semester) => {
+                                    // console.log("semester", semester)
+                                    const season = seasonList.find(
+                                        (season) => season.id === semester.season
+                                    );
+                                    return (
+                                        <Semester
+                                            key={semester.id}
+                                            title={`${season ? season.name : "Unknown Season"} ${semester.year}`}
+                                            courses={
+                                                semesterCourseList.find((sem) => sem.semester_id === semester.id)
+                                                    ?.course_list || []
+                                            }
+                                            moveCourse={moveCourse}
+                                            semesterId={semester.id}
+                                            semester={semester}
+                                            handleEditSemesterClick={handleEditSemesterClick}
+                                            majorList={majorList} // Pass majorList
+                                        />
+                                    );
+                                })}
                             <div
                                 className="semester add-new-plan"
                                 style={{backgroundColor: "#f5f5f5"}}
