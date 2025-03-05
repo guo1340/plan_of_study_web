@@ -7,7 +7,7 @@ from major.models import Major
 
 class Course(models.Model):
     major = models.ForeignKey(Major, on_delete=models.PROTECT, related_name="courses", default=1)
-    class_number = models.IntegerField(default="4000")
+    class_number = models.IntegerField(default=4000)
     title = models.CharField(max_length=150, default="")
     prereqs = models.ManyToManyField('self', symmetrical=False, related_name='prerequisite_for', blank=True)
     seasons = models.ManyToManyField(Season)
@@ -19,5 +19,8 @@ class Course(models.Model):
     credit_type = models.ForeignKey(CreditType, on_delete=models.PROTECT, related_name="courses", default=1)
     link = models.TextField(default="https://cs.vt.edu/Graduate/Courses.html")
 
+    # JSON field for storing an array of course IDs
+    course_id_list = models.JSONField(default=list)
+
     def __str__(self):
-        return f"Class: {self.abbreviation} {self.class_number}"
+        return f"Class: {self.major.abbreviation} {self.class_number}"

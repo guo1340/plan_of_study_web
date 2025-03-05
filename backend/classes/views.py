@@ -7,6 +7,7 @@ from .serializers import ClassSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
+from rest_framework import status
 
 
 def check_admin_permission(request):
@@ -57,21 +58,32 @@ class ClassViewSet(ModelViewSet):
             return Response(serializer.errors, status=400)
 
     def update(self, request, pk=None, *args, **kwargs):
-        check_admin_permission(request)  # Ensure user has admin role
-        major = request.data.get("major")
-        class_number = request.data.get('class_number')
-        title = request.data.get("title")
-        if Course.objects.filter(Q(class_number=class_number) & Q(major=major)
-                                 & Q(title=title)).exclude(pk=pk).exists():
-            return Response({"error": "A class with the same major, class number, and title already exists."},
-                            status=400)
-        class_obj = Course.objects.all().get(pk=pk)
-        serializer = self.serializer_class(class_obj, data=request.data)
+        class_obj = Course.objects.get(pk=pk)
+
+        # Extract fields from request
+        course_id_list_update = "course_id_list" in request.data and len(request.data) == 1
+
+        # Only check admin permissions if the update does NOT solely involve course_id_list
+        if not course_id_list_update:
+            check_admin_permission(request)  # Ensure user has admin role
+
+            major = request.data.get("major")
+            class_number = request.data.get('class_number')
+            title = request.data.get("title")
+
+            # Check if a duplicate course exists with the same major, class number, and title
+            if Course.objects.filter(Q(class_number=class_number) & Q(major=major) & Q(title=title)).exclude(
+                    pk=pk).exists():
+                return Response({"error": "A class with the same major, class number, and title already exists."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        # Proceed with updating the course
+        serializer = self.serializer_class(class_obj, data=request.data, partial=True)  # Allow partial updates
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         else:
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None, *args, **kwargs):
         check_admin_permission(request)  # Ensure user has admin role
