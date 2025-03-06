@@ -912,3 +912,28 @@
 .save-button:hover {
   background-color: #600000;
 }
+
+.plan-title-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 30px; /* Adds spacing between title and details */
+}
+
+.plan-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.5rem;
+  font-weight: normal;
+  text-align: left;
+  color: white;
+}
+
+.plan-major {
+  margin-top: 5%;
+  font-weight: bold;
+}
+
+.plan-level {
+  margin-top: 5px;
+}

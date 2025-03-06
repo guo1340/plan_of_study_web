@@ -848,7 +848,13 @@ const Plan = (props) => {
             <DndProvider backend={HTML5Backend}>
                 <div className="plan-container">
                     <header className="plan-page-header">
-                        <h2 className="plan-page-title">{currentEditPlan.name}</h2>
+                        <div className="plan-title-container">
+                            <h2 className="plan-page-title">{currentEditPlan.name}</h2>
+                            <div className="plan-details">
+                                <div className="plan-major">Major: Industrial System Engineering</div>
+                                <div className="plan-level">Level: MS</div>
+                            </div>
+                        </div>
                         <div
                             className="status-icon-container-plan"
                             onMouseEnter={() => setHoveredStatus(id)}
