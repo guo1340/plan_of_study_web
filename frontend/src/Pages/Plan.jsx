@@ -18,6 +18,7 @@ import Button from "@mui/material/Button";
 import {NotificationManager} from "react-notifications";
 import {green, red} from "@mui/material/colors";
 import {AiOutlineEdit} from "react-icons/ai";
+import { AiOutlineDelete } from "react-icons/ai";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 const ItemType = "CARD";
 
@@ -73,9 +74,14 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
                 <div style={{display: "flex"}}>
                     <h3>{title}</h3>
                     {title !== "Course Cart" && <Button
-                        sx={{color: "black", maxWidth: "20px"}}
+                        sx={{color: "black", marginLeft: "10px", minWidth: "30px", maxWidth: "30px"}}
                         onClick={() => handleEditSemesterClick(semester)}>
                         <AiOutlineEdit/>
+                    </Button>}
+                    {title !== "Course Cart" && <Button
+                        sx={{color: "red", minWidth: "30px", maxWidth: "30px"}}
+                        onClick={(event) => event.stopPropagation()}>
+                        <AiOutlineDelete/>
                     </Button>}
                 </div>
                 {semester === undefined ? (
