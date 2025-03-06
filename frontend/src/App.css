@@ -937,3 +937,28 @@
 .plan-level {
   margin-top: 5px;
 }
+
+.course-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-item-top {
+  display: flex;
+  flex-direction: row;
+}
+
+.course-item-bottom {
+  display: flex;
+  flex-direction: row;
+  margin-top: 20px;
+}
+
+.course-description-button{
+  margin-left: 15px;
+}
+
+.course-delete-button {
+  margin-left: 169px;
+  margin-top: -5px;
+}

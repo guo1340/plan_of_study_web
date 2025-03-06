@@ -39,11 +39,22 @@ const Course = ({id, course, moveCourse, majorList}) => {
             className="course-item"
             style={{opacity: isDragging ? 0.5 : 1, whiteSpace: "pre-line"}}
         >
-            <div>
-                {majorAbbr} {course.class_number} {course.title}
+            <div className="course-container">
+                <div className="course-item-top">
+                    <div className="course-number-title">{majorAbbr} {course.class_number} {course.title}</div>
+                    <div className="course-description-button"><MoreVertIcon/></div>
+                </div>
+                <div className="course-item-bottom">
+                    <div className="course-credit">Credit: {course.credits}</div>
+                    <div className="course-delete-button">
+                        <Button
+                            sx={{color: "red", minWidth: "30px", maxWidth: "30px"}}
+                            onClick={(event) => event.stopPropagation()}>
+                            <AiOutlineDelete/>
+                        </Button>
+                    </div>
+                </div>
             </div>
-            Credit: {course.credits}
-            <MoreVertIcon/>
         </div>
     );
 };
