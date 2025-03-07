@@ -44,7 +44,7 @@ const Course = ({id, course, moveCourse, majorList}) => {
             <div className="course-container">
                 <div className="course-item-top">
                     <div className="course-number-title">{majorAbbr} {course.class_number} {course.title}</div>
-                    <div className="course-description-button"><MoreVertIcon/></div>
+                    <div className="course-description-button"><AiOutlineInfoCircle/></div>
                 </div>
                 <div className="course-item-bottom">
                     <div className="course-credit">Credit: {course.credits}</div>

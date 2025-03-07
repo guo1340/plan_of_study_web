@@ -947,6 +947,8 @@
 .course-item-top {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .course-item-bottom {
@@ -956,7 +958,12 @@
 }
 
 .course-description-button{
-  margin-left: 15px;
+  min-width: 30px;
+  max-width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1976d2;
 }
 
 .course-delete-button {
