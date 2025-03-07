@@ -34,6 +34,7 @@ const Course = ({id, course, moveCourse, majorList}) => {
     }));
 
     const majorAbbr = majorList[course.major] || "N/A"; // Lookup abbreviation
+    const [openDialog, setOpenDialog] = useState(false);
 
     return (
         <div
@@ -44,7 +45,7 @@ const Course = ({id, course, moveCourse, majorList}) => {
             <div className="course-container">
                 <div className="course-item-top">
                     <div className="course-number-title">{majorAbbr} {course.class_number} {course.title}</div>
-                    <div className="course-description-button"><AiOutlineInfoCircle/></div>
+                    <div className="course-description-button" onClick={() => setOpenDialog(true)}><AiOutlineInfoCircle/></div>
                 </div>
                 <div className="course-item-bottom">
                     <div className="course-credit">Credit: {course.credits}</div>
@@ -57,6 +58,32 @@ const Course = ({id, course, moveCourse, majorList}) => {
                     </div>
                 </div>
             </div>
+
+            {/* Popup Dialog */}
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle style={{textAlign: "center"}}>Course Information</DialogTitle>
+                <DialogContent>
+                    <h3>CS5704 Software Engineering</h3>
+                    <p><b>Description</b>: Study of the principles and tools applicable to the methodical construction and controlled evolution of complex software systems. All phases of the life cycle are presented; particular attention focuses on the design, testing, and maintenance phases. Introduction to software project management. Attention to measurement models of the software process and product which allow quantitative assessment of cost, reliability, and complexity of software systems. (3H,3C) Pre: CS 5044</p>
+                    <p><b>Prerequisites</b>: No Prerequisites for this course</p>
+                    <p><b>Corequisites</b>: No Corequisites for this course</p>
+                    <p>
+                    <b>Link</b>: &nbsp;
+                        <a href="https://website.cs.vt.edu/Graduate/Courses/GradCourseDescriptions.html#CS5704"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="popup-link">
+                            Course Description
+                        </a>
+                    </p>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </div>
     );
 };
