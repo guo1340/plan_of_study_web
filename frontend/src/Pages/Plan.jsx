@@ -20,6 +20,8 @@ import {green, red} from "@mui/material/colors";
 import {AiOutlineEdit} from "react-icons/ai";
 import { AiOutlineDelete } from "react-icons/ai";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Menu, MenuItem, IconButton } from "@mui/material";
+import {AiOutlineInfoCircle,} from "react-icons/ai";
 const ItemType = "CARD";
 
 const Course = ({id, course, moveCourse, majorList}) => {
@@ -79,12 +81,23 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
     };
     // console.log("creditCount", creditCount);
 
+    const [anchorEl, setAnchorEl] = useState(null);
+
+    const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+    setAnchorEl(null);
+    };
+
     return (
         <div ref={drop} className="semester course-cart-color course-cart-scroll">
             <div className="semester-header course-cart-color">
                 <div style={{display: "flex"}}>
                     <h3>{title}</h3>
-                    {title !== "Course Cart" && <Button
+                    {/* This is the other format of edit and delete buttons of each semester card */}
+                    {/* {title !== "Course Cart" && <Button
                         sx={{color: "black", marginLeft: "10px", minWidth: "30px", maxWidth: "30px"}}
                         onClick={() => handleEditSemesterClick(semester)}>
                         <AiOutlineEdit/>
@@ -93,7 +106,23 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
                         sx={{color: "red", minWidth: "30px", maxWidth: "30px"}}
                         onClick={(event) => event.stopPropagation()}>
                         <AiOutlineDelete/>
-                    </Button>}
+                    </Button>} */}
+                    
+                    {title !== "Course Cart" && (
+                        <>
+                        <Button className="semester-menu-button" onClick={handleMenuOpen}>
+                            <MoreVertIcon className="semester-menu-button"/>
+                        </Button>
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                            <MenuItem onClick={() => { handleEditSemesterClick(semester); handleMenuClose(); }}>
+                            <AiOutlineEdit style={{ marginRight: "8px" }} /> Edit
+                            </MenuItem>
+                            <MenuItem onClick={(event) => { event.stopPropagation(); handleMenuClose(); }} style={{ color: "red" }}>
+                            <AiOutlineDelete style={{ marginRight: "8px" }} /> Delete
+                            </MenuItem>
+                        </Menu>
+                        </>
+                    )}
                 </div>
                 {semester === undefined ? (
                     <span className="credits">Credits: {creditCount(courses)}</span>

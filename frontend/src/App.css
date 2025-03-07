@@ -837,7 +837,7 @@
   align-items: center;
   background-color: #EABD8C;
   color: black;
-  padding: 10px;
+  padding: 5px;
   font-size: 1.2rem;
   margin-bottom: 10px;
   box-sizing: border-box;
@@ -848,6 +848,7 @@
   margin: 0;
   font-size: 1.1rem;
   color: black;
+  margin: 10px;
 }
 
 .credits {
@@ -961,4 +962,10 @@
 .course-delete-button {
   margin-left: 169px;
   margin-top: -5px;
+}
+
+.semester-menu-button {
+  min-width: 30px;
+  max-width: 30px;
+  color: #000;
 }
