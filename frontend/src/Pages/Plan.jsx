@@ -18,10 +18,11 @@ import Button from "@mui/material/Button";
 import {NotificationManager} from "react-notifications";
 import {green, red} from "@mui/material/colors";
 import {AiOutlineEdit} from "react-icons/ai";
-import { AiOutlineDelete } from "react-icons/ai";
+import {AiOutlineDelete} from "react-icons/ai";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Menu, MenuItem, IconButton } from "@mui/material";
+import {Menu, MenuItem} from "@mui/material";
 import {AiOutlineInfoCircle,} from "react-icons/ai";
+
 const ItemType = "CARD";
 
 const Course = ({id, course, moveCourse, majorList}) => {
@@ -35,6 +36,34 @@ const Course = ({id, course, moveCourse, majorList}) => {
 
     const majorAbbr = majorList[course.major] || "N/A"; // Lookup abbreviation
     const [openDialog, setOpenDialog] = useState(false);
+    const [prereqs, setPrereqs] = useState([])
+    const [coreqs, setCoreqs] = useState([])
+
+    const getListCourses = async () => {
+        try {
+            // Fetch all prereqs in parallel
+            const prereqPromises = course.prereqs.map((c) =>
+                axios.get(`http://localhost:8000/api/classes/${c}/`).then(res => res.data)
+            );
+            const coreqPromises = course.coreqs.map((c) =>
+                axios.get(`http://localhost:8000/api/classes/${c}/`).then(res => res.data)
+            );
+
+            // Resolve all promises
+            const prereqsData = await Promise.all(prereqPromises);
+            const coreqsData = await Promise.all(coreqPromises);
+
+            // Update states
+            setPrereqs(prereqsData);
+            setCoreqs(coreqsData);
+        } catch (error) {
+            console.error("Error fetching course data", error);
+        }
+    };
+
+    useEffect(() => {
+        getListCourses();
+    }, [course]); // Re-fetch whenever `course` changes
 
     return (
         <div
@@ -45,7 +74,8 @@ const Course = ({id, course, moveCourse, majorList}) => {
             <div className="course-container">
                 <div className="course-item-top">
                     <div className="course-number-title">{majorAbbr} {course.class_number} {course.title}</div>
-                    <div className="course-description-button" onClick={() => setOpenDialog(true)}><AiOutlineInfoCircle/></div>
+                    <div className="course-description-button" onClick={() => setOpenDialog(true)}>
+                        <AiOutlineInfoCircle/></div>
                 </div>
                 <div className="course-item-bottom">
                     <div className="course-credit">Credit: {course.credits}</div>
@@ -63,16 +93,28 @@ const Course = ({id, course, moveCourse, majorList}) => {
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
                 <DialogTitle style={{textAlign: "center"}}>Course Information</DialogTitle>
                 <DialogContent>
-                    <h3>CS5704 Software Engineering</h3>
-                    <p><b>Description</b>: Study of the principles and tools applicable to the methodical construction and controlled evolution of complex software systems. All phases of the life cycle are presented; particular attention focuses on the design, testing, and maintenance phases. Introduction to software project management. Attention to measurement models of the software process and product which allow quantitative assessment of cost, reliability, and complexity of software systems. (3H,3C) Pre: CS 5044</p>
-                    <p><b>Prerequisites</b>: No Prerequisites for this course</p>
-                    <p><b>Corequisites</b>: No Corequisites for this course</p>
+                    <h3>{majorAbbr} {course.class_number} {course.title}</h3>
+                    <p><b>Description</b>: {course.description}</p>
                     <p>
-                    <b>Link</b>: &nbsp;
-                        <a href="https://website.cs.vt.edu/Graduate/Courses/GradCourseDescriptions.html#CS5704"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="popup-link">
+                        <b>Prerequisites</b>: {course.prereqs.length === 0 ? "No Prerequisites for this course" : prereqs.map((c, index) => (
+                        <span key={c.id}>
+                            {majorList[c.major]} {c.class_number}
+                            {index !== prereqs.length - 1 && ", "}
+                        </span>
+                    ))}</p>
+                    <p>
+                        <b>Corequisites</b>: {course.coreqs.length === 0 ? "No Corequisites for this course" : coreqs.map((c, index) => (
+                        <span key={c.id}>
+                            {majorList[c.major]} {c.class_number}
+                            {index !== coreqs.length - 1 && ", "}
+                        </span>
+                    ))}</p>
+                    <p>
+                        <b>Link</b>: &nbsp;
+                        <a href={course.link}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="popup-link">
                             Course Description
                         </a>
                     </p>
@@ -111,11 +153,11 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
     const [anchorEl, setAnchorEl] = useState(null);
 
     const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+        setAnchorEl(event.currentTarget);
     };
 
     const handleMenuClose = () => {
-    setAnchorEl(null);
+        setAnchorEl(null);
     };
 
     return (
@@ -134,20 +176,26 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
                         onClick={(event) => event.stopPropagation()}>
                         <AiOutlineDelete/>
                     </Button>} */}
-                    
+
                     {title !== "Course Cart" && (
                         <>
-                        <Button className="semester-menu-button" onClick={handleMenuOpen}>
-                            <MoreVertIcon className="semester-menu-button"/>
-                        </Button>
-                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                            <MenuItem onClick={() => { handleEditSemesterClick(semester); handleMenuClose(); }}>
-                            <AiOutlineEdit style={{ marginRight: "8px" }} /> Edit
-                            </MenuItem>
-                            <MenuItem onClick={(event) => { event.stopPropagation(); handleMenuClose(); }} style={{ color: "red" }}>
-                            <AiOutlineDelete style={{ marginRight: "8px" }} /> Delete
-                            </MenuItem>
-                        </Menu>
+                            <Button className="semester-menu-button" onClick={handleMenuOpen}>
+                                <MoreVertIcon className="semester-menu-button"/>
+                            </Button>
+                            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                                <MenuItem onClick={() => {
+                                    handleEditSemesterClick(semester);
+                                    handleMenuClose();
+                                }}>
+                                    <AiOutlineEdit style={{marginRight: "8px"}}/> Edit
+                                </MenuItem>
+                                <MenuItem onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleMenuClose();
+                                }} style={{color: "red"}}>
+                                    <AiOutlineDelete style={{marginRight: "8px"}}/> Delete
+                                </MenuItem>
+                            </Menu>
                         </>
                     )}
                 </div>
@@ -209,6 +257,7 @@ const Plan = (props) => {
     const [openDialog, setOpenDialog] = useState(false);
     const [seasonList, setSeasonList] = useState([]);
     const [majorList, setMajorList] = useState([]);
+    const [planMajor, setPlanMajor] = useState(null);
     const currentYear = new Date().getFullYear();
     const yearList = Array.from({length: 10}, (_, i) => currentYear + i); // Generate years
     const [semesterFormData, setSemesterFormData] = useState({
@@ -269,6 +318,18 @@ const Plan = (props) => {
             }
         }
     };
+
+    const getPlanMajor = async () => {
+        if (template) {
+            try {
+                const res = await axios.get(`http://localhost:8000/api/major/${template.major}`);
+                setPlanMajor(res.data);
+                // console.log("major: ", res.data)
+            } catch (e) {
+                console.error("Error fetching plan major data", e)
+            }
+        }
+    }
 
     const getListMajors = async () => {
         try {
@@ -830,7 +891,6 @@ const Plan = (props) => {
                     setOpenHome(true);
                 }
                 await getPlan();
-                await getListMajors();
             } catch (error) {
                 console.error("Error in token refresh or data fetching:", error);
             }
@@ -838,6 +898,17 @@ const Plan = (props) => {
 
         fetchDataAfterTokenRefresh();
     }, [id, props.token]);
+
+    useEffect(() => {
+        const fetchPlanMajor = async () => {
+            try {
+                await getPlanMajor();
+            } catch (error) {
+                console.error("Error in getting plan major info:", error);
+            }
+        }
+        fetchPlanMajor();
+    }, [template]);
 
     useEffect(() => {
         if (skipSemesterRefresh.current) {
@@ -867,6 +938,7 @@ const Plan = (props) => {
     useEffect(() => {
         if (template && template.requirements) {
             getListRequirements();
+            getListMajors();
         } else {
             console.warn("Template is not available yet.");
         }
@@ -924,8 +996,9 @@ const Plan = (props) => {
                         <div className="plan-title-container">
                             <h2 className="plan-page-title">{currentEditPlan.name}</h2>
                             <div className="plan-details">
-                                <div className="plan-major">Major: Industrial System Engineering</div>
-                                <div className="plan-level">Level: MS</div>
+                                <div
+                                    className="plan-major">Major: {planMajor && planMajor.name ? planMajor.name : "N/A"}</div>
+                                <div className="plan-level">Level: {template ? template.level : ""}</div>
                             </div>
                         </div>
                         <div
