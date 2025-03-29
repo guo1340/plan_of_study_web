@@ -22,10 +22,11 @@ import {AiOutlineDelete} from "react-icons/ai";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {Menu, MenuItem} from "@mui/material";
 import {AiOutlineInfoCircle,} from "react-icons/ai";
+import ConfirmationDialog from "../Components/ConfirmationDialog";
 
 const ItemType = "CARD";
 
-const Course = ({id, course, moveCourse, majorList}) => {
+const Course = ({id, course, moveCourse, majorList, handleDeleteCourse, semesterId, handleUpdateCredit}) => {
     const [{isDragging}, drag] = useDrag(() => ({
         type: ItemType,
         item: {id},
@@ -36,24 +37,32 @@ const Course = ({id, course, moveCourse, majorList}) => {
 
     const majorAbbr = majorList[course.major] || "N/A"; // Lookup abbreviation
     const [openDialog, setOpenDialog] = useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [prereqs, setPrereqs] = useState([])
     const [coreqs, setCoreqs] = useState([])
+    const [updatedCredits, setUpdatedCredits] = useState(course.credits);
 
     const getListCourses = async () => {
         try {
-            // Fetch all prereqs in parallel
-            const prereqPromises = course.prereqs.map((c) =>
-                axios.get(`http://localhost:8000/api/classes/${c}/`).then(res => res.data)
+            // ✅ Flatten prereq and coreq groups to get unique course IDs
+            const prereqIds = Array.isArray(course.prereq_groups)
+                ? [...new Set(course.prereq_groups.flat())]
+                : [];
+            const coreqIds = Array.isArray(course.coreq_groups)
+                ? [...new Set(course.coreq_groups.flat())]
+                : [];
+
+            // ✅ Fetch all unique courses in parallel
+            const prereqPromises = prereqIds.map((id) =>
+                axios.get(`http://localhost:8000/api/classes/${id}/`).then((res) => res.data)
             );
-            const coreqPromises = course.coreqs.map((c) =>
-                axios.get(`http://localhost:8000/api/classes/${c}/`).then(res => res.data)
+            const coreqPromises = coreqIds.map((id) =>
+                axios.get(`http://localhost:8000/api/classes/${id}/`).then((res) => res.data)
             );
 
-            // Resolve all promises
             const prereqsData = await Promise.all(prereqPromises);
             const coreqsData = await Promise.all(coreqPromises);
 
-            // Update states
             setPrereqs(prereqsData);
             setCoreqs(coreqsData);
         } catch (error) {
@@ -82,7 +91,7 @@ const Course = ({id, course, moveCourse, majorList}) => {
                     <div className="course-delete-button">
                         <Button
                             sx={{color: "red", minWidth: "30px", maxWidth: "30px"}}
-                            onClick={(event) => event.stopPropagation()}>
+                            onClick={() => setOpenDeleteDialog(true)}>
                             <AiOutlineDelete/>
                         </Button>
                     </div>
@@ -96,19 +105,41 @@ const Course = ({id, course, moveCourse, majorList}) => {
                     <h3>{majorAbbr} {course.class_number} {course.title}</h3>
                     <p><b>Description</b>: {course.description}</p>
                     <p>
-                        <b>Prerequisites</b>: {course.prereqs.length === 0 ? "No Prerequisites for this course" : prereqs.map((c, index) => (
-                        <span key={c.id}>
-                            {majorList[c.major]} {c.class_number}
-                            {index !== prereqs.length - 1 && ", "}
-                        </span>
-                    ))}</p>
+                        <b>Prerequisites</b>:{" "}
+                        {Array.isArray(course.prereq_groups) && course.prereq_groups.some(group => group.length > 0)
+                            ? course.prereq_groups
+                                .filter(group => group.length > 0)
+                                .map((group, i) => {
+                                    const names = group
+                                        .map(id => {
+                                            const match = prereqs.find(p => p.id === id);
+                                            return match ? `${majorList[match.major]} ${match.class_number}` : null;
+                                        })
+                                        .filter(Boolean)
+                                        .join(" and ");
+                                    return `[${names}]`;
+                                })
+                                .join(" or ")
+                            : "No Prerequisites for this course"}
+                    </p>
                     <p>
-                        <b>Corequisites</b>: {course.coreqs.length === 0 ? "No Corequisites for this course" : coreqs.map((c, index) => (
-                        <span key={c.id}>
-                            {majorList[c.major]} {c.class_number}
-                            {index !== coreqs.length - 1 && ", "}
-                        </span>
-                    ))}</p>
+                        <b>Corequisites</b>:{" "}
+                        {Array.isArray(course.coreq_groups) && course.coreq_groups.some(group => group.length > 0)
+                            ? course.coreq_groups
+                                .filter(group => group.length > 0)
+                                .map((group, i) => {
+                                    const names = group
+                                        .map(id => {
+                                            const match = coreqs.find(c => c.id === id);
+                                            return match ? `${majorList[match.major]} ${match.class_number}` : null;
+                                        })
+                                        .filter(Boolean)
+                                        .join(" and ");
+                                    return `[${names}]`;
+                                })
+                                .join(" or ")
+                            : "No Corequisites for this course"}
+                    </p>
                     <p>
                         <b>Link</b>: &nbsp;
                         <a href={course.link}
@@ -118,6 +149,29 @@ const Course = ({id, course, moveCourse, majorList}) => {
                             Course Description
                         </a>
                     </p>
+                    {course.editable_credits && (
+                        <div style={{display: "flex", alignItems: "center", marginTop: "1rem"}}>
+                            <TextField
+                                label="Update Credits"
+                                type="number"
+                                value={updatedCredits}
+                                onChange={(e) => setUpdatedCredits(parseInt(e.target.value))}
+                                InputProps={{inputProps: {min: 0}}}
+                                sx={{marginRight: 2, width: 120}}
+                            />
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={() => {
+                                    handleUpdateCredit(course, semesterId, updatedCredits);
+                                    setOpenDialog(false)
+                                }}
+                                sx={{minWidth: "30px", maxWidth:"20px", maxHeight:"30px"}}
+                            >
+                                <CheckBoxIcon/>
+                            </Button>
+                        </div>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDialog(false)} color="primary">
@@ -126,12 +180,33 @@ const Course = ({id, course, moveCourse, majorList}) => {
                 </DialogActions>
             </Dialog>
 
+            <ConfirmationDialog
+                open={openDeleteDialog}
+                handleClose={() => setOpenDeleteDialog(false)}
+                message="Are you sure you want to remove this course from your plan?"
+                handleSubmit={() => {
+                    handleDeleteCourse(course, semesterId);
+                    setOpenDeleteDialog(false)
+                }}
+            />
+
         </div>
     );
 };
 
 
-const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditSemesterClick, majorList}) => {
+const Semester = ({
+                      title,
+                      courses,
+                      moveCourse,
+                      semesterId,
+                      semester,
+                      handleEditSemesterClick,
+                      majorList,
+                      handleDeleteCourse,
+                      handleDeleteSemester,
+                      handleUpdateCredit
+                  }) => {
     const [, drop] = useDrop(() => ({
         accept: ItemType,
         drop: (item) => moveCourse(item.id, semesterId), // Ensure a valid drop happens
@@ -189,8 +264,8 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
                                 }}>
                                     <AiOutlineEdit style={{marginRight: "8px"}}/> Edit
                                 </MenuItem>
-                                <MenuItem onClick={(event) => {
-                                    event.stopPropagation();
+                                <MenuItem onClick={() => {
+                                    handleDeleteSemester(semester)
                                     handleMenuClose();
                                 }} style={{color: "red"}}>
                                     <AiOutlineDelete style={{marginRight: "8px"}}/> Delete
@@ -221,6 +296,9 @@ const Semester = ({title, courses, moveCourse, semesterId, semester, handleEditS
                     course={course}
                     moveCourse={moveCourse}
                     majorList={majorList} // Pass majorList
+                    handleDeleteCourse={handleDeleteCourse}
+                    semesterId={semesterId}
+                    handleUpdateCredit={handleUpdateCredit}
                 />
             ))}
 
@@ -447,11 +525,15 @@ const Plan = (props) => {
             const validSemesters = semestersData.filter(
                 (semester) => semester !== null
             );
+            const sortedSemesters = validSemesters.slice().sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                return a.season - b.season; // Assumes season is numeric (Spring = 1, Summer = 2, Fall = 3, Winter = 4)
+            });
 
-            setSemesterList(validSemesters);
+            setSemesterList(sortedSemesters);
 
             setSemesterCourseList(
-                validSemesters.map((semester) => ({
+                sortedSemesters.map((semester) => ({
                     semester_id: semester.id,
                     course_list: semester.courses || [], // ✅ Ensures course_list is always an array
                 }))
@@ -635,53 +717,132 @@ const Plan = (props) => {
         setOpenDialog(true);
     }
 
-    // Need fixing
+    const validatePrereqs = (movedCourse, targetSemesterId, semesterCourseList, newCart) => {
+        let previousCourses = []; // Courses before the target semester
+        let targetSemesterFound = false;
+
+        for (const semester of semesterCourseList) {
+            if (semester.semester_id === targetSemesterId) {
+                targetSemesterFound = true;
+                break;
+            }
+            semester.course_list.forEach((course) => previousCourses.push(course));
+        }
+
+        // ✅ Validate prerequisites
+        const prereqGroups = Array.isArray(movedCourse.prereq_groups) ? movedCourse.prereq_groups : [[]];
+
+        const hasSatisfiedGroup = prereqGroups.some((group) => {
+            return Array.isArray(group) && group.every((prereqId) => {
+                return previousCourses.some((course) => course.id === prereqId);
+            });
+        });
+
+        if (!hasSatisfiedGroup && prereqGroups.some((group) => group.length > 0)) {
+            NotificationManager.warning(
+                `Cannot move course ${movedCourse.title}\n please check the prerequisites for this course~`,
+                "Missing prerequisites",
+                5000
+            );
+            return false;
+        }
+
+        // ✅ Validate corequisites (must exist in same semester)
+        const currentSemester = semesterCourseList.find(
+            (semester) => semester.semester_id === targetSemesterId
+        );
+
+        const coreqGroups = Array.isArray(movedCourse.coreq_groups) ? movedCourse.coreq_groups : [];
+
+        const hasSatisfiedCoreqGroup = coreqGroups.length === 0 || coreqGroups.some((group) => {
+            return Array.isArray(group) && group.every((coreqId) => {
+                return currentSemester.course_list.some((course) => course.id === coreqId);
+            });
+        });
+
+        if (!hasSatisfiedCoreqGroup) {
+            NotificationManager.warning(
+                `Cannot move course ${movedCourse.title}\n please check the corequisites for this course~`,
+                "Missing corequisites",
+                5000
+            );
+            return false;
+        }
+
+        return true; // ✅ All validations passed
+    };
+
+    // needs fixing
     const moveCourse = (courseId, targetSemesterId) => {
         skipSemesterRefresh.current = true; // ✅ Prevent useEffect from running
 
         console.log(`Moving course ${courseId} to semester ${targetSemesterId}`);
 
         setSemesterCourseList((prevSemesterCourseList) => {
-            const updatedSemesterCourseList = prevSemesterCourseList.map((sc) => ({
-                ...sc,
-                course_list: [...sc.course_list],
-            }));
 
             let movedCourse = null;
             let previousSemesterId = "coursecart";
 
-            // Find and remove the course from its current location
-            for (let semesterData of updatedSemesterCourseList) {
+            // Find the course from its current location
+            // from semesters
+            for (let semesterData of prevSemesterCourseList) {
                 const courseIndex = semesterData.course_list.findIndex(
                     (course) => course.course_id === courseId
                 );
                 if (courseIndex !== -1) {
                     movedCourse = semesterData.course_list[courseIndex];
                     previousSemesterId = semesterData.semester_id;
-                    if (previousSemesterId !== targetSemesterId) {
-                        semesterData.course_list.splice(courseIndex, 1);
-                    }
+                    // if (previousSemesterId !== targetSemesterId) {
+                    //     semesterData.course_list = semesterData.course_list.filter(
+                    //         (course) => course.course_id !== courseId
+                    //     );
+                    // }
                     break;
                 }
             }
 
+            let newCart = courseCart;
+            // from cart
             if (!movedCourse) {
-                setCourseCart((prevCourseCart) => {
-                    const updatedCourseCart = [...prevCourseCart];
-                    const cartIndex = updatedCourseCart.findIndex(
-                        (course) => course.course_id === courseId
-                    );
-                    if (cartIndex !== -1) {
-                        movedCourse = updatedCourseCart[cartIndex];
-                        previousSemesterId = "coursecart";
-                        if (previousSemesterId !== targetSemesterId) {
-                            updatedCourseCart.splice(cartIndex, 1);
+                // Use callback to ensure we get latest courseCart
+                const foundInCart = (() => {
+                    let latest = null;
+                    setCourseCart((prevCourseCart) => {
+                        const match = prevCourseCart.find((course) => course.course_id === courseId);
+                        if (match) {
+                            latest = match;
                         }
+                        newCart = prevCourseCart;
+                        return prevCourseCart;
+                    });
+                    return latest;
+                })();
 
-                    }
-                    return updatedCourseCart;
-                });
+                if (foundInCart) {
+                    movedCourse = foundInCart;
+                    previousSemesterId = "coursecart";
+                }
+            }
+            // no course found
+            if (!movedCourse) {
+                console.error(`Error: Course ${courseId} not found.`);
+                return prevSemesterCourseList;
+            }
 
+            // Prevent redundant moves
+            if (previousSemesterId === targetSemesterId) {
+                console.warn("Move ignored: Course is already in the target location.");
+                return prevSemesterCourseList;
+            }
+            // check for prereqs if needed
+            if (targetSemesterId !== "coursecart" && !validatePrereqs(movedCourse, targetSemesterId, prevSemesterCourseList, newCart)) {
+                return prevSemesterCourseList; // revert
+            }
+            // move course out of course cart if it's moving from course cart
+            if (previousSemesterId === "coursecart") {
+                setCourseCart((prevCourseCart) =>
+                    prevCourseCart.filter((course) => course.course_id !== courseId)
+                );
                 setCurrentEditPlan((prevCurrentEditPlan) => ({
                     ...prevCurrentEditPlan,
                     course_cart: prevCurrentEditPlan.course_cart.filter(
@@ -690,90 +851,98 @@ const Plan = (props) => {
                 }));
             }
 
-            if (!movedCourse) {
-                console.error(`Error: Course ${courseId} not found.`);
-                return updatedSemesterCourseList;
-            }
-
-            // Prevent redundant moves
-            if (previousSemesterId === targetSemesterId) {
-                console.warn("Move ignored: Course is already in the target location.");
-                return updatedSemesterCourseList;
-            }
-
-            movedCourse.previousSemester = previousSemesterId;
-            movedCourse.currentSemester = targetSemesterId;
-
             if (targetSemesterId === "coursecart") {
                 setCourseCart((prevCourseCart) => [...prevCourseCart, movedCourse]);
                 setCurrentEditPlan((prevCurrentEditPlan) => ({
                     ...prevCurrentEditPlan,
-                    course_cart: [...prevCurrentEditPlan.course_cart, movedCourse.course_id],
+                    course_cart: [...prevCurrentEditPlan.course_cart, movedCourse],
                 }));
+            }
+            // else {
+            // const targetEntry = prevSemesterCourseList.find(
+            //     (entry) => entry.semester_id === targetSemesterId
+            // );
+            // if (targetEntry) {
+            //     targetEntry.course_list.push(movedCourse);
+            // } else {
+            //     prevSemesterCourseList.push({
+            //         semester_id: targetSemesterId,
+            //         course_list: [movedCourse],
+            //     });
+            // }
+            // }
+
+            const targetSemester = prevSemesterCourseList.find((entry) => entry.semester_id === targetSemesterId)
+            if (targetSemester) {
+                targetSemester.course_list.push(movedCourse)
             } else {
-                const targetEntry = updatedSemesterCourseList.find(
-                    (entry) => entry.semester_id === targetSemesterId
+                prevSemesterCourseList.push({
+                    semester_id: targetSemesterId,
+                    course_list: [movedCourse],
+                })
+            }
+            const previousEntry = prevSemesterCourseList.find((entry) => entry.semester_id === previousSemesterId);
+            if (previousEntry) {
+                previousEntry.course_list = previousEntry.course_list.filter(
+                    (entry) => entry.course_id !== courseId
                 );
-                if (targetEntry) {
-                    targetEntry.course_list.push(movedCourse);
-                } else {
-                    updatedSemesterCourseList.push({
-                        semester_id: targetSemesterId,
-                        course_list: [movedCourse],
-                    });
-                }
             }
 
+
             setSemesterList((prevSemesterList) => {
-                const updatedSemesterList = prevSemesterList.map((semester) => ({
-                    ...semester,
-                    courses: [...semester.courses],
-                    classes: [...semester.classes],
-                }));
+                console.log("we ran this ")
+                const newSemesterList = prevSemesterList.map((semester) => {
+                    if (semester.id === previousSemesterId) {
+                        return {
+                            ...semester,
+                            courses: semester.courses.filter(
+                                (course) => course.course_id !== courseId
+                            ),
+                            classes: semester.classes.filter(
+                                (course) => course.course_id !== courseId
+                            ),
+                        };
+                    } else if (semester.id === targetSemesterId) {
+                        if (!semester.courses.find((course) => {
+                            return course.course_id === courseId
+                        })) {
+                            const temp = {
+                                ...semester,
+                                courses: [...semester.courses, movedCourse],
+                                classes: [...semester.classes, movedCourse]
+                            }
 
-                if (previousSemesterId !== "coursecart") {
-                    const prevSemester = updatedSemesterList.find(
-                        (sem) => sem.id === previousSemesterId
-                    );
-                    if (prevSemester) {
-                        prevSemester.courses = prevSemester.courses.filter(
-                            (course) => course.course_id !== courseId
-                        );
-                        prevSemester.classes = prevSemester.classes.filter(
-                            (id) => id !== courseId
-                        );
-                    }
-                }
-
-                if (targetSemesterId !== "coursecart") {
-                    const newSemester = updatedSemesterList.find(
-                        (sem) => sem.id === targetSemesterId
-                    );
-                    if (newSemester) {
-                        newSemester.courses.push(movedCourse);
-                        newSemester.classes.push(movedCourse.course_id);
+                            console.log("temp", temp)
+                            return {
+                                ...semester,
+                                courses: [...semester.courses, movedCourse],
+                                classes: [...semester.classes, movedCourse]
+                            };
+                        }
+                        return {...semester}
                     } else {
-                        updatedSemesterList.push({
-                            id: targetSemesterId,
-                            courses: [movedCourse],
-                            classes: [movedCourse.course_id],
-                        });
+                        return {...semester};
                     }
-                }
-
-                return updatedSemesterList;
+                })
+                console.log("prevSemesterList", prevSemesterList)
+                console.log("newSemesterList", newSemesterList)
+                return newSemesterList
             });
 
-            // console.log(
-            //   "Updated semester list after move:",
-            //   updatedSemesterCourseList
-            // );
+
+            movedCourse.previousSemester = previousSemesterId;
+            movedCourse.currentSemester = targetSemesterId;
+
+
+            // console.log("semesterList", semesterList)
+
 
             setTimeout(() => {
                 skipSemesterRefresh.current = false; // ✅ Reset flag after changes apply
             }, 100); // Small delay ensures updates settle before next render
 
-            return updatedSemesterCourseList;
+
+            return prevSemesterCourseList;
         });
     };
 
@@ -818,7 +987,7 @@ const Plan = (props) => {
                 console.error("Error adding Semester", error);
             }
             await getPlan();
-            await getListSemesters();
+            // await getListSemesters();
         }
         setSemesterFormData({
             plan: id,
@@ -830,6 +999,198 @@ const Plan = (props) => {
         setOpenDialog(false);
         setCurrentEditSemester(null);
     };
+
+    // needs fixing - debug needed
+    const handleDeleteSemester = async (semester) => {
+        console.log("Deleting semester:", semester);
+
+        try {
+            // ✅ Step 1: Move all courses to course cart before deleting the semester
+            await Promise.all(
+                semester.courses.map((course) => moveCourse(course.course_id, "coursecart"))
+            );
+
+            // ✅ Step 2: Send DELETE request to remove the semester from the backend
+            await axios.delete(`http://localhost:8000/api/semester/${semester.id}/`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                },
+            });
+
+            // ✅ Step 3: Update the local state by removing the semester
+            setSemesterList((prevSemesters) =>
+                prevSemesters.filter((s) => s.id !== semester.id)
+            );
+
+            // ✅ Step 4: Update the plan by removing the semester reference
+            await axios.put(
+                `http://localhost:8000/api/plan/${id}/`,
+                {
+                    ...currentEditPlan,
+                    semesters: currentEditPlan.semesters.filter((sId) => sId !== semester.id),
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                    },
+                }
+            );
+            await saveChanges(new Event("submit"));
+
+            NotificationManager.success("Semester removed successfully!", "Success", 5000);
+        } catch (error) {
+            console.error("Error deleting semester:", error);
+            NotificationManager.error("Failed to remove semester", "Error", 5000);
+        }
+    };
+
+
+    const handleDeleteCourse = async (course, semesterId) => {
+        console.log("Deleting course:", course);
+        console.log("From semester:", semesterId);
+
+        try {
+            if (semesterId === "coursecart") {
+                // Remove course from course cart
+                await axios.put(
+                    `http://localhost:8000/api/plan/${id}/`,
+                    {
+                        ...currentEditPlan,
+                        course_cart: currentEditPlan.course_cart.filter((c) => c.course_id !== course.course_id),
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        },
+                    }
+                );
+
+                // Update state
+                setCourseCart((prevCart) => prevCart.filter((c) => c.course_id !== course.course_id));
+            } else {
+                // Remove course from semester
+                await axios.put(
+                    `http://localhost:8000/api/semester/${semesterId}/`,
+                    {
+                        id: semesterId,
+                        classes: semesterList
+                            .find((semester) => semester.id === semesterId)
+                            ?.courses.filter((c) => c.course_id !== course.course_id) || [],
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        },
+                    }
+                );
+
+                // Update state
+                setSemesterList((prevSemesters) =>
+                    prevSemesters.map((semester) =>
+                        semester.id === semesterId
+                            ? {...semester, courses: semester.courses.filter((c) => c.course_id !== course.course_id)}
+                            : semester
+                    )
+                );
+            }
+
+            try {
+                // ✅ Fetch the latest `course_id_list` from the backend
+                let latestCourseIdList = [];
+                try {
+                    const courseResponse = await axios.get(
+                        `http://localhost:8000/api/classes/${course.id}/`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                            },
+                        }
+                    );
+                    latestCourseIdList = courseResponse.data.course_id_list || [];
+                } catch (error) {
+                    console.error("Error fetching latest course_id_list:", error);
+                    return;
+                }
+
+                // ✅ Remove the deleted `course_id` from the `course_id_list`
+                const updatedCourseIdList = latestCourseIdList.filter((id) => id !== course.course_id);
+
+                // ✅ Update the course with the modified `course_id_list`
+                await axios.put(
+                    `http://localhost:8000/api/classes/${course.id}/`,
+                    {
+                        course_id_list: updatedCourseIdList,
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                        },
+                    }
+                );
+
+                console.log(`Removed course_id ${course.course_id} from course_id_list successfully.`);
+            } catch (error) {
+                console.error("Error updating course_id_list:", error);
+            }
+            await getListSemesters();
+
+            NotificationManager.success("Course removed successfully!", "Success", 5000);
+        } catch (error) {
+            console.error("Error deleting course:", error);
+            NotificationManager.error("Failed to remove course", "Error", 5000);
+        }
+    };
+
+    const handleUpdateCredit = (course, semesterId, updatedCredits) => {
+        if (semesterId === "coursecart") {
+            const updatedCart = courseCart.map((temp) =>
+                temp.course_id === course.course_id
+                    ? {...temp, credits: updatedCredits}
+                    : temp
+            );
+            setCourseCart(updatedCart)
+        } else {
+            const updatedSemesterClasses = semesterList.find((semester) => semester.id === semesterId)
+                .classes.map((temp) =>
+                    temp.course_id === course.course_id
+                        ? {...temp, credits: updatedCredits}
+                        : temp
+                );
+            setSemesterList((prevSemesterList) =>
+                prevSemesterList.map((semester) =>
+                    semester.id === semesterId
+                        ? {
+                            ...semester,
+                            classes: updatedSemesterClasses,
+                            courses: updatedSemesterClasses, // Optional, if you also keep full course objects in `courses`
+                        }
+                        : semester
+                )
+            );
+            setSemesterCourseList((prevSemesterCourseList) =>
+                prevSemesterCourseList.map((entry) => {
+                    if (entry.semester_id === semesterId) {
+                        const updatedCourseList = entry.course_list.map((temp) =>
+                            temp.course_id === course.course_id
+                                ? {...temp, credits: updatedCredits}
+                                : temp
+                        );
+                        return {
+                            ...entry,
+                            course_list: updatedCourseList,
+                        };
+                    } else {
+                        return entry; // Keep other semesters unchanged
+                    }
+                })
+            );
+        }
+
+        setOpenDialog(false); // Optionally close the dialog
+
+    }
+
+
     const saveChanges = async (e) => {
         e.preventDefault();
         await props.checkTokenAndRefresh();
@@ -922,18 +1283,25 @@ const Plan = (props) => {
                 await getListSeasons();
             }
         };
-
         getDataInPlan();
     }, [currentEditPlan]); // ✅ Only runs if `currentEditPlan` changes
 
+    // useEffect(() => {
+    //     if (currentEditPlan.course_cart.length > 0) {
+    //         console.log(
+    //             "Fetching course cart after currentEditPlan updated:",
+    //             currentEditPlan.course_cart
+    //         );
+    //         console.log("semesterCourseList", semesterCourseList)
+    //
+    //     }
+    // }, [currentEditPlan.course_cart]); // ✅ Runs only when `course_cart` updates
+
     useEffect(() => {
-        if (currentEditPlan.course_cart.length > 0) {
-            console.log(
-                "Fetching course cart after currentEditPlan updated:",
-                currentEditPlan.course_cart
-            );
-        }
-    }, [currentEditPlan.course_cart]); // ✅ Runs only when `course_cart` updates
+        console.log("✅ semesterCourseList updated:", semesterCourseList);
+        checkRequirementsFulfilled(false);
+    }, [semesterCourseList]);
+
 
     useEffect(() => {
         if (template && template.requirements) {
@@ -967,6 +1335,10 @@ const Plan = (props) => {
             prevSemesterList.current = semesterList;
         }
     }, [requirementList, semesterList]); // ✅ Runs only when requirementList or semesterList actually change
+
+    useEffect(() => {
+        console.log("semesterList", semesterList)
+    }, [semesterList]);
 
     if (!props.token) {
         return (
@@ -1062,19 +1434,20 @@ const Plan = (props) => {
                         <div className="grid-layout">
                             {semesterList
                                 .slice()
-                                .sort((a, b) => {
-                                    const seasonOrderById = {
-                                        1: 1, // Spring
-                                        2: 2, // Summer
-                                        3: 3, // Fall
-                                        4: 4  // Winter
-                                    };
-                                    // First, sort by year
-                                    if (a.year !== b.year) return a.year - b.year;
-
-                                    // Then, sort by season using seasonOrderById
-                                    return (seasonOrderById[a.season] || 5) - (seasonOrderById[b.season] || 5);
-                                }).map((semester) => {
+                                // .sort((a, b) => {
+                                //     const seasonOrderById = {
+                                //         1: 1, // Spring
+                                //         2: 2, // Summer
+                                //         3: 3, // Fall
+                                //         4: 4  // Winter
+                                //     };
+                                //     // First, sort by year
+                                //     if (a.year !== b.year) return a.year - b.year;
+                                //
+                                //     // Then, sort by season using seasonOrderById
+                                //     return (seasonOrderById[a.season] || 5) - (seasonOrderById[b.season] || 5);
+                                // })
+                                .map((semester) => {
                                     // console.log("semester", semester)
                                     const season = seasonList.find(
                                         (season) => season.id === semester.season
@@ -1092,6 +1465,9 @@ const Plan = (props) => {
                                             semester={semester}
                                             handleEditSemesterClick={handleEditSemesterClick}
                                             majorList={majorList} // Pass majorList
+                                            handleDeleteCourse={handleDeleteCourse}
+                                            handleDeleteSemester={handleDeleteSemester}
+                                            handleUpdateCredit={handleUpdateCredit}
                                         />
                                     );
                                 })}
@@ -1115,6 +1491,9 @@ const Plan = (props) => {
                                     semesterId="coursecart"
                                     semester={undefined}
                                     majorList={majorList}
+                                    handleDeleteCourse={handleDeleteCourse}
+                                    handleDeleteSemester={handleDeleteSemester}
+                                    handleUpdateCredit={handleUpdateCredit}
                                 />
                             </div>
                             <button className="save-button" onClick={saveChanges}>
