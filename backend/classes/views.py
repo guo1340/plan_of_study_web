@@ -158,14 +158,22 @@ class ClassViewSet(ModelViewSet):
             queryset = queryset.filter(elective_field_id=elective_field_id)
             print(f"Filtered by elective_field_id, queryset count: {queryset.count()}")
 
-        # 9. Filter by prerequisites (exact match by ID)
+        # 9. Filter by prerequisites using JSONField 'prereq_groups'
         prereq_ids = search_data.get('prereq_id', None)
         if prereq_ids:
-            prereq_id_list = prereq_ids.split(',')
-            # Filter courses that have all the given prereq_ids
-            queryset = queryset.filter(prereqs__in=prereq_id_list).annotate(num_prereqs=Count('prereqs')).filter(
-                num_prereqs=len(prereq_id_list))
-        print(f"Filtered by all given prereqs, queryset count: {queryset.count()}")
+            prereq_id_list = [int(i) for i in prereq_ids.split(',')]
+
+            def course_has_all_prereqs(course):
+                all_ids = [item for group in course.prereq_groups for item in group]
+                return all(pr in all_ids for pr in prereq_id_list)
+
+            # Filter in Python (not efficient for large datasets)
+            matching_ids = [
+                course.id for course in queryset if course_has_all_prereqs(course)
+            ]
+
+            queryset = queryset.filter(id__in=matching_ids)
+            print(f"Filtered by prereq_groups, queryset count: {queryset.count()}")
 
         # 10. Filter by seasons (comma-separated string, matches multiple seasons)
         seasons_param = search_data.get('seasons', None)
@@ -181,11 +189,19 @@ class ClassViewSet(ModelViewSet):
         # 11. Filter by corequisites (exact match by ID)
         coreq_ids = search_data.get('coreq_id', None)
         if coreq_ids:
-            coreq_id_list = coreq_ids.split(',')
-            # Filter courses that have all the given coreq_ids
-            queryset = queryset.filter(coreqs__in=coreq_id_list).annotate(num_coreqs=Count('coreqs')).filter(
-                num_coreqs=len(coreq_id_list))
-        print(f"Filtered by all given coreqs, queryset count: {queryset.count()}")
+            coreq_id_list = [int(i) for i in coreq_ids.split(',')]
+
+            def course_has_all_coreqs(course):
+                all_ids = [item for group in course.coreq_groups for item in group]
+                return all(pr in all_ids for pr in coreq_id_list)
+
+            # Filter in Python (not efficient for large datasets)
+            matching_ids = [
+                course.id for course in queryset if course_has_all_coreqs(course)
+            ]
+
+            queryset = queryset.filter(id__in=matching_ids)
+            print(f"Filtered by coreq_groups, queryset count: {queryset.count()}")
 
         # Serialize the filtered queryset
         serializer = self.serializer_class(queryset, many=True)
