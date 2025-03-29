@@ -366,8 +366,8 @@
 }
 
 .input_textfield {
-  padding-right: "20px";
-  padding-bottom: "10px";
+  padding-right: 20px;
+  padding-bottom: 10px;
 }
 
 .text {
@@ -957,6 +957,10 @@
   margin-top: 20px;
 }
 
+.course-credit {
+  min-width: 80px;
+}
+
 .course-description-button{
   min-width: 30px;
   max-width: 30px;
@@ -967,7 +971,7 @@
 }
 
 .course-delete-button {
-  margin-left: 169px;
+  margin-left: 150px;
   margin-top: -5px;
 }
 
