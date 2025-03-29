@@ -145,9 +145,9 @@ const Courses = (props) => {
         major: null,
         class_number: null,
         title: "",
-        prereqs: [],
+        prereqs: [[]],
         seasons: [],
-        coreqs: [],
+        coreqs: [[]],
         description: "",
         credits: null,
         elective_field: null,
@@ -190,9 +190,13 @@ const Courses = (props) => {
             abbreviation: course.abbreviation,
             class_number: course.class_number,
             title: course.title,
-            prereqs: course.prereqs,
+            prereqs: Array.isArray(course.prereq_groups) && course.prereq_groups.length > 0
+                ? course.prereq_groups.map((group) => Array.isArray(group) ? group : [])
+                : [[]],
             seasons: course.seasons,
-            coreqs: course.coreqs,
+            coreqs: Array.isArray(course.coreq_groups) && course.coreq_groups.length > 0
+                ? course.coreq_groups.map((group) => Array.isArray(group) ? group : [])
+                : [[]],
             description: course.description,
             credits: course.credits,
             elective_field: course.elective_field,
@@ -253,19 +257,36 @@ const Courses = (props) => {
                             courseSeasons.push(seasonResponse.data);
                         });
                         let coursePrereqs = [];
-                        course.prereqs.map(async (prereq) => {
-                            const prereqResponse = await axios.get(
-                                `http://localhost:8000/api/classes/${prereq}`
-                            );
-                            coursePrereqs.push(prereqResponse.data);
-                        });
+                        const prereqIds = course.prereq_groups?.flat() || [];
+                        await Promise.all(
+                            prereqIds.map(async (prereqId) => {
+                                try {
+                                    const prereqResponse = await axios.get(
+                                        `http://localhost:8000/api/classes/${prereqId}`
+                                    );
+                                    coursePrereqs.push(prereqResponse.data);
+                                } catch (err) {
+                                    console.error("Failed to fetch prereq course:", prereqId, err);
+                                }
+                            })
+                        );
+
                         let courseCoreqs = [];
-                        course.coreqs.map(async (coreq) => {
-                            const coreqResponse = await axios.get(
-                                `http://localhost:8000/api/classes/${coreq}`
-                            );
-                            courseCoreqs.push(coreqResponse.data);
-                        });
+                        const coreqIds = course.coreq_groups?.flat() || [];
+                        await Promise.all(
+                            coreqIds.map(async (coreqId) => {
+                                try {
+                                    const coreqResponse = await axios.get(
+                                        `http://localhost:8000/api/classes/${coreqId}`
+                                    );
+                                    courseCoreqs.push(coreqResponse.data);
+                                } catch (err) {
+                                    console.error("Failed to fetch coreq course:", coreqId, err);
+                                }
+                            })
+                        );
+                        course.coreq_objects = courseCoreqs;
+
 
                         const electiveFieldData = electiveFieldResponse.data;
 
@@ -368,9 +389,9 @@ const Courses = (props) => {
             major: -1,
             abbreviation: "",
             title: "",
-            prereqs: [],
+            prereqs: [[]],
             seasons: [],
-            coreqs: [],
+            coreqs: [[]],
             description: "",
             credits: "",
             elective_field: -1,
@@ -417,7 +438,14 @@ const Courses = (props) => {
                 : "http://localhost:8000/api/classes/";
             // console.log(formData);
             await props.checkTokenAndRefresh();
-            await axios[method](url, formData, {
+            const formDataToSubmit = {
+                ...formData,
+                prereq_groups: formData.prereqs, // Rename key
+                coreq_groups: formData.coreqs, // 👈 NEW
+            };
+            delete formDataToSubmit.prereqs;
+            delete formDataToSubmit.coreqs;
+            await axios[method](url, formDataToSubmit, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
                 },
@@ -427,9 +455,9 @@ const Courses = (props) => {
                 major: -1,
                 abbreviation: "",
                 title: "",
-                prereqs: [],
+                prereqs: [[]],
                 seasons: [],
-                coreqs: [],
+                coreqs: [[]],
                 description: "",
                 credits: "",
                 elective_field: -1,
@@ -467,16 +495,19 @@ const Courses = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const class_options = classes.map((cls) => ({
-        value: cls.id,
-        label: `${cls.abbreviation} - ${cls.title}`,
-    }));
+    const class_options = classes.map((cls) => {
+        const major = majors.find((major) => major.id === cls.major); // Find major abbreviation
+        return {
+            value: cls.id,
+            label: `${major?.abbreviation || "N/A"} ${cls.class_number} - ${cls.title}`, // Updated label
+        };
+    });
 
     // Handling change for MUI Select (adjusted for multi-select) for prereqs
     const handlePrereqsChange = (event, newValue) => {
         setFormData((prevFormData) => ({
             ...prevFormData,
-            prereqs: newValue ? newValue.map((option) => option.value) : [], // Ensure prereqs is always an array
+            prereqs: newValue ? newValue.map((option) => [option.value]) : [],
         }));
     };
 
@@ -534,6 +565,62 @@ const Courses = (props) => {
         setCreditTypeError(false);
     };
 
+    const enrichCourseData = async (coursesData) => {
+        return await Promise.all(
+            coursesData.map(async (course) => {
+                try {
+                    const electiveFieldResponse = await axios.get(
+                        `http://localhost:8000/api/elective-field/${course.elective_field}`
+                    );
+
+                    let courseSeasons = [];
+                    await Promise.all(
+                        course.seasons.map(async (season) => {
+                            const seasonResponse = await axios.get(
+                                `http://localhost:8000/api/season/${season}`
+                            );
+                            courseSeasons.push(seasonResponse.data);
+                        })
+                    );
+
+                    let coursePrereqs = [];
+                    const prereqIds = course.prereq_groups?.flat() || [];
+                    await Promise.all(
+                        prereqIds.map(async (prereqId) => {
+                            const prereqResponse = await axios.get(
+                                `http://localhost:8000/api/classes/${prereqId}`
+                            );
+                            coursePrereqs.push(prereqResponse.data);
+                        })
+                    );
+
+                    let courseCoreqs = [];
+                    const coreqIds = course.coreq_groups?.flat() || [];
+                    await Promise.all(
+                        coreqIds.map(async (coreqId) => {
+                            const coreqResponse = await axios.get(
+                                `http://localhost:8000/api/classes/${coreqId}`
+                            );
+                            courseCoreqs.push(coreqResponse.data);
+                        })
+                    );
+
+                    return {
+                        ...course,
+                        elective_field_object: electiveFieldResponse.data,
+                        season_objects: courseSeasons,
+                        prereq_objects: coursePrereqs,
+                        coreq_objects: courseCoreqs,
+                    };
+                } catch (error) {
+                    console.error("Error enriching course:", course.id, error);
+                    return course;
+                }
+            })
+        );
+    };
+
+
     return (
         <div>
             <Dialog
@@ -548,7 +635,7 @@ const Courses = (props) => {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText style={{paddingBottom: "10px"}}>
-                        Please select the plan you would like to dd the course to.
+                        Please select the plan you would like to add the course to.
                     </DialogContentText>
                     <form
                         onSubmit={async (e) => {
@@ -741,156 +828,166 @@ const Courses = (props) => {
                                 fullWidth
                             />
                         </div>
-                        <div style={{paddingTop: "5px", paddingBottom: "10px"}}>
-                            <Autocomplete
-                                multiple
-                                options={class_options} // Array of prerequisite options
-                                getOptionLabel={(option) => option.label} // Get the label for display
-                                value={
-                                    Array.isArray(formData.prereqs) // Check if formData.prereqs is an array
-                                        ? formData.prereqs.map((id) =>
-                                            class_options.find((option) => option.value === id)
-                                        )
-                                        : [] // Default to empty array if formData.prereqs is not an array
-                                }
-                                onChange={handlePrereqsChange} // Handle change
-                                disableCloseOnSelect
-                                renderOption={(props, option, {selected}) => {
-                                    const {key, ...optionProps} = props;
-                                    return (
-                                        <li key={key} {...optionProps}>
+                        {(Array.isArray(formData.prereqs) ? formData.prereqs : []).map((group, groupIndex) => (
+                            <div key={groupIndex} style={{ marginBottom: "10px" }}>
+                                <Autocomplete
+                                    multiple
+                                    options={class_options}
+                                    getOptionLabel={(option) => option.label}
+                                    value={Array.isArray(group)? group
+                                        .map((id) => class_options.find((option) => option.value === id))
+                                        .filter(Boolean):[]}
+                                    onChange={(e, newValue) => {
+                                        const updatedGroups = [...formData.prereqs];
+                                        updatedGroups[groupIndex] = newValue.map((option) => option.value);
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            prereqs: updatedGroups,
+                                        }));
+                                    }}
+                                    disableCloseOnSelect
+                                    renderOption={(props, option, { selected }) => (
+                                        <li {...props}>
                                             <Checkbox
                                                 icon={icon}
                                                 checkedIcon={checkedIcon}
-                                                style={{marginRight: 8}}
+                                                style={{ marginRight: 8 }}
                                                 checked={selected}
                                             />
                                             {option.label}
                                         </li>
-                                    );
-                                }}
-                                renderTags={(selectedOptions, getTagProps) =>
-                                    selectedOptions.map((option, index) => (
-                                        <Chip
-                                            key={option.value}
-                                            label={option.label}
-                                            {...getTagProps({index})}
-                                        />
-                                    ))
-                                } // Render chips for selected values
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Prerequisites"
-                                        variant="outlined"
-                                        fullWidth
-                                    />
-                                )}
-                                sx={{width: "100%"}} // Full width
-                            />
-                        </div>
-                        <div style={{paddingTop: "5px", paddingBottom: "10px"}}>
-                            <Autocomplete
-                                multiple
-                                options={all_seasons} // Array of season options
-                                getOptionLabel={(option) => option.name} // Get the season name for display
-                                value={
-                                    Array.isArray(formData.seasons)
-                                        ? formData.seasons
-                                            .map((id) =>
-                                                all_seasons.find((season) => season.id === id)
-                                            )
-                                            .filter((season) => season !== undefined)
-                                        : []
-                                } // Map the selected season IDs to corresponding objects
-                                onChange={handleChangeSeason} // Handle change
-                                disableCloseOnSelect
-                                renderOption={(props, option, {selected}) => {
-                                    const {key, ...optionProps} = props;
-                                    return (
-                                        <li key={key} {...optionProps}>
+                                    )}
+                                    renderTags={(selectedOptions, getTagProps) =>
+                                        selectedOptions.map((option, index) => (
+                                            <Chip key={option.value} label={option.label} {...getTagProps({ index })} />
+                                        ))
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField {...params} label={`Prerequisite Group ${groupIndex + 1}`} variant="outlined" fullWidth />
+                                    )}
+                                />
+                            </div>
+                        ))}
+                        <Button
+                            variant="contained"
+                            sx={{marginBottom:"15px"}}
+
+                            // fullWidth
+                            onClick={() => {
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    prereqs: [...prev.prereqs, []], // add a new group
+                                }));
+                            }}
+                        >
+                            + Add Prerequisite Group
+                        </Button>
+
+                        {(Array.isArray(formData.coreqs) ? formData.coreqs : []).map((group, groupIndex) => (
+                            <div key={groupIndex} style={{ marginBottom: "10px" }}>
+                                <Autocomplete
+                                    multiple
+                                    options={class_options}
+                                    getOptionLabel={(option) => option.label}
+                                    value={Array.isArray(group) ? group
+                                        .map((id) => class_options.find((option) => option.value === id))
+                                        .filter(Boolean) : []}
+                                    onChange={(e, newValue) => {
+                                        const updatedGroups = [...formData.coreqs];
+                                        updatedGroups[groupIndex] = newValue.map((option) => option.value);
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            coreqs: updatedGroups,
+                                        }));
+                                    }}
+                                    disableCloseOnSelect
+                                    renderOption={(props, option, { selected }) => (
+                                        <li {...props}>
                                             <Checkbox
                                                 icon={icon}
                                                 checkedIcon={checkedIcon}
-                                                style={{marginRight: 8}}
-                                                checked={selected}
-                                            />
-                                            {option.name}
-                                        </li>
-                                    );
-                                }}
-                                renderTags={(selectedSeasons, getTagProps) =>
-                                    selectedSeasons.map((option, index) => (
-                                        <Chip
-                                            key={option.id}
-                                            label={option.name}
-                                            {...getTagProps({index})}
-                                        />
-                                    ))
-                                } // Render chips for selected seasons
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Seasons *"
-                                        variant="outlined"
-                                        fullWidth
-                                        error={seasonError}
-                                        helperText={
-                                            seasonError ? "Please select at least one season" : ""
-                                        }
-                                    />
-                                )}
-                                sx={{width: "100%"}} // Full width
-                            />
-                        </div>
-                        <div style={{paddingTop: "5px", paddingBottom: "10px"}}>
-                            <Autocomplete
-                                multiple
-                                options={class_options} // Array of corequisite options
-                                getOptionLabel={(option) => option.label} // Extract the label for display
-                                value={
-                                    Array.isArray(formData.coreqs) // Check if formData.coreqs is an array
-                                        ? formData.coreqs.map((id) =>
-                                            class_options.find((option) => option.value === id)
-                                        )
-                                        : [] // Default to empty array if formData.coreqs is not an array
-                                }
-                                onChange={handleCoreqsChange} // Handle change
-                                disableCloseOnSelect
-                                renderOption={(props, option, {selected}) => {
-                                    const {key, ...optionProps} = props;
-                                    return (
-                                        <li key={key} {...optionProps}>
-                                            <Checkbox
-                                                icon={icon}
-                                                checkedIcon={checkedIcon}
-                                                style={{marginRight: 8}}
+                                                style={{ marginRight: 8 }}
                                                 checked={selected}
                                             />
                                             {option.label}
                                         </li>
-                                    );
-                                }}
-                                renderTags={(selectedOptions, getTagProps) =>
-                                    selectedOptions.map((option, index) => (
-                                        <Chip
-                                            key={option.value}
-                                            label={option.label}
-                                            {...getTagProps({index})}
+                                    )}
+                                    renderTags={(selectedOptions, getTagProps) =>
+                                        selectedOptions.map((option, index) => (
+                                            <Chip key={option.value} label={option.label} {...getTagProps({ index })} />
+                                        ))
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField {...params} label={`Corequisite Group ${groupIndex + 1}`} variant="outlined" fullWidth />
+                                    )}
+                                />
+                            </div>
+                        ))}
+                        <Button
+                            variant="contained"
+                            sx={{marginBottom:"15px"}}
+                            onClick={() => {
+                            setFormData((prev) => ({
+                                ...prev,
+                                coreqs: [...prev.coreqs, []],
+                            }));
+                        }}>
+                            + Add Corequisite Group
+                        </Button>
+                        <div style={{paddingTop: "5px", paddingBottom: "10px"}}>
+                        <Autocomplete
+                            multiple
+                            options={all_seasons} // Array of season options
+                            getOptionLabel={(option) => option.name} // Get the season name for display
+                            value={
+                                Array.isArray(formData.seasons)
+                                    ? formData.seasons
+                                        .map((id) =>
+                                            all_seasons.find((season) => season.id === id)
+                                        )
+                                        .filter((season) => season !== undefined)
+                                    : []
+                            } // Map the selected season IDs to corresponding objects
+                            onChange={handleChangeSeason} // Handle change
+                            disableCloseOnSelect
+                            renderOption={(props, option, {selected}) => {
+                                const {key, ...optionProps} = props;
+                                return (
+                                    <li key={key} {...optionProps}>
+                                        <Checkbox
+                                            icon={icon}
+                                            checkedIcon={checkedIcon}
+                                            style={{marginRight: 8}}
+                                            checked={selected}
                                         />
-                                    ))
-                                } // Render chips for selected coreqs
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Corequisites"
-                                        variant="outlined"
-                                        fullWidth
+                                        {option.name}
+                                    </li>
+                                );
+                            }}
+                            renderTags={(selectedSeasons, getTagProps) =>
+                                selectedSeasons.map((option, index) => (
+                                    <Chip
+                                        key={option.id}
+                                        label={option.name}
+                                        {...getTagProps({index})}
                                     />
-                                )}
-                                sx={{width: "100%"}} // Full width
-                            />
-                        </div>
+                                ))
+                            } // Render chips for selected seasons
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Seasons *"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={seasonError}
+                                    helperText={
+                                        seasonError ? "Please select at least one season" : ""
+                                    }
+                                />
+                            )}
+                            sx={{width: "100%"}} // Full width
+                        />
+                    </div>
                         <div style={{paddingTop: "5px", paddingBottom: "10px"}}>
                             <TextField
                                 required
@@ -1008,8 +1105,12 @@ const Courses = (props) => {
                     token={props.token}
                     checkTokenAndRefresh={props.checkTokenAndRefresh}
                     userDetails={props.userDetails}
-                    setClasses={setClasses}
+                    setClasses={async (courses) => {
+                        const enriched = await enrichCourseData(courses);
+                        setClasses(enriched);
+                    }}
                 />
+
                 <div className="course-table">
                     <TableContainer
                         sx={{borderRadius: "10px", overflow: "hidden", boxShadow: "3"}}
@@ -1173,36 +1274,45 @@ const Courses = (props) => {
                                                             </div>
                                                             <div>
                                                                 <b>Prerequisites:</b>{" "}
-                                                                {row.prereqs[0]
-                                                                    ? row.prereq_objects
-                                                                        .map((course) => {
-                                                                            return (
-                                                                                majors.find(
-                                                                                    (major) => major.id === row.major
-                                                                                )?.abbreviation ||
-                                                                                // eslint-disable-next-line no-useless-concat
-                                                                                "N/A" + " " + course.class_number
-                                                                            );
+                                                                {Array.isArray(row.prereq_groups) && row.prereq_groups.some(group => group.length > 0)
+                                                                    ? row.prereq_groups
+                                                                        .filter(group => group.length > 0)
+                                                                        .map((group) => {
+                                                                            const courseNames = group
+                                                                                .map((id) => {
+                                                                                    const course = row.prereq_objects?.find((c) => c.id === id);
+                                                                                    if (!course) return null;
+                                                                                    const major = majors.find((m) => m.id === course.major);
+                                                                                    return `${major?.abbreviation || "N/A"} ${course.class_number}`;
+                                                                                })
+                                                                                .filter(Boolean)
+                                                                                .join(" and ");
+                                                                            return `[${courseNames}]`;
                                                                         })
-                                                                        .join(", ")
+                                                                        .join(" or ")
                                                                     : "No Prerequisites for this course"}
                                                             </div>
                                                             <div>
                                                                 <b>Corequisites:</b>{" "}
-                                                                {row.coreqs[0]
-                                                                    ? row.coreq_objects
-                                                                        .map((course) => {
-                                                                            return (
-                                                                                majors.find(
-                                                                                    (major) => major.id === row.major
-                                                                                )?.abbreviation ||
-                                                                                // eslint-disable-next-line no-useless-concat
-                                                                                "N/A" + " " + course.class_number
-                                                                            );
+                                                                {Array.isArray(row.coreq_groups) && row.coreq_groups.some(group => group.length > 0)
+                                                                    ? row.coreq_groups
+                                                                        .filter(group => group.length > 0)
+                                                                        .map((group) => {
+                                                                            const courseNames = group
+                                                                                .map((id) => {
+                                                                                    const course = row.coreq_objects?.find((c) => c.id === id);
+                                                                                    if (!course) return null;
+                                                                                    const major = majors.find((m) => m.id === course.major);
+                                                                                    return `${major?.abbreviation || "N/A"} ${course.class_number}`;
+                                                                                })
+                                                                                .filter(Boolean)
+                                                                                .join(" and ");
+                                                                            return `[${courseNames}]`;
                                                                         })
-                                                                        .join(", ")
+                                                                        .join(" or ")
                                                                     : "No Corequisites for this course"}
                                                             </div>
+
                                                             <div>
                                                                 <b>Link: </b>
                                                                 <a
