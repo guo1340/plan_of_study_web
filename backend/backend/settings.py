@@ -91,7 +91,9 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'backend.urls'
 
 CORS_ALLOWED_ORIGINS =[
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://plan-of-study.cs.vt.edu:3000',
+    'http://128.173.237.133:3000',
 ]
 
 CORS_ALLOW_METHODS = (
