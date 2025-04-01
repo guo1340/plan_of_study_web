@@ -40,11 +40,14 @@ const Dashboard = (props) => {
 
   const getListPlans = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/plan/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await axios.get(
+        "http://plan-of-study.cs.vt.edu/api/plan/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       console.log("plans", response.data);
       setPlanList(response.data);
       // console.log(planList);
@@ -54,11 +57,14 @@ const Dashboard = (props) => {
   };
   const getListTemplates = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/template/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await axios.get(
+        "http://plan-of-study.cs.vt.edu/api/template/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       setTemplateList(response.data);
       // console.log(templateList);
 
@@ -66,7 +72,7 @@ const Dashboard = (props) => {
         response.data.map(async (template) => {
           try {
             const majorRes = await axios.get(
-              "http://localhost:8000/api/major/",
+              "http://plan-of-study.cs.vt.edu/api/major/",
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -108,7 +114,7 @@ const Dashboard = (props) => {
   const handleDelete = async (plan) => {
     await props.checkTokenAndRefresh();
     try {
-      await axios.delete(`http://localhost:8000/api/plan/${plan.id}`, {
+      await axios.delete(`http://plan-of-study.cs.vt.edu/api/plan/${plan.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -125,7 +131,7 @@ const Dashboard = (props) => {
     e.preventDefault();
     await props.checkTokenAndRefresh();
     try {
-      await axios.post("http://localhost:8000/api/plan/", formData, {
+      await axios.post("http://plan-of-study.cs.vt.edu/api/plan/", formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

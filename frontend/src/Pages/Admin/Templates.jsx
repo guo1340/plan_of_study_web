@@ -211,7 +211,7 @@ const Template = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://localhost:8000/api/major/")
+      .get("http://plan-of-study.cs.vt.edu/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -222,7 +222,7 @@ const Template = (props) => {
 
   const getListCreditTypes = () => {
     axios
-      .get("http://localhost:8000/api/credit-type/")
+      .get("http://plan-of-study.cs.vt.edu/api/credit-type/")
       .then((res) => {
         setCreditTypes(res.data);
       })
@@ -238,7 +238,7 @@ const Template = (props) => {
           try {
             // Fetch the main requirement object
             const requirementResponse = await axios.get(
-              `http://localhost:8000/api/requirement/${requirementId}/`,
+              `http://plan-of-study.cs.vt.edu/api/requirement/${requirementId}/`,
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -251,7 +251,7 @@ const Template = (props) => {
 
             // Fetch the major object for the requirement
             const majorResponse = await axios.get(
-              `http://localhost:8000/api/major/${requirement.major}`,
+              `http://plan-of-study.cs.vt.edu/api/major/${requirement.major}`,
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -264,7 +264,7 @@ const Template = (props) => {
 
             // Fetch the credit type object for the requirement
             const creditTypeResponse = await axios.get(
-              `http://localhost:8000/api/credit-type/${requirement.credit_type}`,
+              `http://plan-of-study.cs.vt.edu/api/credit-type/${requirement.credit_type}`,
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -296,7 +296,7 @@ const Template = (props) => {
 
   const getListTemplates = () => {
     axios
-      .get("http://localhost:8000/api/template/", {
+      .get("http://plan-of-study.cs.vt.edu/api/template/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -346,8 +346,8 @@ const Template = (props) => {
     }
     const method = currentEditTemplate ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing field
     const url = currentEditTemplate
-      ? `http://localhost:8000/api/template/${currentEditTemplate.id}/` // If editing, use the field ID
-      : "http://localhost:8000/api/template/";
+      ? `http://plan-of-study.cs.vt.edu/api/template/${currentEditTemplate.id}/` // If editing, use the field ID
+      : "http://plan-of-study.cs.vt.edu/api/template/";
     handleCloseDialog();
     // axios[method](url, formData).then(getListTemplates());
     try {
@@ -438,8 +438,8 @@ const Template = (props) => {
 
     const method = currentEditRequirement ? "put" : "post";
     const url = currentEditRequirement
-      ? `http://localhost:8000/api/requirement/${currentEditRequirement.id}/`
-      : "http://localhost:8000/api/requirement/";
+      ? `http://plan-of-study.cs.vt.edu/api/requirement/${currentEditRequirement.id}/`
+      : "http://plan-of-study.cs.vt.edu/api/requirement/";
 
     try {
       await props.checkTokenAndRefresh();
@@ -455,7 +455,7 @@ const Template = (props) => {
 
       if (currentEditTemplate) {
         const templateResponse = await axios.get(
-          `http://localhost:8000/api/template/${currentEditTemplate.id}/`
+          `http://plan-of-study.cs.vt.edu/api/template/${currentEditTemplate.id}/`
         );
 
         const updatedRequirements = [
@@ -465,7 +465,7 @@ const Template = (props) => {
 
         // Update the template with the new requirement
         const newTemplateResponse = await axios.put(
-          `http://localhost:8000/api/template/${currentEditTemplate.id}/`,
+          `http://plan-of-study.cs.vt.edu/api/template/${currentEditTemplate.id}/`,
           {
             ...templateResponse.data,
             requirements: updatedRequirements,
@@ -526,11 +526,14 @@ const Template = (props) => {
     // event handler for the delete button
     try {
       await props.checkTokenAndRefresh();
-      await axios.delete(`http://localhost:8000/api/template/${template.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      await axios.delete(
+        `http://plan-of-study.cs.vt.edu/api/template/${template.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       handleCloseDialog();
       getListTemplates();
     } catch (error) {
@@ -542,7 +545,7 @@ const Template = (props) => {
     try {
       await props.checkTokenAndRefresh();
       await axios.delete(
-        `http://localhost:8000/api/requirement/${requirement.id}/`,
+        `http://plan-of-study.cs.vt.edu/api/requirement/${requirement.id}/`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -550,7 +553,7 @@ const Template = (props) => {
         }
       );
       const newTemplate = await axios.get(
-        `http://localhost:8000/api/template/${currentEditTemplate.id}`
+        `http://plan-of-study.cs.vt.edu/api/template/${currentEditTemplate.id}`
       );
       // Fetch updated requirements list for the current template
       if (newTemplate.data) {

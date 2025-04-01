@@ -38,10 +38,13 @@ const Login = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8000/api/login/", {
-        username: formData.username,
-        password: formData.password,
-      });
+      const response = await axios.post(
+        "http://plan-of-study.cs.vt.edu/api/login/",
+        {
+          username: formData.username,
+          password: formData.password,
+        }
+      );
       if (response.status === 200) {
         localStorage.setItem("accessToken", response.data.access);
         localStorage.setItem("refreshToken", response.data.refresh);

@@ -154,7 +154,9 @@ const ElectiveField = (props) => {
 
   const getListMajors = async () => {
     try {
-      const majorRes = await axios.get("http://localhost:8000/api/major");
+      const majorRes = await axios.get(
+        "http://plan-of-study.cs.vt.edu/api/major"
+      );
       setMajors(majorRes.data);
     } catch (error) {
       console.error("Error fetching majors:", error);
@@ -163,7 +165,9 @@ const ElectiveField = (props) => {
 
   const getListFields = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/elective-field/");
+      const res = await axios.get(
+        "http://plan-of-study.cs.vt.edu/api/elective-field/"
+      );
       setFields(res.data);
     } catch (error) {
       console.error("Error fetching elective fields data:", error);
@@ -183,8 +187,8 @@ const ElectiveField = (props) => {
     e.preventDefault();
     const method = currentEditField ? "put" : "post"; // Determine the HTTP method for elective field
     const url = currentEditField
-      ? `http://localhost:8000/api/elective-field/${currentEditField.id}/` // If editing, use the field ID
-      : "http://localhost:8000/api/elective-field/";
+      ? `http://plan-of-study.cs.vt.edu/api/elective-field/${currentEditField.id}/` // If editing, use the field ID
+      : "http://plan-of-study.cs.vt.edu/api/elective-field/";
 
     try {
       // Step 1: Create or update the elective field
@@ -230,7 +234,7 @@ const ElectiveField = (props) => {
     // event handler for the delete button
     try {
       await axios.delete(
-        `http://localhost:8000/api/elective-field/${field.id}`,
+        `http://plan-of-study.cs.vt.edu/api/elective-field/${field.id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

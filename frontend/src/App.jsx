@@ -59,7 +59,7 @@ const App = () => {
       if (!refreshToken) return;
 
       const response = await axios.post(
-        "http://localhost:8000/api/token/refresh/",
+        "http://plan-of-study.cs.vt.edu/api/token/refresh/",
         { refresh: refreshToken }
       );
 
@@ -84,11 +84,14 @@ const App = () => {
   const fetchUser = async () => {
     setLoadingUser(true); // Start loading user details
     try {
-      const response = await axios.get("http://localhost:8000/api/user/me/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await axios.get(
+        "http://plan-of-study.cs.vt.edu/api/user/me/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       if (response.status === 200) {
         setUserDetails(response.data[0]); // Set user details in state
         localStorage.setItem("userRole", response.data[0].role);
