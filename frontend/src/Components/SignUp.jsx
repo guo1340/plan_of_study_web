@@ -44,7 +44,7 @@ const SignUp = ({ openSignUp, signIn, closeSignUp }) => {
       NotificationManager.warning("Passwords do not match", "Warning", 5000);
     } else {
       try {
-        await axios.post("http://plan-of-study.cs.vt.edu/api/register/", {
+        await axios.post("http://plan-of-study.cs.vt.edu:8000/api/register/", {
           username: formData.username,
           email: formData.email,
           password: formData.password,

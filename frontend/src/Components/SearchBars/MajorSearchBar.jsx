@@ -17,7 +17,7 @@ const MajorSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/major/?search=${encodeURIComponent(
+        `http://plan-of-study.cs.vt.edu:8000/api/major/?search=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -30,7 +30,7 @@ const MajorSearchBar = (props) => {
   const getListMajors = async () => {
     try {
       const majorRes = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/major"
+        "http://plan-of-study.cs.vt.edu:8000/api/major"
       );
       setMajors(majorRes.data);
     } catch (error) {

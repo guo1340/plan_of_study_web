@@ -41,7 +41,7 @@ const Dashboard = (props) => {
   const getListPlans = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/plan/",
+        "http://plan-of-study.cs.vt.edu:8000/api/plan/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -58,7 +58,7 @@ const Dashboard = (props) => {
   const getListTemplates = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/template/",
+        "http://plan-of-study.cs.vt.edu:8000/api/template/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -72,7 +72,7 @@ const Dashboard = (props) => {
         response.data.map(async (template) => {
           try {
             const majorRes = await axios.get(
-              "http://plan-of-study.cs.vt.edu/api/major/",
+              "http://plan-of-study.cs.vt.edu:8000/api/major/",
               {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem(
@@ -114,11 +114,14 @@ const Dashboard = (props) => {
   const handleDelete = async (plan) => {
     await props.checkTokenAndRefresh();
     try {
-      await axios.delete(`http://plan-of-study.cs.vt.edu/api/plan/${plan.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      await axios.delete(
+        `http://plan-of-study.cs.vt.edu:8000/api/plan/${plan.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       NotificationManager.success("Plan deleted successfully", "Success", 5000);
     } catch (error) {
       NotificationManager.error("Error deleting plan", "Error", 5000);
@@ -131,11 +134,15 @@ const Dashboard = (props) => {
     e.preventDefault();
     await props.checkTokenAndRefresh();
     try {
-      await axios.post("http://plan-of-study.cs.vt.edu/api/plan/", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      await axios.post(
+        "http://plan-of-study.cs.vt.edu:8000/api/plan/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       NotificationManager.success("Plan added successfully", "Success", 5000);
     } catch (error) {
       NotificationManager.error("Error adding plan", "Error", 5000);

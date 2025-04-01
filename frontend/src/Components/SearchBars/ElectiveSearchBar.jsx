@@ -18,7 +18,7 @@ const ElectiveSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/elective-field/?search=${encodeURIComponent(
+        `http://plan-of-study.cs.vt.edu:8000/api/elective-field/?search=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -30,7 +30,7 @@ const ElectiveSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/major/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -42,7 +42,7 @@ const ElectiveSearchBar = (props) => {
   const getListFields = async () => {
     try {
       const res = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/elective-field/"
+        "http://plan-of-study.cs.vt.edu:8000/api/elective-field/"
       );
       setFields(res.data);
     } catch (error) {

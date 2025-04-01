@@ -59,7 +59,7 @@ const App = () => {
       if (!refreshToken) return;
 
       const response = await axios.post(
-        "http://plan-of-study.cs.vt.edu/api/token/refresh/",
+        "http://plan-of-study.cs.vt.edu:8000/api/token/refresh/",
         { refresh: refreshToken }
       );
 
@@ -85,7 +85,7 @@ const App = () => {
     setLoadingUser(true); // Start loading user details
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/user/me/",
+        "http://plan-of-study.cs.vt.edu:8000/api/user/me/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

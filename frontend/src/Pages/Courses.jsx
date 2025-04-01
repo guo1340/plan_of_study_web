@@ -212,7 +212,7 @@ const Courses = (props) => {
     });
     try {
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/elective-field/`,
+        `http://plan-of-study.cs.vt.edu:8000/api/elective-field/`,
         {
           params: { major: course.major }, // Pass the selected major as a query parameter
         }
@@ -233,7 +233,7 @@ const Courses = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/major/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -245,7 +245,7 @@ const Courses = (props) => {
   const getListCourses = async () => {
     try {
       const courseResponse = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/classes/"
+        "http://plan-of-study.cs.vt.edu:8000/api/classes/"
       );
       const coursesData = courseResponse.data;
 
@@ -253,12 +253,12 @@ const Courses = (props) => {
         coursesData.map(async (course) => {
           try {
             const electiveFieldResponse = await axios.get(
-              `http://plan-of-study.cs.vt.edu/api/elective-field/${course.elective_field}`
+              `http://plan-of-study.cs.vt.edu:8000/api/elective-field/${course.elective_field}`
             );
             let courseSeasons = [];
             course.seasons.map(async (season) => {
               const seasonResponse = await axios.get(
-                `http://plan-of-study.cs.vt.edu/api/season/${season}`
+                `http://plan-of-study.cs.vt.edu:8000/api/season/${season}`
               );
               courseSeasons.push(seasonResponse.data);
             });
@@ -268,7 +268,7 @@ const Courses = (props) => {
               prereqIds.map(async (prereqId) => {
                 try {
                   const prereqResponse = await axios.get(
-                    `http://plan-of-study.cs.vt.edu/api/classes/${prereqId}`
+                    `http://plan-of-study.cs.vt.edu:8000/api/classes/${prereqId}`
                   );
                   coursePrereqs.push(prereqResponse.data);
                 } catch (err) {
@@ -287,7 +287,7 @@ const Courses = (props) => {
               coreqIds.map(async (coreqId) => {
                 try {
                   const coreqResponse = await axios.get(
-                    `http://plan-of-study.cs.vt.edu/api/classes/${coreqId}`
+                    `http://plan-of-study.cs.vt.edu:8000/api/classes/${coreqId}`
                   );
                   courseCoreqs.push(coreqResponse.data);
                 } catch (err) {
@@ -324,7 +324,7 @@ const Courses = (props) => {
 
   const getListSeasons = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/season/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/season/")
       .then((res) => {
         setSeasons(res.data);
       })
@@ -335,7 +335,7 @@ const Courses = (props) => {
 
   const getListCreditTypes = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/credit-type/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/credit-type/")
       .then((res) => {
         setCreditTypes(res.data);
       })
@@ -346,7 +346,7 @@ const Courses = (props) => {
 
   const getListElectiveFields = async () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/elective-field/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/elective-field/")
       .then((res) => {
         setElectiveFieldList(res.data);
       })
@@ -361,7 +361,7 @@ const Courses = (props) => {
     }
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/plan/",
+        "http://plan-of-study.cs.vt.edu:8000/api/plan/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -383,7 +383,7 @@ const Courses = (props) => {
     // event handler for the delete button
     await props.checkTokenAndRefresh();
     axios
-      .delete(`http://plan-of-study.cs.vt.edu/api/classes/${course.id}`, {
+      .delete(`http://plan-of-study.cs.vt.edu:8000/api/classes/${course.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -446,8 +446,8 @@ const Courses = (props) => {
     } else {
       const method = currentEditCourse ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
       const url = currentEditCourse
-        ? `http://plan-of-study.cs.vt.edu/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
-        : "http://plan-of-study.cs.vt.edu/api/classes/";
+        ? `http://plan-of-study.cs.vt.edu:8000/api/classes/${currentEditCourse.id}/` // If editing, use the course ID
+        : "http://plan-of-study.cs.vt.edu:8000/api/classes/";
       // console.log(formData);
       await props.checkTokenAndRefresh();
       const formDataToSubmit = {
@@ -542,7 +542,7 @@ const Courses = (props) => {
     // Fetch elective fields for the selected major
     try {
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/elective-field/?search={"major":"${newValue.id}"}`
+        `http://plan-of-study.cs.vt.edu:8000/api/elective-field/?search={"major":"${newValue.id}"}`
       );
       const electiveFields = response.data.sort(
         (a, b) => a.field_number - b.field_number
@@ -584,14 +584,14 @@ const Courses = (props) => {
       coursesData.map(async (course) => {
         try {
           const electiveFieldResponse = await axios.get(
-            `http://plan-of-study.cs.vt.edu/api/elective-field/${course.elective_field}`
+            `http://plan-of-study.cs.vt.edu:8000/api/elective-field/${course.elective_field}`
           );
 
           let courseSeasons = [];
           await Promise.all(
             course.seasons.map(async (season) => {
               const seasonResponse = await axios.get(
-                `http://plan-of-study.cs.vt.edu/api/season/${season}`
+                `http://plan-of-study.cs.vt.edu:8000/api/season/${season}`
               );
               courseSeasons.push(seasonResponse.data);
             })
@@ -602,7 +602,7 @@ const Courses = (props) => {
           await Promise.all(
             prereqIds.map(async (prereqId) => {
               const prereqResponse = await axios.get(
-                `http://plan-of-study.cs.vt.edu/api/classes/${prereqId}`
+                `http://plan-of-study.cs.vt.edu:8000/api/classes/${prereqId}`
               );
               coursePrereqs.push(prereqResponse.data);
             })
@@ -613,7 +613,7 @@ const Courses = (props) => {
           await Promise.all(
             coreqIds.map(async (coreqId) => {
               const coreqResponse = await axios.get(
-                `http://plan-of-study.cs.vt.edu/api/classes/${coreqId}`
+                `http://plan-of-study.cs.vt.edu:8000/api/classes/${coreqId}`
               );
               courseCoreqs.push(coreqResponse.data);
             })
@@ -661,7 +661,7 @@ const Courses = (props) => {
                 let latestCourseIdList = [];
                 try {
                   const courseResponse = await axios.get(
-                    `http://plan-of-study.cs.vt.edu/api/classes/${planSelectForm.course.id}/`,
+                    `http://plan-of-study.cs.vt.edu:8000/api/classes/${planSelectForm.course.id}/`,
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -692,7 +692,7 @@ const Courses = (props) => {
                 // ✅ Step 4: Update the backend `course_id_list` with the latest version
                 try {
                   await axios.put(
-                    `http://plan-of-study.cs.vt.edu/api/classes/${planSelectForm.course.id}/`,
+                    `http://plan-of-study.cs.vt.edu:8000/api/classes/${planSelectForm.course.id}/`,
                     {
                       course_id_list: [...latestCourseIdList, newCourseId], // ✅ Use the latest list
                     },
@@ -713,7 +713,7 @@ const Courses = (props) => {
                 let latestCourseCart = [];
                 try {
                   const planResponse = await axios.get(
-                    `http://plan-of-study.cs.vt.edu/api/plan/${planSelectForm.plan.id}/`,
+                    `http://plan-of-study.cs.vt.edu:8000/api/plan/${planSelectForm.plan.id}/`,
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -736,7 +736,7 @@ const Courses = (props) => {
 
                 // ✅ Step 7: Update the plan with the new `course_cart`
                 await axios.put(
-                  `http://plan-of-study.cs.vt.edu/api/plan/${planSelectForm.plan.id}/`,
+                  `http://plan-of-study.cs.vt.edu:8000/api/plan/${planSelectForm.plan.id}/`,
                   {
                     course_cart: updatedCourseCart, // ✅ Use latest `course_cart`
                     template: planSelectForm.plan.template,

@@ -19,7 +19,7 @@ const CreditTypeSearchBar = (props) => {
     try {
       const searchQuery = JSON.stringify(searchFormData);
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/credit-type/?search=${encodeURIComponent(
+        `http://plan-of-study.cs.vt.edu:8000/api/credit-type/?search=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -31,7 +31,7 @@ const CreditTypeSearchBar = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/major/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -43,7 +43,7 @@ const CreditTypeSearchBar = (props) => {
   const getListCreditTypes = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/credit-type"
+        "http://plan-of-study.cs.vt.edu:8000/api/credit-type"
       );
       setCreditTypes(response.data);
     } catch (error) {

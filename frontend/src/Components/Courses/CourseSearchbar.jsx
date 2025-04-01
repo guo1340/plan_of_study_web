@@ -41,7 +41,7 @@ const CourseSearchBar = (props) => {
       };
       const searchQuery = JSON.stringify(formattedSearchFormData);
       const response = await axios.get(
-        `http://plan-of-study.cs.vt.edu/api/classes/?search=${encodeURIComponent(
+        `http://plan-of-study.cs.vt.edu:8000/api/classes/?search=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -53,7 +53,7 @@ const CourseSearchBar = (props) => {
 
   const getListMajors = async () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/major/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/major/")
       .then((res) => {
         setMajorList(res.data);
       })
@@ -65,7 +65,7 @@ const CourseSearchBar = (props) => {
   const getListCreditTypes = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/credit-type"
+        "http://plan-of-study.cs.vt.edu:8000/api/credit-type"
       );
       setCreditTypeList(response.data);
     } catch (error) {
@@ -76,7 +76,7 @@ const CourseSearchBar = (props) => {
   const getListSeasons = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/season"
+        "http://plan-of-study.cs.vt.edu:8000/api/season"
       );
       setSeasonList(response.data);
     } catch (error) {
@@ -87,7 +87,7 @@ const CourseSearchBar = (props) => {
   const getListElectiveFields = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/elective-field"
+        "http://plan-of-study.cs.vt.edu:8000/api/elective-field"
       );
       setElectiveFieldList(response.data);
     } catch (error) {
@@ -98,7 +98,7 @@ const CourseSearchBar = (props) => {
   const getListCourses = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/classes"
+        "http://plan-of-study.cs.vt.edu:8000/api/classes"
       );
       setCourseList(response.data);
     } catch (error) {

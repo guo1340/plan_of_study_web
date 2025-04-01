@@ -39,7 +39,7 @@ const Login = (props) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://plan-of-study.cs.vt.edu/api/login/",
+        "http://plan-of-study.cs.vt.edu:8000/api/login/",
         {
           username: formData.username,
           password: formData.password,

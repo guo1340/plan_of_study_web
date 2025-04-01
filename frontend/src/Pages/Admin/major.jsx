@@ -147,7 +147,7 @@ const Major = (props) => {
   const getListMajors = async () => {
     try {
       const majorRes = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/major"
+        "http://plan-of-study.cs.vt.edu:8000/api/major"
       );
       setMajors(majorRes.data);
     } catch (error) {
@@ -159,7 +159,7 @@ const Major = (props) => {
     // event handler for the delete button
     await props.checkTokenAndRefresh();
     axios
-      .delete(`http://plan-of-study.cs.vt.edu/api/major/${major.id}`, {
+      .delete(`http://plan-of-study.cs.vt.edu:8000/api/major/${major.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -210,8 +210,8 @@ const Major = (props) => {
 
     const method = currentEditMajor ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditMajor
-      ? `http://plan-of-study.cs.vt.edu/api/major/${currentEditMajor.id}/` // If editing, use the course ID
-      : "http://plan-of-study.cs.vt.edu/api/major/";
+      ? `http://plan-of-study.cs.vt.edu:8000/api/major/${currentEditMajor.id}/` // If editing, use the course ID
+      : "http://plan-of-study.cs.vt.edu:8000/api/major/";
     console.log(formData);
     await props.checkTokenAndRefresh();
     await axios[method](url, formData, {

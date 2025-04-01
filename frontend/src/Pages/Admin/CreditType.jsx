@@ -150,7 +150,7 @@ const CreditType = (props) => {
   const getListCreditTypes = async () => {
     try {
       const response = await axios.get(
-        "http://plan-of-study.cs.vt.edu/api/credit-type"
+        "http://plan-of-study.cs.vt.edu:8000/api/credit-type"
       );
       setCreditTypes(response.data);
     } catch (error) {
@@ -162,7 +162,7 @@ const CreditType = (props) => {
     await props.checkTokenAndRefresh();
     axios
       .delete(
-        `http://plan-of-study.cs.vt.edu/api/credit-type/${CreditType.id}`,
+        `http://plan-of-study.cs.vt.edu:8000/api/credit-type/${CreditType.id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -217,7 +217,7 @@ const CreditType = (props) => {
 
   const getListMajors = () => {
     axios
-      .get("http://plan-of-study.cs.vt.edu/api/major/")
+      .get("http://plan-of-study.cs.vt.edu:8000/api/major/")
       .then((res) => {
         setMajors(res.data);
       })
@@ -230,8 +230,8 @@ const CreditType = (props) => {
     e.preventDefault();
     const method = currentEditCreditType ? "put" : "post"; // Determine the HTTP method and URL based on whether you're editing an existing course
     const url = currentEditCreditType
-      ? `http://plan-of-study.cs.vt.edu/api/credit-type/${currentEditCreditType.id}/` // If editing, use the course ID
-      : "http://plan-of-study.cs.vt.edu/api/credit-type/";
+      ? `http://plan-of-study.cs.vt.edu:8000/api/credit-type/${currentEditCreditType.id}/` // If editing, use the course ID
+      : "http://plan-of-study.cs.vt.edu:8000/api/credit-type/";
     await props.checkTokenAndRefresh();
     await axios[method](url, formData, {
       headers: {
