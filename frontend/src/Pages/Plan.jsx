@@ -428,6 +428,7 @@ const Plan = (props) => {
     const prevSemesterList = useRef(null); // Track previous semester state
     const initialRequirementCheck = useRef(false); // Track if the first check was made
     const [electReq, setEleReq] = useState(null);
+    const [creditReq, setCreditReq] = useState(null);
     const [electiveFieldList, setElectiveFieldList] = useState([])
 
 
@@ -690,6 +691,18 @@ const Plan = (props) => {
             });
         }
 
+        const creditsForCourseCredit = allCourses
+            .filter((course) => {
+                const field = electiveFieldList.find((f) => f.id === course.elective_field);
+                return course.credit_type === 1 && field && field.field_number !== -3;
+            })
+            .reduce((sum, course) => sum + course.credits, 0);
+
+        setCreditReq({
+            filled: creditsForCourseCredit >= template.min_credits,
+            count: creditsForCourseCredit
+        })
+
         // Create a copy of requirementList with updated "filled" status
         const updatedRequirements = requirementList.map((requirement) => {
             const matchedCourses = allCourses.filter((course) => {
@@ -780,7 +793,10 @@ const Plan = (props) => {
             setRequirementList(updatedRequirements);
         }
 
-        const allRequirementsMet = updatedRequirements.every((req) => req.filled);
+        const allRequirementsMet =
+            updatedRequirements.every((req) => req.filled) &&
+            electReq?.filled === true &&
+            creditReq?.filled === true;
 
         // ✅ Prevent unnecessary `setState` updates
         setCurrentEditPlan((prevPlan) =>
@@ -1571,8 +1587,19 @@ const Plan = (props) => {
                             {hoveredStatus === id && (
                                 <div className="status-hover-plan">
                                     <ul>
+                                        {template && creditReq ? <li
+                                        key={0}
+                                        style={{
+                                            color: creditReq.filled ? green[500] : red[500], // Use correct MUI color values
+                                        }}>
+                                            {creditReq.filled ? "✅" : "❌"}
+                                            There needs to be at least total of {" "}
+                                            <b>{template.min_credits} course credits</b>
+                                            {". current plan has "}
+                                            <b>{creditReq.count}</b>
+                                        </li> : ''}
                                         {template && electReq ? <li
-                                            key={0}
+                                            key={1}
                                             style={{
                                                 color: electReq.filled ? green[500] : red[500], // Use correct MUI color values
                                             }}>
