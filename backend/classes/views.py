@@ -153,10 +153,10 @@ class ClassViewSet(ModelViewSet):
             print(f"Filtered by editable_credits, queryset count: {queryset.count()}")
 
         # 8. Filter by elective field ID
-        elective_field_id = search_data.get('elective_field_id', None)
-        if elective_field_id is not None:
-            queryset = queryset.filter(elective_field_id=elective_field_id)
-            print(f"Filtered by elective_field_id, queryset count: {queryset.count()}")
+        elective_field = search_data.get('elective_field', None)
+        if elective_field is not None:
+            queryset = queryset.filter(elective_field=elective_field)
+            print(f"Filtered by elective_field, queryset count: {queryset.count()}")
 
         # 9. Filter by prerequisites using JSONField 'prereq_groups'
         prereq_ids = search_data.get('prereq_id', None)
