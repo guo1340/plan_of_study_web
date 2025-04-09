@@ -1179,6 +1179,8 @@ const Courses = (props) => {
             const enriched = await enrichCourseData(courses);
             setClasses(enriched);
           }}
+          courseList={classes}
+          getListCourses={getListCourses}
         />
 
         <div className="course-table">

@@ -216,7 +216,7 @@ const CourseSearchBar = (props) => {
               ) || null
             }
             onChange={(event, newValue) => {
-              handleChange("ttle", newValue ? newValue.title : "");
+              handleChange("title", newValue ? newValue.title : "");
             }}
             renderInput={(params) => (
               <TextField
@@ -252,30 +252,16 @@ const CourseSearchBar = (props) => {
               />
             )}
           />
-          <Autocomplete
-            className="search-bar-contents"
-            options={courseList}
-            getOptionLabel={(option) => {
-              return option.credits.toString() || "";
-            }}
-            value={
-              courseList.find(
-                (course) => course.credits === searchFormData.credits
-              ) || null
-            }
-            onChange={(event, newValue) => {
-              handleChange("ttle", newValue ? newValue.credits : "");
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Credit Count"
-                name="credits"
-                variant="outlined"
-                onChange={getListCourses}
-              />
-            )}
+          <TextField
+              className="search-bar-contents"
+              label="Credit Count"
+              name="credits"
+              variant="outlined"
+              type="number"
+              value={searchFormData.credits || ""}
+              onChange={(e) => handleChange("credits", e.target.value)}
           />
+
           <Autocomplete
             className="search-bar-contents"
             options={electiveFieldList}
